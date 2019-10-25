@@ -9,7 +9,6 @@ import (
 	"github.com/solo-io/autopilot/examples/canary/lib/utils"
 	v1 "github.com/solo-io/autopilot/examples/canary/pkg/apis/canaries/v1"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -337,6 +336,122 @@ func (c *Deployer) MakeStatusConditions(canaryStatus v1.CanaryStatus,
 	}
 
 	return true, []v1.CanaryCondition{*newCondition}
+}
+
+// SetStatusPhase updates the canary status phase
+func (c *Deployer) SetStatusPhase(ctx context.Context, cd *v1.Canary, phase v1.CanaryPhase) error {
+	firstTry := true
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		var selErr error
+		if !firstTry {
+			selErr = c.EzKube.Get(ctx, cd)
+			if selErr != nil {
+				return selErr
+			}
+		}
+		cdCopy := cd.DeepCopy()
+		cdCopy.Status.Phase = phase
+		cdCopy.Status.LastTransitionTime = metav1.Now()
+
+		if phase != v1.CanaryPhaseProgressing && phase != v1.CanaryPhaseWaiting {
+			cdCopy.Status.CanaryWeight = 0
+			cdCopy.Status.Iterations = 0
+		}
+
+		// on promotion set primary spec hash
+		if phase == v1.CanaryPhaseInitialized || phase == v1.CanaryPhaseSucceeded {
+			cdCopy.Status.LastPromotedSpec = cd.Status.LastAppliedSpec
+		}
+
+		if ok, conditions := c.MakeStatusConditions(cdCopy.Status, phase); ok {
+			cdCopy.Status.Conditions = conditions
+		}
+
+		err = c.EzKube.UpdateStatus(ctx, cdCopy)
+		firstTry = false
+		return
+	})
+	if err != nil {
+		return ex.Wrap(err, "SetStatusPhase")
+	}
+	return nil
+}
+
+// SetStatusFailedChecks updates the canary failed checks counter
+func (c *Deployer) SetStatusFailedChecks(ctx context.Context, cd *v1.Canary, val int) error {
+	firstTry := true
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		var selErr error
+		if !firstTry {
+			selErr = c.EzKube.Get(ctx, cd)
+			if selErr != nil {
+				return selErr
+			}
+		}
+		cdCopy := cd.DeepCopy()
+		cdCopy.Status.FailedChecks = val
+		cdCopy.Status.LastTransitionTime = metav1.Now()
+
+		err = c.EzKube.UpdateStatus(ctx, cdCopy)
+		firstTry = false
+		return
+	})
+	if err != nil {
+		return ex.Wrap(err, "SetStatusFailedChecks")
+	}
+	return nil
+}
+
+// SetStatusWeight updates the canary status weight value
+func (c *Deployer) SetStatusWeight(ctx context.Context, cd *v1.Canary, val int) error {
+	firstTry := true
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		var selErr error
+		if !firstTry {
+			selErr = c.EzKube.Get(ctx, cd)
+			if selErr != nil {
+				return selErr
+			}
+		}
+		cdCopy := cd.DeepCopy()
+		cdCopy.Status.CanaryWeight = val
+		cdCopy.Status.LastTransitionTime = metav1.Now()
+
+		err = c.EzKube.UpdateStatus(ctx, cdCopy)
+		firstTry = false
+		return
+	})
+	if err != nil {
+		return ex.Wrap(err, "SetStatusWeight")
+	}
+	return nil
+}
+
+// SetStatusIterations updates the canary status iterations value
+func (c *Deployer) SetStatusIterations(ctx context.Context, cd *v1.Canary, val int) error {
+	firstTry := true
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		var selErr error
+		if !firstTry {
+			selErr = c.EzKube.Get(ctx, cd)
+			if selErr != nil {
+				return selErr
+			}
+		}
+
+		cdCopy := cd.DeepCopy()
+		cdCopy.Status.Iterations = val
+		cdCopy.Status.LastTransitionTime = metav1.Now()
+
+		err = c.EzKube.UpdateStatus(ctx, cdCopy)
+		firstTry = false
+		return
+	})
+
+	if err != nil {
+		return ex.Wrap(err, "SetStatusIterations")
+	}
+	return nil
 }
 
 // GetStatusCondition returns a condition based on type
