@@ -3,7 +3,7 @@ package canary
 import (
 	"context"
 	"github.com/solo-io/autopilot/examples/canary/lib/reconciler"
-	gatewayv1kubetypes "github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/apis/gateway.solo.io/v1"
+	glookubev1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1/kube/apis/gloo.solo.io/v1"
 	v1 "k8s.io/api/apps/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -34,6 +34,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		For(&canariesv1.Canary{}).
 		Owns(&v1.Deployment{}).
 		Owns(&corev1.Service{}).
-		Owns(&gatewayv1kubetypes.VirtualService{}).
+		Owns(&glookubev1.UpstreamGroup{}).
 		Complete(r)
 }

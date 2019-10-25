@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"fmt"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/solo-io/autopilot/examples/canary/lib/utils"
 	v1 "github.com/solo-io/autopilot/examples/canary/pkg/apis/canaries/v1"
 	"github.com/solo-io/autopilot/examples/canary/user/pkg/deployer"
@@ -16,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
 	"os"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sort"
 	"strings"
@@ -31,18 +31,15 @@ type CanaryWorker struct {
 	observer      *meshmetrics.GlooObserver
 }
 
+func (w *CanaryWorker) IsWorker() {}
+
 var PromAddr = os.Getenv("METRICS_SERVER")
 
 func NewCanaryWorker(mgr manager.Manager) *CanaryWorker {
-	ezKube := utils.NewEzKube(&v1.Canary{}, mgr)
+	ezKube := utils.NewEzKube(mgr)
 	logger := buildLogger()
 
-	namespace, err := k8sutil.GetOperatorNamespace()
-	if err != nil {
-		panic(err)
-	}
-
-	meshRouter, err := meshrouter.NewGlooRouter("gloo:"+namespace, logger, ezKube)
+	meshRouter, err := meshrouter.NewGlooRouter("gloo:gloo-system", logger, ezKube)
 	if err != nil {
 		panic(err)
 	}
@@ -78,6 +75,7 @@ func buildLogger() *zap.SugaredLogger {
 
 // this method must be named DoWork and accept Context and Canary as its only argument
 func (w *CanaryWorker) DoWork(ctx context.Context, canary *v1.Canary) {
+	w.ezKube.SetOwner(canary)
 	if err := w.advanceCanary(ctx, canary); err != nil {
 		w.recordEventErrorf(canary, "%v", err)
 	}
@@ -445,8 +443,26 @@ func (w *CanaryWorker) reconcileService(ctx context.Context,
 		},
 		Spec: svcSpec,
 	}
+	if err := w.ezKube.Ensure(ctx, svc, func(obj1, obj2 utils.KubeObj) (b bool, e error) {
+		orig, desired := obj1.(*corev1.Service), obj2.(*corev1.Service)
 
-	return w.ezKube.Ensure(ctx, svc)
+		if reflect.DeepEqual(orig.Spec.Ports, desired.Spec.Ports) &&
+			reflect.DeepEqual(orig.Spec.Selector, desired.Spec.Selector) {
+		}
+
+		orig.Spec.Ports = desired.Spec.Ports
+		orig.Spec.Selector = desired.Spec.Selector
+		desired.Spec = orig.Spec
+
+		return true, nil
+	}); err != nil {
+		return err
+	}
+
+	w.logger.With("canary", fmt.Sprintf("%s.%s", canary.Name, canary.Namespace)).
+		Infof("Service %s updated", svc.GetName())
+
+	return nil
 }
 
 func (w *CanaryWorker) checkCanaryStatus(ctx context.Context, canary *v1.Canary) bool {

@@ -3,11 +3,13 @@ package reconciler
 import (
 	"context"
 	"github.com/solo-io/autopilot/examples/canary/lib/work"
+	"github.com/solo-io/autopilot/examples/canary/user/pkg/worker"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sync"
+	"time"
 )
 
 type Reconciler struct {
@@ -49,7 +51,13 @@ func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	runner := r.getRunner(req)
 	if runner == nil {
 		runner = r.addRunner(r.ctx, req)
+		runner.Start()
 	}
+
+	runner.SetInstance(instance)
+
+	// Return and don't requeue
+	return reconcile.Result{}, nil
 }
 
 func (r *Reconciler) getRunner(req reconcile.Request) work.Runner {
@@ -59,8 +67,15 @@ func (r *Reconciler) getRunner(req reconcile.Request) work.Runner {
 }
 
 func (r *Reconciler) addRunner(ctx context.Context, req reconcile.Request) work.Runner {
-	worker := {}
+	w := worker.NewCanaryWorker(r.mgr)
 
+	r.access.Lock()
+	defer r.access.Unlock()
+
+	runner := work.NewRunner(ctx, w, time.Second * 4)
+	r.runners[req] = runner
+
+	return runner
 }
 
 func (r *Reconciler) deleteRunner(req reconcile.Request) {

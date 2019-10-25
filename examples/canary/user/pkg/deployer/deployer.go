@@ -26,7 +26,7 @@ type Deployer struct {
 }
 
 func NewDeployer(ezKube utils.EzKube, logger *zap.SugaredLogger) *Deployer {
-	return &Deployer{EzKube: ezKube, Logger: logger, Labels: []string{"testlabel"}}
+	return &Deployer{EzKube: ezKube, Logger: logger, Labels: []string{"app"}}
 }
 
 // Initialize creates the primary deployment, hpa,
@@ -467,7 +467,7 @@ func (c *Deployer) getStatusCondition(status v1.CanaryStatus, conditionType v1.C
 
 // makeAnnotations appends an unique ID to annotations map
 func (c *Deployer) makeAnnotations(annotations map[string]string) (map[string]string, error) {
-	idKey := "-id"
+	idKey := "canary-id"
 	res := make(map[string]string)
 	uuid := make([]byte, 16)
 	n, err := io.ReadFull(rand.Reader, uuid)
