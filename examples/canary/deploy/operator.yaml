@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: canary
+  template:
+    metadata:
+      labels:
+        name: canary
+    spec:
+      serviceAccountName: canary
+      containers:
+        - name: canary
+          # Replace this with the built image name
+          image: gcr.io/solo-gloo-knative-e2e/canary
+          command:
+          - canary
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "canary"

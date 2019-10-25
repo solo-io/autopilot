@@ -1,0 +1,7 @@
+apiVersion: canaries.solo.io/v1
+kind: Canary
+metadata:
+  name: example-canary
+spec:
+  # Add fields here
+  size: 3
