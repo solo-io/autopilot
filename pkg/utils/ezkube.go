@@ -2,7 +2,10 @@ package utils
 
 import (
 	"context"
-	v1 "k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
+
+	trafficsplitv1alpha2 "github.com/deislabs/smi-sdk-go/pkg/apis/split/v1alpha2"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,7 +26,13 @@ type EzKube interface {
 	UpdateStatus(ctx context.Context, obj KubeObj) error
 	Get(ctx context.Context, obj KubeObj) error
 
-	GetDeployment(ctx context.Context, name, namespace string) (*v1.Deployment, error)
+	GetDeployment(ctx context.Context, name, namespace string) (*appsv1.Deployment, error)
+	GetService(ctx context.Context, name, namespace string) (*corev1.Service, error)
+	GetTrafficSplit(ctx context.Context, name, namespace string) (*trafficsplitv1alpha2.TrafficSplit, error)
+
+	ListDeployments(ctx context.Context, namespace string) (appsv1.DeploymentList, error)
+	ListServices(ctx context.Context, namespace string) (corev1.ServiceList, error)
+	ListTrafficSplits(ctx context.Context, namespace string) (trafficsplitv1alpha2.TrafficSplitList, error)
 }
 
 type ezKube struct {
@@ -78,10 +87,35 @@ func (m *ezKube) Get(ctx context.Context, obj KubeObj) error {
 	return m.mgr.GetClient().Get(ctx, objectKey, obj)
 }
 
-func (m *ezKube) GetDeployment(ctx context.Context, namespace, name string) (*v1.Deployment, error) {
-	obj := &v1.Deployment{}
+func (m *ezKube) GetDeployment(ctx context.Context, namespace, name string) (*appsv1.Deployment, error) {
+	obj := &appsv1.Deployment{}
 	objectKey := client.ObjectKey{Namespace: namespace, Name: name}
 	return obj, m.mgr.GetClient().Get(ctx, objectKey, obj)
+}
+
+func (m *ezKube) GetService(ctx context.Context, namespace, name string) (*corev1.Service, error) {
+	obj := &corev1.Service{}
+	objectKey := client.ObjectKey{Namespace: namespace, Name: name}
+	return obj, m.mgr.GetClient().Get(ctx, objectKey, obj)
+}
+
+func (m *ezKube) GetTrafficSplit(ctx context.Context, namespace, name string) (*trafficsplitv1alpha2.TrafficSplit, error) {
+	obj := &trafficsplitv1alpha2.TrafficSplit{}
+	objectKey := client.ObjectKey{Namespace: namespace, Name: name}
+	return obj, m.mgr.GetClient().Get(ctx, objectKey, obj)
+}
+
+func (m *ezKube) ListDeployments(ctx context.Context, namespace string) (appsv1.DeploymentList, error) {
+	var list appsv1.DeploymentList
+	return list, m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace})
+}
+func (m *ezKube) ListServices(ctx context.Context, namespace string) (corev1.ServiceList, error) {
+	var list corev1.ServiceList
+	return list, m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace})
+}
+func (m *ezKube) ListTrafficSplits(ctx context.Context, namespace string) (trafficsplitv1alpha2.TrafficSplitList, error) {
+	var list trafficsplitv1alpha2.TrafficSplitList
+	return list, m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace})
 }
 
 func objKey(obj metav1.Object) client.ObjectKey {
