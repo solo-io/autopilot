@@ -1,0 +1,128 @@
+package scheduler
+
+import (
+    "context"
+    "fmt"
+    "github.com/solo-io/autopilot/pkg/metrics"
+    "time"
+
+    "github.com/solo-io/autopilot/pkg/utils"
+    "sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+    {{.TypesImportPrefix}} "{{.TypesImportPath}}"
+
+
+{{- range $phase := .Phases}}
+    {{- if has_inputs $phase }}
+
+    {{worker_import_prefix $phase}} "{{worker_package $phase}}"
+    {{- end}}
+{{- end}}
+
+)
+
+// Modify the WorkInterval to change the interval at which workers resync
+var WorkInterval = time.Second * 5
+
+type Scheduler struct {
+    ctx context.Context
+    kube utils.EzKube
+    observer metrics.Interface
+    namespace string
+}
+
+func NewScheduler(ctx context.Context, kube utils.EzKube, observer metrics.Interface, namespace string ) *Scheduler {
+    return &Scheduler{
+    	ctx:       ctx,
+    	kube:      kube,
+    	observer:  observer,
+        namespace: namespace,
+    }
+}
+
+func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result, error) {
+    result := reconcile.Result{RequeueAfter: WorkInterval}
+
+    var {{$.KindLowerCamel}} {{.TypesImportPrefix}}.{{.Kind}}
+    {{$.KindLowerCamel}}.Namespace = request.Namespace
+    {{$.KindLowerCamel}}.Name = request.Name
+
+    if err := kube.Get(ctx, &{{$.KindLowerCamel}}); err != nil {
+        return result, err
+    }
+    switch {{$.KindLowerCamel}}.Status.Phase {
+{{- range $phase := .Phases}}
+    {{- if is_initial $phase }}
+    case "", {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase}}:
+    {{- else }}
+    case {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase}}:
+    {{- end}}
+    {{- if is_final $phase }}
+        // end state, do not requeue
+        return reconcile.Result{}, nil
+    {{- else }}
+
+        {{- if has_inputs $phase }}
+		inputs, err := s.make{{ $phase.Name}}Inputs()
+		if err != nil {
+			return result, err
+		}
+
+            {{- if has_outputs $phase }}
+        outputs, nextPhase, err := (&initializing.Worker{Kube:kube}).Sync(ctx, {{$.KindLowerCamel}}, inputs)
+		if err != nil {
+			return result, err
+		}
+            {{- else}}
+        nextPhase, err := (&initializing.Worker{Kube:kube}).Sync(ctx, {{$.KindLowerCamel}}, inputs)
+		if err != nil {
+			return result, err
+		}
+
+            {{- end}}
+
+        {{- else}}
+            {{- if has_outputs $phase }}
+        outputs, nextPhase, err := (&initializing.Worker{Kube:kube}).Sync(ctx, {{$.KindLowerCamel}})
+		if err != nil {
+			return result, err
+		}
+            {{- else}}
+        nextPhase, err := (&initializing.Worker{Kube:kube}).Sync(ctx, {{$.KindLowerCamel}})
+		if err != nil {
+			return result, err
+		}
+            {{- end}}
+        {{- end}}
+
+        {{- if has_outputs $phase }}
+            {{- range $out := $phase.Outputs }}
+		for _, out := range outputs.{{ output_name $out }} {
+			if err := kube.Ensure(ctx, out); err != nil {
+				return result, err
+			}
+		}
+            {{- end}}
+        {{- end}}
+
+        {{$.KindLowerCamel}}.Status.Phase = nextPhase
+		if err := kube.UpdateStatus(ctx, {{$.KindLowerCamel}}); err != nil {
+			return result, err
+		}
+		return result, nil
+
+        {{- end}}
+        return result, err
+    {{- end}}
+{{- end}}
+    }
+    return result, fmt.Errorf("cannot process {{.Kind}} in unknown phase: %v", {{$.KindLowerCamel}}.Status.Phase)
+}
+
+{{- range $phase := .Phases}}
+    {{- if has_inputs $phase }}
+func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}}, error) {
+	
+}
+    {{- end}}
+{{- end}}
