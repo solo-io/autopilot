@@ -3,7 +3,6 @@ package scheduler
 import (
     "context"
     "fmt"
-    "github.com/solo-io/autopilot/pkg/metrics"
     "time"
 
     "github.com/solo-io/autopilot/pkg/utils"
@@ -11,10 +10,10 @@ import (
 
     {{.Version}} "{{.TypesImportPath}}"
 
+    "github.com/solo-io/autopilot/pkg/metrics"
 
 {{- range $phase := .Phases}}
     {{- if or (has_inputs $phase) (has_outputs $phase) }}
-
     {{worker_import_prefix $phase}} "{{worker_package $phase}}"
     {{- end}}
 {{- end}}
