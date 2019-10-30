@@ -10,11 +10,15 @@ import (
 
 func (d TemplateData) Funcs() template.FuncMap {
 	return template.FuncMap{
-		"join":                 strings.Join,
-		"lower":                strings.ToLower,
-		"lower_camel":          strcase.ToLowerCamel,
-		"upper_camel":          strcase.ToCamel,
-		"snake":                strcase.ToSnake,
+		// string utils
+		"join":        strings.Join,
+		"lower":       strings.ToLower,
+		"lower_camel": strcase.ToLowerCamel,
+		"upper_camel": strcase.ToCamel,
+		"snake":       strcase.ToSnake,
+		"split":       splitTrimEmpty,
+
+		// project data
 		"param_name":           paramName,
 		"param_import_prefix":  paramImportPrefix,
 		"param_package":        paramPackage,
@@ -25,6 +29,10 @@ func (d TemplateData) Funcs() template.FuncMap {
 		"worker_import_prefix": workerImportPrefix,
 		"worker_package":       d.workerPackage,
 	}
+}
+
+func splitTrimEmpty(s, sep string) []string {
+	return strings.Split(strings.TrimSpace(s), sep)
 }
 
 func paramName(param Parameter) string {

@@ -1,0 +1,32 @@
+package {{.Version}}
+
+import (
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// {{.Kind}} is the Schema for the {{ .KindLowerCamel }} API
+// +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:path={{.KindLowerCamel}},scope=Namespaced
+type {{.Kind}} struct {
+    metav1.TypeMeta   `json:",inline"`
+    metav1.ObjectMeta `json:"metadata,omitempty"`
+
+    Spec   {{.Kind}}Spec   `json:"spec,omitempty"`
+    Status {{.Kind}}Status `json:"status,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// {{.Kind}}List contains a list of {{.Kind}}
+type {{.Kind}}List struct {
+    metav1.TypeMeta `json:",inline"`
+    metav1.ListMeta `json:"metadata,omitempty"`
+    Items           []{{ .Kind }} `json:"items"`
+}
+
+func init() {
+    SchemeBuilder.Register(&{{.Kind}}{}, &{{.Kind}}List{})
+}

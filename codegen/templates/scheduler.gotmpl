@@ -9,7 +9,7 @@ import (
     "github.com/solo-io/autopilot/pkg/utils"
     "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-    {{.TypesImportPrefix}} "{{.TypesImportPath}}"
+    {{.Version}} "{{.TypesImportPath}}"
 
 
 {{- range $phase := .Phases}}
@@ -43,7 +43,7 @@ func NewScheduler(ctx context.Context, kube utils.EzKube, m metrics.Metrics, nam
 func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result, error) {
     result := reconcile.Result{RequeueAfter: WorkInterval}
 
-    var {{$.KindLowerCamel}} {{.TypesImportPrefix}}.{{.Kind}}
+    var {{$.KindLowerCamel}} {{.Version}}.{{.Kind}}
     {{$.KindLowerCamel}}.Namespace = request.Namespace
     {{$.KindLowerCamel}}.Name = request.Name
 
@@ -53,9 +53,9 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
     switch {{$.KindLowerCamel}}.Status.Phase {
 {{- range $phase := .Phases}}
     {{- if $phase.Initial }}
-    case "", {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase.Name}}:
+    case "", {{$.Version}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- else }}
-    case {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase.Name}}:
+    case {{$.Version}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- end}}
     {{- if is_final $phase }}
         // end state, do not requeue

@@ -39,26 +39,35 @@ func Load(file string) (*TemplateData, error) {
 
 	c := pluralize.NewClient()
 
+	apiGroup := apiVersionParts[0]
 	apiVersion := apiVersionParts[1]
 	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
 
 	return &TemplateData{
-		Project:           project,
-		ProjectPackage:    projectGoPkg,
-		TypesImportPrefix: apiVersion,
-		TypesImportPath:   apiImportPath,
-		KindLowerCamel:    strcase.ToLowerCamel(project.Kind),
+		Project:         project,
+		ProjectPackage:  projectGoPkg,
+		Group:           apiGroup,
+		Version:         apiVersion,
+		TypesImportPath: apiImportPath,
+		KindLowerCamel:  strcase.ToLowerCamel(project.Kind),
 	}, nil
 }
 
 func Generate(data *TemplateData) (map[string]string, error) {
-	scheduler, err := renderProjectFile(data, "scheduler.gotmpl")
-	if err != nil {
-		return nil, err
-	}
-
-	files := map[string]string{
-		filepath.Join(data.ProjectPackage, "pkg", "scheduler", "scheduler.go"): scheduler,
+	files := make(map[string]string)
+	for path, templateFile := range map[string]string{
+		filepath.Join(data.ProjectPackage, "pkg", "scheduler", "scheduler.go"): "scheduler.gotmpl",
+		filepath.Join(data.TypesImportPath, "doc.go"):                          "doc.gotmpl",
+		filepath.Join(data.TypesImportPath, "phases.go"):                       "phases.gotmpl",
+		filepath.Join(data.TypesImportPath, "register.go"):                     "register.gotmpl",
+		filepath.Join(data.TypesImportPath, "spec.go"):                         "spec.gotmpl",
+		filepath.Join(data.TypesImportPath, "types.go"):                        "types.gotmpl",
+	} {
+		contents, err := renderProjectFile(data, templateFile)
+		if err != nil {
+			return nil, err
+		}
+		files[path] = contents
 	}
 
 	for _, phase := range data.Project.Phases {

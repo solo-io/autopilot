@@ -1,0 +1,13 @@
+package {{.Version}}
+
+type {{$.Kind}}Phase string
+
+const (
+{{- range $phase := .Phases}}
+    {{range $line := (split $phase.Description "\n") }}
+    // {{ $line }}
+    {{- end}}
+    {{$.Kind}}Phase{{$phase.Name}} {{$.Kind}}Phase = "{{$phase.Name}}"
+
+{{- end}}
+)
