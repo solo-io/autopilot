@@ -43,27 +43,46 @@ func Load(file string) (*TemplateData, error) {
 	apiVersion := apiVersionParts[1]
 	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
 
-	return &TemplateData{
+	data := &TemplateData{
 		Project:         project,
 		ProjectPackage:  projectGoPkg,
 		Group:           apiGroup,
 		Version:         apiVersion,
 		TypesImportPath: apiImportPath,
 		KindLowerCamel:  strcase.ToLowerCamel(project.Kind),
-	}, nil
+	}
+
+
+	// required for use by worker template
+	for i, phase := range project.Phases {
+		phase.Project = data
+		project.Phases[i] = phase
+	}
+
+	return data, nil
 }
 
-func Generate(data *TemplateData) (map[string]string, error) {
-	files := make(map[string]string)
-	for path, templateFile := range map[string]string{
+func projectFiles(data *TemplateData) map[string]string {
+	return map[string]string{
 		filepath.Join(data.ProjectPackage, "pkg", "scheduler", "scheduler.go"): "scheduler.gotmpl",
 		filepath.Join(data.TypesImportPath, "doc.go"):                          "doc.gotmpl",
 		filepath.Join(data.TypesImportPath, "phases.go"):                       "phases.gotmpl",
 		filepath.Join(data.TypesImportPath, "register.go"):                     "register.gotmpl",
 		filepath.Join(data.TypesImportPath, "spec.go"):                         "spec.gotmpl",
 		filepath.Join(data.TypesImportPath, "types.go"):                        "types.gotmpl",
-	} {
-		contents, err := renderProjectFile(data, templateFile)
+	}
+}
+func phaseFiles(data *TemplateData, phase Phase) map[string]string {
+	return map[string]string{
+		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go"): "parameters.gotmpl",
+		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "worker.go"): "worker.gotmpl",
+	}
+}
+
+func Generate(data *TemplateData) (map[string]string, error) {
+	files := make(map[string]string)
+	for path, projectFile := range projectFiles(data) {
+		contents, err := renderProjectFile(data, projectFile)
 		if err != nil {
 			return nil, err
 		}
@@ -72,11 +91,13 @@ func Generate(data *TemplateData) (map[string]string, error) {
 
 	for _, phase := range data.Project.Phases {
 		if hasInputs(phase) || hasOutputs(phase) {
-			params, err := renderWorkerFile(data, phase, "parameters.gotmpl")
-			if err != nil {
-				return nil, err
+			for path, phaseFile := range phaseFiles(data, phase) {
+				contents, err := renderWorkerFile(data, phase, phaseFile)
+				if err != nil {
+					return nil, err
+				}
+				files[path] = contents
 			}
-			files[filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go")] = params
 		}
 	}
 

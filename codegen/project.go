@@ -12,6 +12,9 @@ type Phase struct {
 	Inputs      []Parameter `json:"inputs"`
 	Outputs     []Parameter `json:"outputs"`
 	Initial     bool        `json:"initial"`
+
+	// set by load
+	Project *TemplateData
 }
 
 type Parameter string

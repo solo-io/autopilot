@@ -3,8 +3,9 @@ module github.com/solo-io/autopilot
 go 1.13
 
 require (
-	github.com/deislabs/smi-sdk-go v0.2.0 // indirect
+	github.com/deislabs/smi-sdk-go v0.2.0
 	github.com/gertd/go-pluralize v0.1.1
+	github.com/go-openapi/spec v0.19.0
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/operator-framework/operator-sdk v0.12.0
@@ -15,6 +16,7 @@ require (
 	k8s.io/apimachinery v0.0.0
 	k8s.io/code-generator v0.0.0
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
+	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d
 	sigs.k8s.io/controller-runtime v0.3.0
 	sigs.k8s.io/yaml v1.1.0
 )

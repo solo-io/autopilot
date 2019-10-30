@@ -3,6 +3,7 @@ package codegen
 import (
 	"github.com/solo-io/autopilot/codegen/util"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -33,6 +34,8 @@ func Run(dir string) error {
 			return err
 		}
 	}
+
+	log.Printf("Finished generating %v", project.ApiVersion+"."+project.Kind)
 
 	return nil
 }

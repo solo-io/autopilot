@@ -15,6 +15,8 @@ import (
 
     progressing "github.com/solo-io/autopilot/examples/promota/pkg/workers/progressing"
 
+    promoting "github.com/solo-io/autopilot/examples/promota/pkg/workers/promoting"
+
 )
 
 // Modify the WorkInterval to change the interval at which workers resync
@@ -39,11 +41,11 @@ func NewScheduler(ctx context.Context, kube utils.EzKube, m metrics.Metrics, nam
 func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result, error) {
     result := reconcile.Result{RequeueAfter: WorkInterval}
 
-    var canary v1.Canary
+    canary := &v1.Canary{}
     canary.Namespace = request.Namespace
     canary.Name = request.Name
 
-    if err := s.kube.Get(s.ctx, &canary); err != nil {
+    if err := s.kube.Get(s.ctx, canary); err != nil {
         return result, err
     }
     switch canary.Status.Phase {
@@ -83,7 +85,7 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 		if err != nil {
 			return result, err
 		}
-        outputs, nextPhase, err := (&initializing.Worker{Kube:s.kube}).Sync(s.ctx, canary, inputs)
+        outputs, nextPhase, err := (&progressing.Worker{Kube:s.kube}).Sync(s.ctx, canary, inputs)
 		if err != nil {
 			return result, err
 		}
@@ -100,7 +102,7 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 
         return result, err
     case v1.CanaryPhasePromoting:
-        outputs, nextPhase, err := (&initializing.Worker{Kube:s.kube}).Sync(s.ctx, canary)
+        outputs, nextPhase, err := (&promoting.Worker{Kube:s.kube}).Sync(s.ctx, canary)
 		if err != nil {
 			return result, err
 		}

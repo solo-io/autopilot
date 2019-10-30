@@ -1,0 +1,28 @@
+package {{worker_import_prefix $}}
+
+import (
+	"context"
+    "github.com/solo-io/autopilot/pkg/utils"
+
+    {{.Project.Version}} "{{.Project.TypesImportPath}}"
+)
+
+type Worker struct {
+    Kube utils.EzKube
+}
+
+{{- if has_inputs $ }}
+    {{- if has_outputs $ }}
+func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}, inputs Inputs) (Outputs, {{$.Project.Version}}.{{$.Project.Kind}}Phase, error) {
+    {{- else}}
+func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}, inputs Inputs) ({{$.Project.Version}}.{{$.Project.Kind}}Phase, error) {
+    {{- end}}
+{{- else}}
+    {{- if has_outputs $ }}
+func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}) (Outputs, {{$.Project.Version}}.{{$.Project.Kind}}Phase, error) {
+    {{- else}}
+func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}) ({{$.Project.Version}}.{{$.Project.Kind}}Phase, error) {
+    {{- end}}
+{{- end}}
+    panic("implement me!")
+}

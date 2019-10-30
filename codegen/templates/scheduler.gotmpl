@@ -13,7 +13,7 @@ import (
 
 
 {{- range $phase := .Phases}}
-    {{- if has_inputs $phase }}
+    {{- if or (has_inputs $phase) (has_outputs $phase) }}
 
     {{worker_import_prefix $phase}} "{{worker_package $phase}}"
     {{- end}}
@@ -43,11 +43,11 @@ func NewScheduler(ctx context.Context, kube utils.EzKube, m metrics.Metrics, nam
 func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result, error) {
     result := reconcile.Result{RequeueAfter: WorkInterval}
 
-    var {{$.KindLowerCamel}} {{.Version}}.{{.Kind}}
+    {{$.KindLowerCamel}} := &{{.Version}}.{{.Kind}}{}
     {{$.KindLowerCamel}}.Namespace = request.Namespace
     {{$.KindLowerCamel}}.Name = request.Name
 
-    if err := s.kube.Get(s.ctx, &{{$.KindLowerCamel}}); err != nil {
+    if err := s.kube.Get(s.ctx, {{$.KindLowerCamel}}); err != nil {
         return result, err
     }
     switch {{$.KindLowerCamel}}.Status.Phase {
@@ -69,12 +69,12 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 		}
 
             {{- if has_outputs $phase }}
-        outputs, nextPhase, err := (&initializing.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, err := (&initializing.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
@@ -83,12 +83,12 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 
         {{- else}}
             {{- if has_outputs $phase }}
-        outputs, nextPhase, err := (&initializing.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, err := (&initializing.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
