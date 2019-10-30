@@ -53,9 +53,9 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
     switch {{$.KindLowerCamel}}.Status.Phase {
 {{- range $phase := .Phases}}
     {{- if $phase.Initial }}
-    case "", {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase}}:
+    case "", {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- else }}
-    case {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase}}:
+    case {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- end}}
     {{- if is_final $phase }}
         // end state, do not requeue
@@ -97,7 +97,7 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 
         {{- if has_outputs $phase }}
             {{- range $out := $phase.Outputs }}
-		for _, out := range outputs.{{ output_name $out }} {
+		for _, out := range outputs.{{ param_name $out }} {
 			if err := s.kube.Ensure(s.ctx, out); err != nil {
 				return result, err
 			}
@@ -109,27 +109,25 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 		if err := s.kube.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
 			return result, err
 		}
-		return result, nil
 
-        {{- end}}
         return result, err
+        {{- end}}
     {{- end}}
-{{- end}}
     }
     return result, fmt.Errorf("cannot process {{.Kind}} in unknown phase: %v", {{$.KindLowerCamel}}.Status.Phase)
 }
 
 {{- range $phase := .Phases}}
     {{- if has_inputs $phase }}
-func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}}, error) {
-	var inputs {{worker_import_prefix $phase}}
+func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}}.Inputs, error) {
+	var inputs {{worker_import_prefix $phase}}.Inputs
 	var err error
 
         {{- range $in := $phase.Inputs }}
             {{- if is_metrics $in }}
     inpputs.Observer = s.Observer
             {{- else}}
-    inputs.{{input_name $in}}, err = s.kube.List{{input_name $in}}(s.ctx, s.namespace)
+    inputs.{{param_name $in}}, err = s.kube.List{{param_name $in}}(s.ctx, s.namespace)
     if err != nil {
         return inputs, err
     }
@@ -138,5 +136,5 @@ func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}
 
     return inputs, err
 }
-    {{- end}}
+{{- end}}
 {{- end}}

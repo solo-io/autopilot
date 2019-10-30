@@ -10,6 +10,7 @@ phases:
       - deployments
       - services
       - trafficsplits
+    initial: true
   - name: Progressing
     description: |
       The canary analysis & traffic shifting has started

@@ -15,7 +15,7 @@ func (d TemplateData) Funcs() template.FuncMap {
 		"lower_camel":          strcase.ToLowerCamel,
 		"upper_camel":          strcase.ToCamel,
 		"snake":                strcase.ToSnake,
-		"output_name":          outputName,
+		"param_name":           paramName,
 		"has_outputs":          hasOutputs,
 		"has_inputs":           hasInputs,
 		"is_final":             isFinal,
@@ -25,7 +25,7 @@ func (d TemplateData) Funcs() template.FuncMap {
 	}
 }
 
-func outputName(param Parameter) string {
+func paramName(param Parameter) string {
 	return parameterNames[param]
 }
 

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,7 +35,7 @@ func Load(file string) (*TemplateData, error) {
 	c := pluralize.NewClient()
 
 	apiVersion := apiVersionParts[1]
-	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)))
+	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
 
 	return &TemplateData{
 		Project:           project,
@@ -59,21 +58,21 @@ func Generate(data *TemplateData) (map[string]string, error) {
 }
 
 func render(data *TemplateData, templateFile string) (string, error) {
-	tmpl := mustLoad(templateFile)
+	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
+	content, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New(templateFile).Funcs(data.Funcs()).Parse(string(content))
+	if err != nil {
+		return "", err
+	}
 	buf := &bytes.Buffer{}
-	if err := tmpl.Execute(buf, data); err != nil {
+	if err := tmpl.Funcs(data.Funcs()).Execute(buf, data); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-func mustLoad(file string) *template.Template {
-	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", file)
-	content, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		log.Fatalf("failed to read template file %v", fullPath)
-	}
-	return template.Must(template.New(file).Parse(string(content)))
 }
 
 func autopilotRoot() string {

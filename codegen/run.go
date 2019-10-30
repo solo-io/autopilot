@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -19,6 +20,9 @@ func Run(dir string) error {
 	}
 
 	for name, content := range files {
+		if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
+			return err
+		}
 		if err := ioutil.WriteFile(name, []byte(content), 0644); err != nil {
 			return err
 		}
