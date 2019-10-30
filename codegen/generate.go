@@ -24,7 +24,12 @@ func Load(file string) (*TemplateData, error) {
 	if err := yaml.Unmarshal(projData, &project); err != nil {
 		return nil, err
 	}
-	projectGoPkg := util.GetGoPkg(filepath.Dir(file))
+
+	if err := os.Chdir(filepath.Dir(file)); err != nil {
+		return nil, err
+	}
+
+	projectGoPkg := util.GetGoPkg()
 
 	apiVersionParts := strings.Split(project.ApiVersion, "/")
 
@@ -47,17 +52,29 @@ func Load(file string) (*TemplateData, error) {
 }
 
 func Generate(data *TemplateData) (map[string]string, error) {
-	scheduler, err := render(data, "scheduler.gotmpl")
+	scheduler, err := renderProjectFile(data, "scheduler.gotmpl")
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]string{
+	files := map[string]string{
 		filepath.Join(data.ProjectPackage, "pkg", "scheduler", "scheduler.go"): scheduler,
-	}, nil
+	}
+
+	for _, phase := range data.Project.Phases {
+		if hasInputs(phase) || hasOutputs(phase) {
+			params, err := renderWorkerFile(data, phase, "parameters.gotmpl")
+			if err != nil {
+				return nil, err
+			}
+			files[filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go")] = params
+		}
+	}
+
+	return files, nil
 }
 
-func render(data *TemplateData, templateFile string) (string, error) {
+func renderProjectFile(data *TemplateData, templateFile string) (string, error) {
 	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
 	content, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -70,6 +87,24 @@ func render(data *TemplateData, templateFile string) (string, error) {
 	}
 	buf := &bytes.Buffer{}
 	if err := tmpl.Funcs(data.Funcs()).Execute(buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func renderWorkerFile(data *TemplateData, phase Phase, templateFile string) (string, error) {
+	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
+	content, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New(templateFile).Funcs(data.Funcs()).Parse(string(content))
+	if err != nil {
+		return "", err
+	}
+	buf := &bytes.Buffer{}
+	if err := tmpl.Funcs(data.Funcs()).Execute(buf, phase); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

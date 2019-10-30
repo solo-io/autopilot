@@ -27,15 +27,15 @@ var WorkInterval = time.Second * 5
 type Scheduler struct {
     ctx context.Context
     kube utils.EzKube
-    observer metrics.Interface
+    Metrics metrics.Metrics
     namespace string
 }
 
-func NewScheduler(ctx context.Context, kube utils.EzKube, observer metrics.Interface, namespace string ) *Scheduler {
+func NewScheduler(ctx context.Context, kube utils.EzKube, m metrics.Metrics, namespace string ) *Scheduler {
     return &Scheduler{
     	ctx:       ctx,
     	kube:      kube,
-    	observer:  observer,
+        Metrics:  m,
         namespace: namespace,
     }
 }
@@ -125,11 +125,11 @@ func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}
 	    err error
     )
 
-        {{- range $in := $phase.Inputs }}
-            {{- if is_metrics $in }}
-    inpputs.Observer = s.Observer
+        {{- range $param := $phase.Inputs }}
+            {{- if is_metrics $param }}
+    inputs.{{param_name $param}} = s.Metrics
             {{- else}}
-    inputs.{{param_name $in}}, err = s.kube.List{{param_name $in}}(s.ctx, s.namespace)
+    inputs.{{param_name $param}}, err = s.kube.List{{param_name $param}}(s.ctx, s.namespace)
     if err != nil {
         return inputs, err
     }

@@ -131,19 +131,17 @@ func getHomeDir() (string, error) {
 // from go.mod the project uses Go modules to manage dependencies.
 //
 // Example: "github.com/example-inc/app-operator"
-func GetGoPkg(root string) string {
-	localGoModFile := filepath.Join(root, goModFile)
-
+func GetGoPkg() string {
 	// Default to reading from go.mod, as it should usually have the (correct)
 	// package path, and no further processing need be done on it if so.
-	if _, err := os.Stat(localGoModFile); err != nil && !os.IsNotExist(err) {
+	if _, err := os.Stat(goModFile); err != nil && !os.IsNotExist(err) {
 		log.Fatalf("Failed to read go.mod: %v", err)
 	} else if err == nil {
-		b, err := ioutil.ReadFile(localGoModFile)
+		b, err := ioutil.ReadFile(goModFile)
 		if err != nil {
 			log.Fatalf("Read go.mod: %v", err)
 		}
-		mf, err := modfile.Parse(localGoModFile, b, nil)
+		mf, err := modfile.Parse(goModFile, b, nil)
 		if err != nil {
 			log.Fatalf("Parse go.mod: %v", err)
 		}
@@ -168,12 +166,13 @@ func GetGoPkg(root string) string {
 	if !strings.HasPrefix(MustGetwd(), goPath) {
 		log.Fatal("Could not determine project repository path: $GOPATH not set, wd in default $HOME/go/src, or wd does not contain a go.mod")
 	}
-	return parseGoPkg(goPath, root)
+	return parseGoPkg(goPath)
 }
 
-func parseGoPkg(gopath, root string) string {
+func parseGoPkg(gopath string) string {
 	goSrc := filepath.Join(gopath, SrcDir)
-	pathedPkg := strings.Replace(root, goSrc, "", 1)
+	wd := MustGetwd()
+	pathedPkg := strings.Replace(wd, goSrc, "", 1)
 	// Make sure package only contains the "/" separator and no others, and
 	// trim any leading/trailing "/".
 	return strings.Trim(filepath.ToSlash(pathedPkg), "/")

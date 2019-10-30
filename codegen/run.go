@@ -20,6 +20,7 @@ func Run(dir string) error {
 	}
 
 	for name, content := range files {
+		name = filepath.Join(os.Getenv("GOPATH"), "src", name)
 		if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
 			return err
 		}

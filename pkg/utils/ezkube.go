@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"github.com/solo-io/autopilot/pkg/aliases"
 	appsv1 "k8s.io/api/apps/v1"
 
 	trafficsplitv1alpha2 "github.com/deislabs/smi-sdk-go/pkg/apis/split/v1alpha2"
@@ -30,8 +31,8 @@ type EzKube interface {
 	GetService(ctx context.Context, name, namespace string) (*corev1.Service, error)
 	GetTrafficSplit(ctx context.Context, name, namespace string) (*trafficsplitv1alpha2.TrafficSplit, error)
 
-	ListDeployments(ctx context.Context, namespace string) (appsv1.DeploymentList, error)
-	ListServices(ctx context.Context, namespace string) (corev1.ServiceList, error)
+	ListDeployments(ctx context.Context, namespace string) (aliases.Deployments, error)
+	ListServices(ctx context.Context, namespace string) (aliases.Services, error)
 	ListTrafficSplits(ctx context.Context, namespace string) (trafficsplitv1alpha2.TrafficSplitList, error)
 }
 
@@ -105,17 +106,41 @@ func (m *ezKube) GetTrafficSplit(ctx context.Context, namespace, name string) (*
 	return obj, m.mgr.GetClient().Get(ctx, objectKey, obj)
 }
 
-func (m *ezKube) ListDeployments(ctx context.Context, namespace string) (appsv1.DeploymentList, error) {
+func (m *ezKube) ListDeployments(ctx context.Context, namespace string) (aliases.Deployments, error) {
 	var list appsv1.DeploymentList
-	return list, m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace})
+	if err := m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace}); err != nil {
+		return nil, err
+	}
+	var items aliases.Deployments
+	for _, item := range list.Items {
+		items = append(items, &item)
+	}
+	return items, nil
 }
-func (m *ezKube) ListServices(ctx context.Context, namespace string) (corev1.ServiceList, error) {
+
+func (m *ezKube) ListServices(ctx context.Context, namespace string) (aliases.Services, error) {
 	var list corev1.ServiceList
-	return list, m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace})
+	if err := m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace}); err != nil {
+		return nil, err
+	}
+
+	var items aliases.Services
+	for _, item := range list.Items {
+		items = append(items, &item)
+	}
+	return items, nil
 }
-func (m *ezKube) ListTrafficSplits(ctx context.Context, namespace string) (trafficsplitv1alpha2.TrafficSplitList, error) {
+func (m *ezKube) ListTrafficSplits(ctx context.Context, namespace string) (aliases.TrafficSplits, error) {
 	var list trafficsplitv1alpha2.TrafficSplitList
-	return list, m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace})
+	if err := m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace}); err != nil {
+		return nil, err
+	}
+
+	var items aliases.TrafficSplits
+	for _, item := range list.Items {
+		items = append(items, &item)
+	}
+	return items, nil
 }
 
 func objKey(obj metav1.Object) client.ObjectKey {

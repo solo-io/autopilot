@@ -16,6 +16,8 @@ func (d TemplateData) Funcs() template.FuncMap {
 		"upper_camel":          strcase.ToCamel,
 		"snake":                strcase.ToSnake,
 		"param_name":           paramName,
+		"param_import_prefix":  paramImportPrefix,
+		"param_package":        paramPackage,
 		"has_outputs":          hasOutputs,
 		"has_inputs":           hasInputs,
 		"is_final":             isFinal,
@@ -27,6 +29,14 @@ func (d TemplateData) Funcs() template.FuncMap {
 
 func paramName(param Parameter) string {
 	return parameterNames[param]
+}
+
+func paramImportPrefix(param Parameter) string {
+	return parameterImportPrefixes[param]
+}
+
+func paramPackage(param Parameter) string {
+	return parameterPackages[param]
 }
 
 func hasOutputs(phase Phase) bool {

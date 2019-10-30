@@ -29,3 +29,17 @@ var parameterNames = map[Parameter]string{
 	TrafficSplits: "TrafficSplits",
 	Metrics:       "Metrics",
 }
+
+var parameterImportPrefixes = map[Parameter]string{
+	Deployments:   "aliases",
+	Services:      "aliases",
+	TrafficSplits: "aliases",
+	Metrics:       "metrics",
+}
+
+var parameterPackages = map[Parameter]string{
+	Deployments:   "github.com/solo-io/autopilot/pkg/aliases",
+	Services:      "github.com/solo-io/autopilot/pkg/aliases",
+	TrafficSplits: "github.com/solo-io/autopilot/pkg/aliases",
+	Metrics:       "github.com/solo-io/autopilot/pkg/metrics",
+}

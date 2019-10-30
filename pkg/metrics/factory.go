@@ -22,7 +22,7 @@ func NewFactory(metricsServer string, meshProvider string, timeout time.Duration
 	}, nil
 }
 
-func (factory Factory) Observer(provider string) Interface {
+func (factory Factory) Observer(provider string) Metrics {
 	switch {
 	case provider == "none":
 		return &HttpObserver{

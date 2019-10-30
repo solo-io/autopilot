@@ -1,0 +1,27 @@
+package {{worker_import_prefix $}}
+
+{{- range $param := $.Inputs }}
+import {{param_import_prefix $param}} "{{param_package $param}}"
+{{- end}}
+
+{{- range $param := $.Outputs }}
+import {{param_import_prefix $param}} "{{param_package $param}}"
+{{- end}}
+
+{{- if has_inputs $}}
+
+type Inputs struct {
+    {{- range $param := $.Inputs }}
+    {{param_name $param}} {{param_import_prefix $param}}.{{param_name $param}}
+    {{- end}}
+}
+{{- end}}
+
+{{- if has_outputs $}}
+
+type Outputs struct {
+    {{- range $param := $.Outputs }}
+    {{param_name $param}} {{param_import_prefix $param}}.{{param_name $param}}
+    {{- end}}
+}
+{{- end}}
