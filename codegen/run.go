@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/solo-io/autopilot/codegen/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,6 +17,10 @@ func Run(dir string) error {
 
 	files, err := Generate(project)
 	if err != nil {
+		return err
+	}
+
+	if err := util.DeepcopyGen(project.TypesImportPath); err != nil {
 		return err
 	}
 
