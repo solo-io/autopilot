@@ -16,7 +16,7 @@ import (
 // Modify the WorkInterval to change the interval at which workers resync
 var WorkInterval = time.Second * 5
 
-func ScheduleWorker(ctx context.Context, kube utils.EzKube, observer metrics.Interface, request reconcile.Request) (reconcile.Result, error) {
+func ScheduleWorker(ctx context.Context, kube utils.EzKube, observer metrics.Metrics, request reconcile.Request) (reconcile.Result, error) {
 	result := reconcile.Result{RequeueAfter: WorkInterval}
 
 	var canary v1.Canary

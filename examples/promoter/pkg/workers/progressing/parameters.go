@@ -10,7 +10,7 @@ import (
 )
 
 type Inputs struct {
-	Metrics metrics.Interface
+	Metrics metrics.Metrics
 }
 
 type Outputs struct {
