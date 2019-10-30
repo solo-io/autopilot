@@ -120,8 +120,10 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
 {{- range $phase := .Phases}}
     {{- if has_inputs $phase }}
 func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}}.Inputs, error) {
-	var inputs {{worker_import_prefix $phase}}.Inputs
-	var err error
+	var (
+		inputs {{worker_import_prefix $phase}}.Inputs
+	    err error
+    )
 
         {{- range $in := $phase.Inputs }}
             {{- if is_metrics $in }}
