@@ -11,6 +11,7 @@ type Phase struct {
 	Description string      `json:"description"`
 	Inputs      []Parameter `json:"inputs"`
 	Outputs     []Parameter `json:"outputs"`
+	Initial     bool        `json:"initial"`
 }
 
 type Parameter string
@@ -21,3 +22,10 @@ const (
 	TrafficSplits Parameter = "trafficsplits"
 	Metrics       Parameter = "metrics"
 )
+
+var parameterNames = map[Parameter]string{
+	Deployments:   "Deployments",
+	Services:      "Services",
+	TrafficSplits: "TrafficSplits",
+	Metrics:       "Metrics",
+}

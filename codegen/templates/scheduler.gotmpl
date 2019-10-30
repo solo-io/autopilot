@@ -52,7 +52,7 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
     }
     switch {{$.KindLowerCamel}}.Status.Phase {
 {{- range $phase := .Phases}}
-    {{- if is_initial $phase }}
+    {{- if $phase.Initial }}
     case "", {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase}}:
     {{- else }}
     case {{$.TypesImportPrefix}}.{{$.Kind}}Phase{{$phase}}:
