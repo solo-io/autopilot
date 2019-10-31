@@ -6,18 +6,99 @@ import (
 	"time"
 
 	"github.com/solo-io/autopilot/pkg/utils"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	v1 "github.com/solo-io/autopilot/examples/promota/pkg/apis/canaries/v1"
 
-	"github.com/solo-io/autopilot/examples/promota/pkg/workers/initializing"
-	"github.com/solo-io/autopilot/examples/promota/pkg/workers/progressing"
-	"github.com/solo-io/autopilot/examples/promota/pkg/workers/promoting"
+	config "github.com/solo-io/autopilot/examples/promota/pkg/config"
+	aliases "github.com/solo-io/autopilot/pkg/aliases"
+
+	initializing "github.com/solo-io/autopilot/examples/promota/pkg/workers/initializing"
+	progressing "github.com/solo-io/autopilot/examples/promota/pkg/workers/progressing"
+	promoting "github.com/solo-io/autopilot/examples/promota/pkg/workers/promoting"
 	"github.com/solo-io/autopilot/pkg/metrics"
 )
 
-// Modify the WorkInterval to change the interval at which workers resync
-var WorkInterval = time.Second * 5
+func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) error {
+	scheduler, err := NewScheduler(ctx, mgr, namespace)
+	if err != nil {
+		return err
+	}
+	// Create a new controller
+	c, err := controller.New("canary-controller", mgr, controller.Options{Reconciler: scheduler})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to primary resource Canary
+	err = c.Watch(&source.Kind{Type: &v1.Canary{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Deployments and requeue the owner Canary
+	err = c.Watch(&source.Kind{Type: &aliases.Deployment{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.Canary{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Services and requeue the owner Canary
+	err = c.Watch(&source.Kind{Type: &aliases.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.Canary{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource TrafficSplits and requeue the owner Canary
+	err = c.Watch(&source.Kind{Type: &aliases.TrafficSplit{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.Canary{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource TrafficSplits and requeue the owner Canary
+	err = c.Watch(&source.Kind{Type: &aliases.TrafficSplit{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.Canary{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Deployments and requeue the owner Canary
+	err = c.Watch(&source.Kind{Type: &aliases.Deployment{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.Canary{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource TrafficSplits and requeue the owner Canary
+	err = c.Watch(&source.Kind{Type: &aliases.TrafficSplit{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1.Canary{},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+var WorkInterval = config.WorkInterval
 
 type Scheduler struct {
 	ctx       context.Context
@@ -26,16 +107,23 @@ type Scheduler struct {
 	namespace string
 }
 
-func NewScheduler(ctx context.Context, kube utils.EzKube, m metrics.Metrics, namespace string) *Scheduler {
+func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string) (*Scheduler, error) {
+	kube := utils.NewEzKube(&v1.Canary{}, mgr)
+
+	metricsFactory, err := metrics.NewFactory(config.MetricsServer, config.MeshProvider, time.Second*30)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Scheduler{
 		ctx:       ctx,
 		kube:      kube,
-		Metrics:   m,
+		Metrics:   metricsFactory.Observer(),
 		namespace: namespace,
-	}
+	}, nil
 }
 
-func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result, error) {
+func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	result := reconcile.Result{RequeueAfter: WorkInterval}
 
 	canary := &v1.Canary{}
