@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func Run(dir string, forceOverwrite bool) error {
@@ -42,6 +43,10 @@ func Run(dir string, forceOverwrite bool) error {
 		}
 		if err := ioutil.WriteFile(name, []byte(content), 0644); err != nil {
 			return err
+		}
+
+		if !strings.HasSuffix(name, ".go") {
+			continue
 		}
 
 		formatted, err := imports.Process(name, []byte(content), nil)
