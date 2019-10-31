@@ -77,11 +77,11 @@ func projectFiles(data *TemplateData) []GenFile {
 	return []GenFile{
 		{OutPath: filepath.Join(data.ProjectPackage, "main.go"), TemplatePath: "main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "scheduler.gotmpl"},
-		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "config.gotmpl"},
+		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "config.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "doc.gotmpl"},
 		{OutPath: filepath.Join(data.TypesImportPath, "phases.go"), TemplatePath: "phases.gotmpl"},
 		{OutPath: filepath.Join(data.TypesImportPath, "register.go"), TemplatePath: "register.gotmpl"},
-		{OutPath: filepath.Join(data.TypesImportPath, "spec.go"), TemplatePath: "spec.gotmpl"},
+		{OutPath: filepath.Join(data.TypesImportPath, "spec.go"), TemplatePath: "spec.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join(data.TypesImportPath, "types.go"), TemplatePath: "types.gotmpl"},
 	}
 }
