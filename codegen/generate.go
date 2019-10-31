@@ -66,43 +66,52 @@ func Load(file string) (*TemplateData, error) {
 	return data, nil
 }
 
-func projectFiles(data *TemplateData) map[string]string {
-	return map[string]string{
-		filepath.Join(data.ProjectPackage, "main.go"):           "main.gotmpl",
-		filepath.Join(data.SchedulerImportPath, "scheduler.go"): "scheduler.gotmpl",
-		filepath.Join(data.ConfigImportPath, "config.go"):       "config.gotmpl",
-		filepath.Join(data.TypesImportPath, "doc.go"):           "doc.gotmpl",
-		filepath.Join(data.TypesImportPath, "phases.go"):        "phases.gotmpl",
-		filepath.Join(data.TypesImportPath, "register.go"):      "register.gotmpl",
-		filepath.Join(data.TypesImportPath, "spec.go"):          "spec.gotmpl",
-		filepath.Join(data.TypesImportPath, "types.go"):         "types.gotmpl",
+type GenFile struct {
+	OutPath       string
+	TemplatePath  string
+	SkipOverwrite bool
+	Content       string
+}
+
+func projectFiles(data *TemplateData) []GenFile {
+	return []GenFile{
+		{OutPath: filepath.Join(data.ProjectPackage, "main.go"), TemplatePath: "main.gotmpl"},
+		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "scheduler.gotmpl"},
+		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "config.gotmpl"},
+		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "doc.gotmpl"},
+		{OutPath: filepath.Join(data.TypesImportPath, "phases.go"), TemplatePath: "phases.gotmpl"},
+		{OutPath: filepath.Join(data.TypesImportPath, "register.go"), TemplatePath: "register.gotmpl"},
+		{OutPath: filepath.Join(data.TypesImportPath, "spec.go"), TemplatePath: "spec.gotmpl"},
+		{OutPath: filepath.Join(data.TypesImportPath, "types.go"), TemplatePath: "types.gotmpl"},
 	}
 }
-func phaseFiles(data *TemplateData, phase Phase) map[string]string {
-	return map[string]string{
-		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go"): "parameters.gotmpl",
-		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "worker.go"):     "worker.gotmpl",
+func phaseFiles(data *TemplateData, phase Phase) []GenFile {
+	return []GenFile{
+		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go"), TemplatePath: "parameters.gotmpl"},
+		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "worker.go"), TemplatePath: "worker.gotmpl", SkipOverwrite: true},
 	}
 }
 
-func Generate(data *TemplateData) (map[string]string, error) {
-	files := make(map[string]string)
-	for path, projectFile := range projectFiles(data) {
-		contents, err := renderProjectFile(data, projectFile)
+func Generate(data *TemplateData) ([]GenFile, error) {
+	var files []GenFile
+	for _, projectFile := range projectFiles(data) {
+		contents, err := renderProjectFile(data, projectFile.TemplatePath)
 		if err != nil {
 			return nil, err
 		}
-		files[path] = contents
+		projectFile.Content = contents
+		files = append(files, projectFile)
 	}
 
 	for _, phase := range data.Project.Phases {
 		if hasInputs(phase) || hasOutputs(phase) {
-			for path, phaseFile := range phaseFiles(data, phase) {
-				contents, err := renderWorkerFile(data, phase, phaseFile)
+			for _, phaseFile := range phaseFiles(data, phase) {
+				contents, err := renderWorkerFile(data, phase, phaseFile.TemplatePath)
 				if err != nil {
 					return nil, err
 				}
-				files[path] = contents
+				phaseFile.Content = contents
+				files = append(files, phaseFile)
 			}
 		}
 	}

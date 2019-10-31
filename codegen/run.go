@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func Run(dir string) error {
+func Run(dir string, forceOverwrite bool) error {
 	config := filepath.Join(dir, "autopilot.yaml")
 
 	project, err := Load(config)
@@ -26,8 +26,17 @@ func Run(dir string) error {
 		return err
 	}
 
-	for name, content := range files {
-		name = filepath.Join(os.Getenv("GOPATH"), "src", name)
+	for _, file := range files {
+		name := filepath.Join(os.Getenv("GOPATH"), "src", file.OutPath)
+		content := file.Content
+
+		if !forceOverwrite && file.SkipOverwrite {
+			if _, err := os.Stat(name); err == nil {
+				log.Printf("skippinng file %v because it exists", name)
+				continue
+			}
+		}
+
 		if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
 			return err
 		}
