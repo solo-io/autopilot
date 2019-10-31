@@ -1,4 +1,4 @@
-package codegen
+package model
 
 import (
 	"path/filepath"
@@ -20,14 +20,14 @@ func (d TemplateData) Funcs() template.FuncMap {
 
 		// project data
 		"param_name_plural":    paramNamePlural,
-		"param_name_singular":    paramNameSingular,
+		"param_name_singular":  paramNameSingular,
 		"param_import_prefix":  paramImportPrefix,
 		"param_package":        paramPackage,
-		"has_outputs":          hasOutputs,
-		"has_inputs":           hasInputs,
+		"has_outputs":          HasOutputs,
+		"has_inputs":           HasInputs,
 		"is_final":             isFinal,
 		"is_metrics":           isMetrics,
-		"worker_import_prefix": workerImportPrefix,
+		"worker_import_prefix": WorkerImportPrefix,
 		"worker_package":       d.workerPackage,
 	}
 }
@@ -52,26 +52,30 @@ func paramPackage(param Parameter) string {
 	return parameters[param].Package
 }
 
-func hasOutputs(phase Phase) bool {
+func ParamApiVersion(param Parameter) string {
+	return parameters[param].ApiVersion
+}
+
+func HasOutputs(phase Phase) bool {
 	return len(phase.Outputs) > 0
 }
 
-func hasInputs(phase Phase) bool {
+func HasInputs(phase Phase) bool {
 	return len(phase.Inputs) > 0
 }
 
 func isFinal(phase Phase) bool {
-	return !hasOutputs(phase) && !hasInputs(phase)
+	return !HasOutputs(phase) && !HasInputs(phase)
 }
 
 func isMetrics(param Parameter) bool {
 	return param == Metrics
 }
 
-func workerImportPrefix(phase Phase) string {
+func WorkerImportPrefix(phase Phase) string {
 	return strings.ToLower(phase.Name)
 }
 
 func (d TemplateData) workerPackage(phase Phase) string {
-	return filepath.Join(d.ProjectPackage, "pkg", "workers", strings.ToLower(phase.Name))
+	return filepath.Join(phase.Project.ProjectPackage, "pkg", "workers", strings.ToLower(phase.Name))
 }

@@ -3,6 +3,9 @@ package codegen
 import (
 	"bytes"
 	"fmt"
+	"github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/autopilot/codegen/templates"
+	"github.com/solo-io/autopilot/codegen/templates/deploy"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,12 +18,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func Load(file string) (*TemplateData, error) {
+func Load(file string) (*model.TemplateData, error) {
 	projData, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	var project Project
+	var project model.Project
 	if err := yaml.Unmarshal(projData, &project); err != nil {
 		return nil, err
 	}
@@ -46,7 +49,7 @@ func Load(file string) (*TemplateData, error) {
 	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
 	configImportPath := filepath.Join(projectGoPkg, "pkg", "config")
 
-	data := &TemplateData{
+	data := &model.TemplateData{
 		Project:             project,
 		ProjectPackage:      projectGoPkg,
 		Group:               apiGroup,
@@ -55,6 +58,8 @@ func Load(file string) (*TemplateData, error) {
 		SchedulerImportPath: schedulerImportPath,
 		ConfigImportPath:    configImportPath,
 		KindLowerCamel:      strcase.ToLowerCamel(project.Kind),
+		KindLower:           strings.ToLower(project.Kind),
+		KindLowerPlural:     pluralize.NewClient().Plural(strings.ToLower(project.Kind)),
 	}
 
 	// required for use by worker template
@@ -68,12 +73,70 @@ func Load(file string) (*TemplateData, error) {
 
 type GenFile struct {
 	OutPath       string
-	TemplatePath  string
 	SkipOverwrite bool
-	Content       string
+
+	// set by generate
+	Content string
+
+	// either TemplatePath or TemplateFunc is set
+	TemplatePath string
+	TemplateFunc templates.TemplateFunc
 }
 
-func projectFiles(data *TemplateData) []GenFile {
+func (gf GenFile) GenProjectFile(data *model.TemplateData) (string, error) {
+	if gf.TemplatePath != "" {
+		return renderProjectFile(data, gf.TemplatePath)
+	}
+	return gf.genTemplateFunc(data)
+}
+
+func (gf GenFile) GenPhaseFile(data *model.TemplateData, phase model.Phase) (string, error) {
+	if gf.TemplatePath != "" {
+		return renderPhaseFile(data, phase, gf.TemplatePath)
+	}
+	return gf.genTemplateFunc(data)
+}
+
+func (gf GenFile) genTemplateFunc(data *model.TemplateData) (string, error) {
+	obj := gf.TemplateFunc(data)
+
+	yam, err := yaml.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	var v map[string]interface{}
+
+	if err := yaml.Unmarshal(yam, &v); err != nil {
+		return "", err
+	}
+
+	delete(v, "status")
+	// why do we have to do this? Go problem???
+	meta := v["metadata"].(map[string]interface{})
+
+	delete(meta, "creationTimestamp")
+	v["metadata"] = meta
+
+	if spec, ok := v["spec"].(map[string]interface{}); ok {
+		if template, ok := spec["template"].(map[string]interface{}); ok {
+			if meta, ok := template["metadata"].(map[string]interface{}); ok {
+				delete(meta, "creationTimestamp")
+				template["metadata"] = meta
+				spec["template"] = template
+				v["spec"] = spec
+			}
+		}
+	}
+
+	yam, err = yaml.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	return string(yam), nil
+}
+
+func projectFiles(data *model.TemplateData) []GenFile {
 	return []GenFile{
 		{OutPath: filepath.Join(data.ProjectPackage, "main.go"), TemplatePath: "code/main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
@@ -84,34 +147,43 @@ func projectFiles(data *TemplateData) []GenFile {
 		{OutPath: filepath.Join(data.TypesImportPath, "spec.go"), TemplatePath: "code/spec.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join(data.TypesImportPath, "types.go"), TemplatePath: "code/types.gotmpl"},
 
+		// build
 		{OutPath: filepath.Join(data.ProjectPackage, "build", "Dockerfile"), TemplatePath: "build/Dockerfile.tmpl"},
 		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "user_setup"), TemplatePath: "build/user_setup.tmpl"},
 		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "entrypoint"), TemplatePath: "build/entrypoint.tmpl"},
+
+		// deploy
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment.yaml"), TemplateFunc: deploy.Deployment},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "role.yaml"), TemplateFunc: deploy.Role},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "service_account.yaml"), TemplateFunc: deploy.ServiceAccount},
 	}
 }
 
-func phaseFiles(data *TemplateData, phase Phase) []GenFile {
+func phaseFiles(data *model.TemplateData, phase model.Phase) []GenFile {
 	return []GenFile{
-		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
-		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "worker.go"), TemplatePath: "code/worker.gotmpl", SkipOverwrite: true},
+		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
+		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "worker.go"), TemplatePath: "code/worker.gotmpl", SkipOverwrite: true},
 	}
 }
 
-func Generate(data *TemplateData) ([]GenFile, error) {
+func Generate(data *model.TemplateData) ([]GenFile, error) {
 	var files []GenFile
 	for _, projectFile := range projectFiles(data) {
-		contents, err := renderProjectFile(data, projectFile.TemplatePath)
+		contents, err := projectFile.GenProjectFile(data)
 		if err != nil {
 			return nil, err
 		}
+
 		projectFile.Content = contents
 		files = append(files, projectFile)
 	}
 
 	for _, phase := range data.Project.Phases {
-		if hasInputs(phase) || hasOutputs(phase) {
+		if model.HasInputs(phase) || model.HasOutputs(phase) {
 			for _, phaseFile := range phaseFiles(data, phase) {
-				contents, err := renderWorkerFile(data, phase, phaseFile.TemplatePath)
+				contents, err := phaseFile.GenPhaseFile(data, phase)
 				if err != nil {
 					return nil, err
 				}
@@ -124,7 +196,7 @@ func Generate(data *TemplateData) ([]GenFile, error) {
 	return files, nil
 }
 
-func renderProjectFile(data *TemplateData, templateFile string) (string, error) {
+func renderProjectFile(data *model.TemplateData, templateFile string) (string, error) {
 	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
 	content, err := ioutil.ReadFile(fullPath)
 	if err != nil {
@@ -142,7 +214,7 @@ func renderProjectFile(data *TemplateData, templateFile string) (string, error) 
 	return buf.String(), nil
 }
 
-func renderWorkerFile(data *TemplateData, phase Phase, templateFile string) (string, error) {
+func renderPhaseFile(data *model.TemplateData, phase model.Phase, templateFile string) (string, error) {
 	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
 	content, err := ioutil.ReadFile(fullPath)
 	if err != nil {

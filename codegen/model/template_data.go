@@ -1,4 +1,4 @@
-package codegen
+package model
 
 type TemplateData struct {
 	Project
@@ -11,5 +11,7 @@ type TemplateData struct {
 	TypesImportPath     string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
 	SchedulerImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
 	ConfigImportPath    string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/config"
-	KindLowerCamel      string // e.g. "canary"
+	KindLowerCamel      string // e.g. "canaryResource"
+	KindLower           string // e.g. "canaryresource"
+	KindLowerPlural     string // e.g. "canaryresources"
 }

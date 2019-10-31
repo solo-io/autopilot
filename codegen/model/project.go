@@ -1,9 +1,10 @@
-package codegen
+package model
 
 type Project struct {
-	ApiVersion string  `json:"apiVersion"`
-	Kind       string  `json:"kind"`
-	Phases     []Phase `json:"phases"`
+	OperatorName string  `json:"operatorName"`
+	ApiVersion   string  `json:"apiVersion"`
+	Kind         string  `json:"kind"`
+	Phases       []Phase `json:"phases"`
 }
 
 type Phase struct {
@@ -19,6 +20,10 @@ type Phase struct {
 
 type Parameter string
 
+func (p Parameter) String() string {
+	return string(p)
+}
+
 const (
 	Deployments   Parameter = "deployments"
 	Services      Parameter = "services"
@@ -27,10 +32,11 @@ const (
 )
 
 type ParameterInfo struct {
-	SingleName string
-	PluralName string
+	SingleName   string
+	PluralName   string
 	ImportPrefix string
-	Package string
+	Package      string
+	ApiVersion   string // kube apiversion
 }
 
 var parameters = map[Parameter]ParameterInfo{
@@ -39,22 +45,25 @@ var parameters = map[Parameter]ParameterInfo{
 		SingleName:   "Deployment",
 		ImportPrefix: "aliases",
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+		ApiVersion:   "apps/v1",
 	},
 	Services: ParameterInfo{
 		PluralName:   "Services",
 		SingleName:   "Service",
 		ImportPrefix: "aliases",
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+		ApiVersion:   "v1",
 	},
 	TrafficSplits: ParameterInfo{
 		PluralName:   "TrafficSplits",
 		SingleName:   "TrafficSplit",
 		ImportPrefix: "aliases",
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+		ApiVersion:   "split.smi-spec.io/v1alpha1",
 	},
 	Metrics: ParameterInfo{
-		PluralName: "Metrics",
-		SingleName: "Metric",
+		PluralName:   "Metrics",
+		SingleName:   "Metric",
 		ImportPrefix: "metrics",
 		Package:      "github.com/solo-io/autopilot/pkg/metrics",
 	},
