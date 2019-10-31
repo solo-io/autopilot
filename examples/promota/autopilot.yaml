@@ -1,3 +1,4 @@
+operatorName: promoter
 apiVersion: mesh.demos.io/v1
 kind: Canary
 phases:
