@@ -33,13 +33,15 @@ type EzKube interface {
 
 	ListDeployments(ctx context.Context, namespace string) (aliases.Deployments, error)
 	ListServices(ctx context.Context, namespace string) (aliases.Services, error)
-	ListTrafficSplits(ctx context.Context, namespace string) (trafficsplitv1alpha2.TrafficSplitList, error)
+	ListTrafficSplits(ctx context.Context, namespace string) (aliases.TrafficSplits, error)
 }
 
 type ezKube struct {
 	controlObj KubeObj
 	mgr        manager.Manager
 }
+
+var _ EzKube = &ezKube{}
 
 func NewEzKube(controlObj KubeObj, mgr manager.Manager) *ezKube {
 	return &ezKube{controlObj: controlObj, mgr: mgr}
@@ -130,6 +132,7 @@ func (m *ezKube) ListServices(ctx context.Context, namespace string) (aliases.Se
 	}
 	return items, nil
 }
+
 func (m *ezKube) ListTrafficSplits(ctx context.Context, namespace string) (aliases.TrafficSplits, error) {
 	var list trafficsplitv1alpha2.TrafficSplitList
 	if err := m.mgr.GetClient().List(ctx, &list, &client.ListOptions{Namespace: namespace}); err != nil {

@@ -5,7 +5,11 @@ import corev1 "k8s.io/api/core/v1"
 import trafficsplitv1alpha2 "github.com/deislabs/smi-sdk-go/pkg/apis/split/v1alpha2"
 
 type (
-	Deployments = []*appsv1.Deployment
-	Services = []*corev1.Service
-	TrafficSplits = []*trafficsplitv1alpha2.TrafficSplit
+	Deployment = appsv1.Deployment
+	Service = corev1.Service
+	TrafficSplit = trafficsplitv1alpha2.TrafficSplit
+
+	Deployments = []*Deployment
+	Services = []*Service
+	TrafficSplits = []*TrafficSplit
 )

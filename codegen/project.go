@@ -26,23 +26,36 @@ const (
 	Metrics       Parameter = "metrics"
 )
 
-var parameterNames = map[Parameter]string{
-	Deployments:   "Deployments",
-	Services:      "Services",
-	TrafficSplits: "TrafficSplits",
-	Metrics:       "Metrics",
+type ParameterInfo struct {
+	SingleName string
+	PluralName string
+	ImportPrefix string
+	Package string
 }
 
-var parameterImportPrefixes = map[Parameter]string{
-	Deployments:   "aliases",
-	Services:      "aliases",
-	TrafficSplits: "aliases",
-	Metrics:       "metrics",
-}
-
-var parameterPackages = map[Parameter]string{
-	Deployments:   "github.com/solo-io/autopilot/pkg/aliases",
-	Services:      "github.com/solo-io/autopilot/pkg/aliases",
-	TrafficSplits: "github.com/solo-io/autopilot/pkg/aliases",
-	Metrics:       "github.com/solo-io/autopilot/pkg/metrics",
+var parameters = map[Parameter]ParameterInfo{
+	Deployments: ParameterInfo{
+		PluralName:   "Deployments",
+		SingleName:   "Deployment",
+		ImportPrefix: "aliases",
+		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+	},
+	Services: ParameterInfo{
+		PluralName:   "Services",
+		SingleName:   "Service",
+		ImportPrefix: "aliases",
+		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+	},
+	TrafficSplits: ParameterInfo{
+		PluralName:   "TrafficSplits",
+		SingleName:   "TrafficSplit",
+		ImportPrefix: "aliases",
+		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+	},
+	Metrics: ParameterInfo{
+		PluralName: "Metrics",
+		SingleName: "Metric",
+		ImportPrefix: "metrics",
+		Package:      "github.com/solo-io/autopilot/pkg/metrics",
+	},
 }

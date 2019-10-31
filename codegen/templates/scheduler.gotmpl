@@ -6,9 +6,19 @@ import (
     "time"
 
     "github.com/solo-io/autopilot/pkg/utils"
+    "sigs.k8s.io/controller-runtime/pkg/handler"
+    "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
     {{.Version}} "{{.TypesImportPath}}"
+
+    config "{{.ConfigImportPath}}"
+
+{{- range $phase := .Phases }}
+    {{- range $param := $phase.Outputs }}
+    {{param_import_prefix $param}} "{{param_package $param}}"
+    {{- end}}
+{{- end}}
 
     "github.com/solo-io/autopilot/pkg/metrics"
 
@@ -20,8 +30,42 @@ import (
 
 )
 
-// Modify the WorkInterval to change the interval at which workers resync
-var WorkInterval = time.Second * 5
+func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) error {
+    scheduler, err := NewScheduler(ctx, mgr, namespace)
+    if err != nil {
+    	return err
+    }
+    // Create a new controller
+    c, err := controller.New("{{.KindLowerCamel}}-controller", mgr, controller.Options{Reconciler: scheduler})
+    if err != nil {
+        return err
+    }
+
+    // Watch for changes to primary resource {{.Kind}}
+    err = c.Watch(&source.Kind{Type: &{{$.Version}}.{{$.Kind}}{}}, &handler.EnqueueRequestForObject{})
+    if err != nil {
+        return err
+    }
+
+{{- range $phase := .Phases }}
+    {{- range $param := $phase.Outputs }}
+
+    // Watch for changes to secondary resource {{param_name_plural $param }} and requeue the owner {{$.Kind}}
+    err = c.Watch(&source.Kind{Type: &{{param_import_prefix $param }}.{{param_name_singular $param }}{}}, &handler.EnqueueRequestForOwner{
+        IsController: true,
+        OwnerType:    &{{$.Version}}.{{$.Kind}}{},
+    })
+    if err != nil {
+        return err
+    }
+    {{- end}}
+{{- end}}
+
+    return nil
+
+}
+
+var WorkInterval = config.WorkInterval
 
 type Scheduler struct {
     ctx context.Context
@@ -30,19 +74,26 @@ type Scheduler struct {
     namespace string
 }
 
-func NewScheduler(ctx context.Context, kube utils.EzKube, m metrics.Metrics, namespace string ) *Scheduler {
+func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string ) (*Scheduler, error) {
+	kube := utils.NewEzKube(&{{$.Version}}.{{$.Kind}}{}, mgr)
+
+    metricsFactory, err := metrics.NewFactory(config.MetricsServer, config.MeshProvider, time.Second * 30)
+    if err != nil {
+    	return nil, err
+    }
+
     return &Scheduler{
     	ctx:       ctx,
     	kube:      kube,
-        Metrics:  m,
+        Metrics:   metricsFactory.Observer(),
         namespace: namespace,
-    }
+    }, nil
 }
 
-func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result, error) {
+func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
     result := reconcile.Result{RequeueAfter: WorkInterval}
 
-    {{$.KindLowerCamel}} := &{{.Version}}.{{.Kind}}{}
+    {{$.KindLowerCamel}} := &{{$.Version}}.{{$.Kind}}{}
     {{$.KindLowerCamel}}.Namespace = request.Namespace
     {{$.KindLowerCamel}}.Name = request.Name
 
@@ -94,14 +145,12 @@ func (s *Scheduler) ScheduleWorker(request reconcile.Request) (reconcile.Result,
             {{- end}}
         {{- end}}
 
-        {{- if has_outputs $phase }}
-            {{- range $out := $phase.Outputs }}
-		for _, out := range outputs.{{ param_name $out }} {
+        {{- range $out := $phase.Outputs }}
+		for _, out := range outputs.{{ param_name_plural $out }} {
 			if err := s.kube.Ensure(s.ctx, out); err != nil {
 				return result, err
 			}
 		}
-            {{- end}}
         {{- end}}
 
         {{$.KindLowerCamel}}.Status.Phase = nextPhase
@@ -126,9 +175,9 @@ func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}
 
         {{- range $param := $phase.Inputs }}
             {{- if is_metrics $param }}
-    inputs.{{param_name $param}} = s.Metrics
+    inputs.{{param_name_plural $param}} = s.Metrics
             {{- else}}
-    inputs.{{param_name $param}}, err = s.kube.List{{param_name $param}}(s.ctx, s.namespace)
+    inputs.{{param_name_plural $param}}, err = s.kube.List{{param_name_plural $param}}(s.ctx, s.namespace)
     if err != nil {
         return inputs, err
     }

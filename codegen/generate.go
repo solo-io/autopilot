@@ -41,17 +41,21 @@ func Load(file string) (*TemplateData, error) {
 
 	apiGroup := apiVersionParts[0]
 	apiVersion := apiVersionParts[1]
+
 	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
+	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
+	configImportPath := filepath.Join(projectGoPkg, "pkg", "config")
 
 	data := &TemplateData{
-		Project:         project,
-		ProjectPackage:  projectGoPkg,
-		Group:           apiGroup,
-		Version:         apiVersion,
-		TypesImportPath: apiImportPath,
-		KindLowerCamel:  strcase.ToLowerCamel(project.Kind),
+		Project:             project,
+		ProjectPackage:      projectGoPkg,
+		Group:               apiGroup,
+		Version:             apiVersion,
+		TypesImportPath:     apiImportPath,
+		SchedulerImportPath: schedulerImportPath,
+		ConfigImportPath:    configImportPath,
+		KindLowerCamel:      strcase.ToLowerCamel(project.Kind),
 	}
-
 
 	// required for use by worker template
 	for i, phase := range project.Phases {
@@ -64,18 +68,20 @@ func Load(file string) (*TemplateData, error) {
 
 func projectFiles(data *TemplateData) map[string]string {
 	return map[string]string{
-		filepath.Join(data.ProjectPackage, "pkg", "scheduler", "scheduler.go"): "scheduler.gotmpl",
-		filepath.Join(data.TypesImportPath, "doc.go"):                          "doc.gotmpl",
-		filepath.Join(data.TypesImportPath, "phases.go"):                       "phases.gotmpl",
-		filepath.Join(data.TypesImportPath, "register.go"):                     "register.gotmpl",
-		filepath.Join(data.TypesImportPath, "spec.go"):                         "spec.gotmpl",
-		filepath.Join(data.TypesImportPath, "types.go"):                        "types.gotmpl",
+		filepath.Join(data.ProjectPackage, "main.go"):           "main.gotmpl",
+		filepath.Join(data.SchedulerImportPath, "scheduler.go"): "scheduler.gotmpl",
+		filepath.Join(data.ConfigImportPath, "config.go"):       "config.gotmpl",
+		filepath.Join(data.TypesImportPath, "doc.go"):           "doc.gotmpl",
+		filepath.Join(data.TypesImportPath, "phases.go"):        "phases.gotmpl",
+		filepath.Join(data.TypesImportPath, "register.go"):      "register.gotmpl",
+		filepath.Join(data.TypesImportPath, "spec.go"):          "spec.gotmpl",
+		filepath.Join(data.TypesImportPath, "types.go"):         "types.gotmpl",
 	}
 }
 func phaseFiles(data *TemplateData, phase Phase) map[string]string {
 	return map[string]string{
 		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "parameters.go"): "parameters.gotmpl",
-		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "worker.go"): "worker.gotmpl",
+		filepath.Join(data.ProjectPackage, "pkg", "workers", workerImportPrefix(phase), "worker.go"):     "worker.gotmpl",
 	}
 }
 

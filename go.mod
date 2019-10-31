@@ -3,6 +3,7 @@ module github.com/solo-io/autopilot
 go 1.13
 
 require (
+	github.com/Azure/go-autorest/autorest v0.9.2 // indirect
 	github.com/deislabs/smi-sdk-go v0.2.0
 	github.com/gertd/go-pluralize v0.1.1
 	github.com/go-openapi/spec v0.19.0
@@ -12,6 +13,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/rogpeppe/go-internal v1.5.0
 	github.com/sirupsen/logrus v1.4.2
+	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/code-generator v0.0.0
