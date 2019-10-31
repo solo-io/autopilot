@@ -134,7 +134,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		return result, err
 	}
 	switch canary.Status.Phase {
-	case v1.CanaryPhaseInitializing:
+	case "", v1.CanaryPhaseInitializing:
 		inputs, err := s.makeInitializingInputs()
 		if err != nil {
 			return result, err
