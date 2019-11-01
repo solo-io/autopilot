@@ -1,11 +1,10 @@
 package deploy
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/solo-io/autopilot/cli/pkg/utils"
 	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/util"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -17,7 +16,8 @@ import (
 )
 
 var (
-	namespace string
+	namespace  string
+	deletePods bool
 )
 
 func NewCmd() *cobra.Command {
@@ -29,6 +29,7 @@ func NewCmd() *cobra.Command {
 		RunE: deployFunc,
 	}
 	deployCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to which to deploy the operator")
+	deployCmd.PersistentFlags().BoolVarP(&deletePods, "deletepods", "d", false, "Delete existing pods after pushing images (to force Kubernetes to pull the newly pushed image)")
 	return deployCmd
 }
 
@@ -41,7 +42,7 @@ func deploymentWithImage(deploymentBase, image string) ([]byte, error) {
 	return []byte(withImage), nil
 }
 
-func deploy(image, namespace string) error {
+func deploy(operatorName, image, namespace string, deletePods bool) error {
 
 	log.Printf("Pushing image %v", image)
 	push := exec.Command("docker", "push", image)
@@ -58,7 +59,7 @@ func deploy(image, namespace string) error {
 		"service_account.yaml",
 	}
 
-	Kubectl(nil, "create", "ns", namespace)
+	utils.Kubectl(nil, "create", "ns", namespace)
 
 	for _, man := range manifests {
 		log.Printf("Deploying %v", man)
@@ -66,7 +67,7 @@ func deploy(image, namespace string) error {
 		if err != nil {
 			return err
 		}
-		if err := KubectlApply(raw, "-n", namespace); err != nil {
+		if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
 			return err
 		}
 	}
@@ -77,8 +78,14 @@ func deploy(image, namespace string) error {
 	if err != nil {
 		return err
 	}
-	if err := KubectlApply(raw, "-n", namespace); err != nil {
+	if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
 		return err
+	}
+
+	if deletePods {
+		if err := utils.Kubectl(nil, "delete", "pod", "-n", namespace, "-l", "name="+operatorName, "--ignore-not-found"); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -91,11 +98,12 @@ func deployFunc(cmd *cobra.Command, args []string) error {
 
 	util.MustInProjectRoot()
 
+	cfg, err := codegen.Load("autopilot.yaml")
+	if err != nil {
+		return err
+	}
+
 	if namespace == "" {
-		cfg, err := codegen.Load("autopilot.yaml")
-		if err != nil {
-			return err
-		}
 		namespace = cfg.OperatorName
 	}
 
@@ -103,24 +111,10 @@ func deployFunc(cmd *cobra.Command, args []string) error {
 
 	log.Infof("Deploying Operator with image %s", image)
 
-	if err := deploy(image, namespace); err != nil {
+	if err := deploy(cfg.OperatorName, image, namespace, deletePods); err != nil {
 		return fmt.Errorf("failed to deploy operator with image %s: (%v)", image, err)
 	}
 
 	log.Info("Operator deployment complete.")
 	return nil
-}
-
-func KubectlApply(manifest []byte, extraArgs ...string) error {
-	return Kubectl(bytes.NewBuffer(manifest), append([]string{"apply", "-f", "-"}, extraArgs...)...)
-}
-
-func Kubectl(stdin io.Reader, args ...string) error {
-	kubectl := exec.Command("kubectl", args...)
-	if stdin != nil {
-		kubectl.Stdin = stdin
-	}
-	kubectl.Stdout = os.Stdout
-	kubectl.Stderr = os.Stderr
-	return kubectl.Run()
 }

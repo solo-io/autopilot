@@ -31,21 +31,32 @@ func (p permission) verbs() []string {
 func role(data *model.TemplateData) *v1.Role {
 	requiredPermissions := make(map[model.Parameter]permission)
 
+	setRead := func(param model.Parameter) {
+		perm := requiredPermissions[param]
+		perm.read = true
+		requiredPermissions[param] = perm
+	}
+	setWrite := func(param model.Parameter) {
+		perm := requiredPermissions[param]
+		perm.write = true
+		requiredPermissions[param] = perm
+	}
+
 	for _, phase := range data.Phases {
 		for _, param := range phase.Inputs {
 			if param == model.Metrics {
 				continue
 			}
-			perm := requiredPermissions[param]
-			perm.read = true
-			requiredPermissions[param] = perm
+			setRead(param)
 		}
 		for _, param := range phase.Outputs {
-			perm := requiredPermissions[param]
-			perm.write = true
-			requiredPermissions[param] = perm
+			setWrite(param)
 		}
 	}
+
+	// always require read on pods and configmaps
+	setRead(model.Pods)
+	setRead(model.ConfigMaps)
 
 	var rules []v1.PolicyRule
 	for param, perm := range requiredPermissions {

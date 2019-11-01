@@ -25,6 +25,8 @@ func (p Parameter) String() string {
 }
 
 const (
+	ConfigMaps    Parameter = "configmaps"
+	Pods          Parameter = "pods"
 	Deployments   Parameter = "deployments"
 	Services      Parameter = "services"
 	TrafficSplits Parameter = "trafficsplits"
@@ -40,26 +42,40 @@ type ParameterInfo struct {
 }
 
 var parameters = map[Parameter]ParameterInfo{
+	ConfigMaps: ParameterInfo{
+		PluralName:   "ConfigMaps",
+		SingleName:   "ConfigMap",
+		ImportPrefix: "aliases",
+		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+		ApiVersion:   "",
+	},
+	Pods: ParameterInfo{
+		PluralName:   "Pods",
+		SingleName:   "Pod",
+		ImportPrefix: "aliases",
+		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+		ApiVersion:   "",
+	},
 	Deployments: ParameterInfo{
 		PluralName:   "Deployments",
 		SingleName:   "Deployment",
 		ImportPrefix: "aliases",
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
-		ApiVersion:   "apps/v1",
+		ApiVersion:   "apps",
 	},
 	Services: ParameterInfo{
 		PluralName:   "Services",
 		SingleName:   "Service",
 		ImportPrefix: "aliases",
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
-		ApiVersion:   "v1",
+		ApiVersion:   "",
 	},
 	TrafficSplits: ParameterInfo{
 		PluralName:   "TrafficSplits",
 		SingleName:   "TrafficSplit",
 		ImportPrefix: "aliases",
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
-		ApiVersion:   "split.smi-spec.io/v1alpha1",
+		ApiVersion:   "split.smi-spec.io",
 	},
 	Metrics: ParameterInfo{
 		PluralName:   "Metrics",
