@@ -1,0 +1,18 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: canary.mesh.demos.io
+spec:
+  group: mesh.demos.io
+  names:
+    kind: Canary
+    listKind: CanaryList
+    plural: canaries
+    singular: canary
+  scope: Namespaced
+  subresources:
+    status: {}
+  versions:
+  - name: v1
+    served: true
+    storage: true

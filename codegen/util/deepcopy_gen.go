@@ -16,12 +16,12 @@ package util
 
 import (
 	"flag"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	generatorargs "k8s.io/code-generator/cmd/deepcopy-gen/args"
 	"k8s.io/gengo/examples/deepcopy-gen/generators"
 )

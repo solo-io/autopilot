@@ -1,12 +1,8 @@
-package initializing
-
-// TODO generate
+package progressing
 
 import (
-	"github.com/solo-io/autopilot/pkg/metrics"
-	corev1 "k8s.io/api/core/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	trafficsplitv1alpha2 "github.com/deislabs/smi-sdk-go/pkg/apis/split/v1alpha2"
+	aliases "github.com/solo-io/autopilot/pkg/aliases"
+	metrics "github.com/solo-io/autopilot/pkg/metrics"
 )
 
 type Inputs struct {
@@ -14,7 +10,5 @@ type Inputs struct {
 }
 
 type Outputs struct {
-	Deployments   appsv1.DeploymentList
-	Services      corev1.ServiceList
-	TrafficSplits trafficsplitv1alpha2.TrafficSplitList
+	TrafficSplits aliases.TrafficSplits
 }

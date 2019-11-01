@@ -1,0 +1,33 @@
+apiVersion: mesh.demos.io/v1
+kind: Canary
+phases:
+  - name: Initializing
+    description: |
+      Creation of managed resources has started
+    inputs:
+      - deployments
+    outputs:
+      - deployments
+      - services
+      - trafficsplits
+    initial: true
+  - name: Progressing
+    description: |
+      The canary analysis & traffic shifting has started
+    inputs:
+      - metrics
+    outputs:
+      - trafficsplits
+  - name: Promoting
+    description: |
+      The canary analysis has finished,
+      and the canary deployment is being promoted
+    outputs:
+      - deployments
+      - trafficsplits
+  - name: Succeeded
+    description: |
+      The canary was promoted successfully
+  - name: Failed
+    description: |
+      The canary failed and was rolled back

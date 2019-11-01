@@ -74,6 +74,7 @@ func Load(file string) (*model.TemplateData, error) {
 type GenFile struct {
 	OutPath       string
 	SkipOverwrite bool
+	Permission    os.FileMode
 
 	// set by generate
 	Content string
@@ -149,8 +150,8 @@ func projectFiles(data *model.TemplateData) []GenFile {
 
 		// build
 		{OutPath: filepath.Join(data.ProjectPackage, "build", "Dockerfile"), TemplatePath: "build/Dockerfile.tmpl"},
-		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "user_setup"), TemplatePath: "build/user_setup.tmpl"},
-		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "entrypoint"), TemplatePath: "build/entrypoint.tmpl"},
+		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "user_setup"), TemplatePath: "build/user_setup.tmpl", Permission: 0777},
+		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "entrypoint"), TemplatePath: "build/entrypoint.tmpl", Permission: 0777},
 
 		// deploy
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},

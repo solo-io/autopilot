@@ -26,67 +26,7 @@ const (
 	rolesDir        = "roles"
 	helmChartsDir   = "helm-charts"
 	goModFile       = "go.mod"
-	gopkgTOMLFile   = "Gopkg.toml"
 )
-
-// OperatorType - the type of operator
-type OperatorType = string
-
-const (
-	// OperatorTypeGo - golang type of operator.
-	OperatorTypeGo OperatorType = "go"
-	// OperatorTypeAnsible - ansible type of operator.
-	OperatorTypeAnsible OperatorType = "ansible"
-	// OperatorTypeHelm - helm type of operator.
-	OperatorTypeHelm OperatorType = "helm"
-	// OperatorTypeUnknown - unknown type of operator.
-	OperatorTypeUnknown OperatorType = "unknown"
-)
-
-type ErrUnknownOperatorType struct {
-	Type string
-}
-
-func (e ErrUnknownOperatorType) Error() string {
-	if e.Type == "" {
-		return "unknown operator type"
-	}
-	return fmt.Sprintf(`unknown operator type "%v"`, e.Type)
-}
-
-type DepManagerType string
-
-const (
-	DepManagerGoMod DepManagerType = "modules"
-	DepManagerDep   DepManagerType = "dep"
-)
-
-type ErrInvalidDepManager string
-
-func (e ErrInvalidDepManager) Error() string {
-	return fmt.Sprintf(`"%s" is not a valid dep manager; dep manager must be one of ["%v", "%v"]`, string(e), DepManagerDep, DepManagerGoMod)
-}
-
-var ErrNoDepManager = fmt.Errorf(`no valid dependency manager file found; dep manager must be one of ["%v", "%v"]`, DepManagerDep, DepManagerGoMod)
-
-func GetDepManagerType() (DepManagerType, error) {
-	if IsDepManagerDep() {
-		return DepManagerDep, nil
-	} else if IsDepManagerGoMod() {
-		return DepManagerGoMod, nil
-	}
-	return "", ErrNoDepManager
-}
-
-func IsDepManagerDep() bool {
-	_, err := os.Stat(gopkgTOMLFile)
-	return err == nil || os.IsExist(err)
-}
-
-func IsDepManagerGoMod() bool {
-	_, err := os.Stat(goModFile)
-	return err == nil || os.IsExist(err)
-}
 
 // MustInProjectRoot checks if the current dir is the project root, and exits
 // if not.
@@ -176,45 +116,6 @@ func parseGoPkg(gopath string) string {
 	// Make sure package only contains the "/" separator and no others, and
 	// trim any leading/trailing "/".
 	return strings.Trim(filepath.ToSlash(pathedPkg), "/")
-}
-
-// GetOperatorType returns type of operator is in cwd.
-// This function should be called after verifying the user is in project root.
-func GetOperatorType() OperatorType {
-	switch {
-	case IsOperatorGo():
-		return OperatorTypeGo
-	case IsOperatorAnsible():
-		return OperatorTypeAnsible
-	case IsOperatorHelm():
-		return OperatorTypeHelm
-	}
-	return OperatorTypeUnknown
-}
-
-func IsOperatorGo() bool {
-	_, err := os.Stat(mainFile)
-	return err == nil
-}
-
-func IsOperatorAnsible() bool {
-	stat, err := os.Stat(rolesDir)
-	return err == nil && stat.IsDir()
-}
-
-func IsOperatorHelm() bool {
-	stat, err := os.Stat(helmChartsDir)
-	return err == nil && stat.IsDir()
-}
-
-// MustGetGopath gets GOPATH and ensures it is set and non-empty. If GOPATH
-// is not set or empty, MustGetGopath exits.
-func MustGetGopath() string {
-	gopath, ok := os.LookupEnv(GoPathEnv)
-	if !ok || len(gopath) == 0 {
-		log.Fatal("GOPATH env not set")
-	}
-	return gopath
 }
 
 // MustSetWdGopath sets GOPATH to the first element of the path list in

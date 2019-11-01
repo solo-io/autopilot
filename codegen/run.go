@@ -1,10 +1,11 @@
 package codegen
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/solo-io/autopilot/codegen/util"
 	"golang.org/x/tools/imports"
 	"io/ioutil"
-	"log"
+
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,10 +24,6 @@ func Run(dir string, forceOverwrite bool) error {
 		return err
 	}
 
-	if err := util.DeepcopyGen(project.TypesImportPath); err != nil {
-		return err
-	}
-
 	for _, file := range files {
 		name := filepath.Join(os.Getenv("GOPATH"), "src", file.OutPath)
 		content := file.Content
@@ -38,10 +35,18 @@ func Run(dir string, forceOverwrite bool) error {
 			}
 		}
 
-		if err := os.MkdirAll(filepath.Dir(name), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
 			return err
 		}
-		if err := ioutil.WriteFile(name, []byte(content), 0644); err != nil {
+
+		perm := file.Permission
+		if perm == 0 {
+			perm = 0644
+		}
+
+		log.Printf("Writing %v", name)
+
+		if err := ioutil.WriteFile(name, []byte(content), perm); err != nil {
 			return err
 		}
 
@@ -57,6 +62,11 @@ func Run(dir string, forceOverwrite bool) error {
 		if err := ioutil.WriteFile(name, []byte(formatted), 0644); err != nil {
 			return err
 		}
+	}
+
+	log.Printf("Generating Deepcopy types for %v", project.TypesImportPath)
+	if err := util.DeepcopyGen(project.TypesImportPath); err != nil {
+		return err
 	}
 
 	log.Printf("Finished generating %v", project.ApiVersion+"."+project.Kind)
