@@ -15,6 +15,7 @@ func Deployment(data *model.TemplateData) runtime.Object {
 }
 
 func deployment(data *model.TemplateData) *appsv1.Deployment {
+	labels :=  map[string]string{"name": data.OperatorName}
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,
@@ -26,11 +27,12 @@ func deployment(data *model.TemplateData) *appsv1.Deployment {
 		Spec: appsv1.DeploymentSpec{
 			Replicas: pointer.Int32Ptr(1),
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"name": data.OperatorName},
+				MatchLabels: labels,
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: data.OperatorName,
+					Labels: labels,
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: data.OperatorName,

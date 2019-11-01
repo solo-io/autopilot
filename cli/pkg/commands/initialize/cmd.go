@@ -1,11 +1,10 @@
 package initialize
 
 import (
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/model"
-	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -26,15 +25,15 @@ func NewCmd() *cobra.Command {
 `,
 		RunE: initFunc,
 	}
-	genCmd.PersistentFlags().BoolVarP(&forceOverwrite, "overwrite", "f", false, "force overwriting files that are meant to be modified by the user (spec.go, worker.go, etc.)")
 	return genCmd
 }
 
 func initFunc(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("command %s requires exactly one argument", cmd.CommandPath())
+	}
 
-	util.MustInProjectRoot()
-
-	return codegen.Run(".", forceOverwrite)
+	return initAutopilotProject(args[0])
 }
 
 func initAutopilotProject(name string) error {

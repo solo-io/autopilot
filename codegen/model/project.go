@@ -8,14 +8,14 @@ type Project struct {
 }
 
 type Phase struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Inputs      []Parameter `json:"inputs"`
-	Outputs     []Parameter `json:"outputs"`
-	Initial     bool        `json:"initial"`
+	Name        string      `json:"name,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Inputs      []Parameter `json:"inputs,omitempty"`
+	Outputs     []Parameter `json:"outputs,omitempty"`
+	Initial     bool        `json:"initial,omitempty"`
 
 	// set by load
-	Project *TemplateData
+	Project *TemplateData `json:"-"`
 }
 
 type Parameter string

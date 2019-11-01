@@ -22,7 +22,7 @@ const (
 
 	fsep            = string(filepath.Separator)
 	mainFile        = "cmd" + fsep + "manager" + fsep + "main.go"
-	buildDockerfile = "build" + fsep + "Dockerfile"
+	autopilotFile   = "autopilot.yaml"
 	rolesDir        = "roles"
 	helmChartsDir   = "helm-charts"
 	goModFile       = "go.mod"
@@ -41,9 +41,9 @@ func MustInProjectRoot() {
 func CheckProjectRoot() error {
 	// If the current directory has a "build/Dockerfile", then it is safe to say
 	// we are at the project root.
-	if _, err := os.Stat(buildDockerfile); err != nil {
+	if _, err := os.Stat(autopilotFile); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("must run command in project root dir: project structure requires %s", buildDockerfile)
+			return fmt.Errorf("must run command in project root dir: project structure requires %s", autopilotFile)
 		}
 		return errors.Wrap(err, "error while checking if current directory is the project root")
 	}

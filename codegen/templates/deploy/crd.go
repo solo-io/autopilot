@@ -19,7 +19,7 @@ func customResourceDefinition(data *model.TemplateData) *apiextv1beta1.CustomRes
 			Kind:       "CustomResourceDefinition",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s.%s", data.KindLower, data.Group),
+			Name: fmt.Sprintf("%s.%s", data.KindLowerPlural, data.Group),
 		},
 		Spec: apiextv1beta1.CustomResourceDefinitionSpec{
 			Group: data.Group,

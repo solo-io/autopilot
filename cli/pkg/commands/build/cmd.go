@@ -85,7 +85,7 @@ func buildFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := util.GoCmdOptions{
-		BinName:     filepath.Join(absProjectPath, "build", "_output", "bin", projectName),
+		BinName:     filepath.Join(absProjectPath, "build", "_output", "bin", projectName+"-operator"),
 		PackagePath: util.GetGoPkg(),
 		Args:        goArgs,
 		Env:         goBuildEnv,

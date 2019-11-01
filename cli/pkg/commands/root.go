@@ -1,16 +1,16 @@
 package commands
 
 import (
+	log "github.com/sirupsen/logrus"
+	"github.com/solo-io/autopilot/cli/pkg/commands/build"
 	"github.com/solo-io/autopilot/cli/pkg/commands/deploy"
 	"github.com/solo-io/autopilot/cli/pkg/commands/generate"
 	"github.com/solo-io/autopilot/cli/pkg/commands/initialize"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	log "github.com/sirupsen/logrus"
-	"github.com/solo-io/autopilot/cli/pkg/commands/build"
 )
+
+var verbose bool
 
 func AutoPilotCli() *cobra.Command {
 	root := &cobra.Command{
@@ -18,7 +18,7 @@ func AutoPilotCli() *cobra.Command {
 		Aliases: []string{"ap"},
 		Short:   "An SDK for building Service Mesh Operators with ease",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if viper.GetBool("verbose") {
+			if verbose {
 				if err := util.SetGoVerbose(); err != nil {
 					log.Fatalf("Could not set GOFLAGS: (%v)", err)
 				}
@@ -32,10 +32,7 @@ func AutoPilotCli() *cobra.Command {
 	root.AddCommand(build.NewCmd())
 	root.AddCommand(deploy.NewCmd())
 
-	root.PersistentFlags().Bool("verbose", false, "Enable verbose logging")
-	if err := viper.BindPFlags(root.PersistentFlags()); err != nil {
-		log.Fatalf("Failed to bind root flags: %v", err)
-	}
+	root.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 
 	return root
 }

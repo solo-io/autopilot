@@ -32,8 +32,8 @@ func NewCmd() *cobra.Command {
 	return deployCmd
 }
 
-func deploymentWithImage(image string) ([]byte, error) {
-	raw, err := ioutil.ReadFile("deployment.yaml")
+func deploymentWithImage(deploymentBase, image string) ([]byte, error) {
+	raw, err := ioutil.ReadFile(deploymentBase)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +42,15 @@ func deploymentWithImage(image string) ([]byte, error) {
 }
 
 func deploy(image, namespace string) error {
+
+	log.Printf("Pushing image %v", image)
+	push := exec.Command("docker", "push", image)
+	push.Stderr = os.Stderr
+	push.Stdout = os.Stdout
+	if err := push.Run(); err != nil {
+		return err
+	}
+
 	manifests := []string{
 		"crd.yaml",
 		"role.yaml",
@@ -62,8 +71,9 @@ func deploy(image, namespace string) error {
 		}
 	}
 
-	log.Printf("Deploying %v", "deploy/deployment.yaml")
-	raw, err := deploymentWithImage(image)
+	deploymentBase := "deploy/deployment.yaml"
+	log.Printf("Deploying %v", deploymentBase)
+	raw, err := deploymentWithImage(deploymentBase, image)
 	if err != nil {
 		return err
 	}
