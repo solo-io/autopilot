@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"github.com/solo-io/autopilot/cli/pkg/commands/deploy"
 	"github.com/solo-io/autopilot/cli/pkg/commands/generate"
+	"github.com/solo-io/autopilot/cli/pkg/commands/initialize"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,8 +27,10 @@ func AutoPilotCli() *cobra.Command {
 			}
 		},
 	}
+	root.AddCommand(initialize.NewCmd())
 	root.AddCommand(generate.NewCmd())
 	root.AddCommand(build.NewCmd())
+	root.AddCommand(deploy.NewCmd())
 
 	root.PersistentFlags().Bool("verbose", false, "Enable verbose logging")
 	if err := viper.BindPFlags(root.PersistentFlags()); err != nil {
