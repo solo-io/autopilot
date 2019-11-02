@@ -9,6 +9,7 @@ import (
     "sigs.k8s.io/controller-runtime/pkg/handler"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/reconcile"
+    logf "sigs.k8s.io/controller-runtime/pkg/log"
 
     {{.Version}} "{{.TypesImportPath}}"
 
@@ -30,6 +31,8 @@ import (
 
 )
 
+var log = logf.Log.WithName("scheduler")
+
 func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) error {
     scheduler, err := NewScheduler(ctx, mgr, namespace)
     if err != nil {
@@ -42,6 +45,7 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
     }
 
     // Watch for changes to primary resource {{.Kind}}
+    log.Info("Registering watch for primary resource {{.Kind}}")
     err = c.Watch(&source.Kind{Type: &{{$.Version}}.{{$.Kind}}{}}, &handler.EnqueueRequestForObject{})
     if err != nil {
         return err
@@ -51,6 +55,7 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
     {{- range $param := $phase.Outputs }}
 
     // Watch for changes to secondary resource {{param_name_plural $param }} and requeue the owner {{$.Kind}}
+    log.Info("Registering watch for primary resource secondary resource {{param_name_plural $param }}")
     err = c.Watch(&source.Kind{Type: &{{param_import_prefix $param }}.{{param_name_singular $param }}{}}, &handler.EnqueueRequestForOwner{
         IsController: true,
         OwnerType:    &{{$.Version}}.{{$.Kind}}{},
@@ -107,6 +112,8 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- else }}
     case {{$.Version}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- end}}
+        log.Info("Syncing {{$.Kind}} %v in phase {{$phase.Name}}", {{$.KindLowerCamel}}.Name)
+
     {{- if is_final $phase }}
         // end state, do not requeue
         return reconcile.Result{}, nil

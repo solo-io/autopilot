@@ -159,6 +159,9 @@ func projectFiles(data *model.TemplateData) []GenFile {
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "role.yaml"), TemplateFunc: deploy.Role},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "service_account.yaml"), TemplateFunc: deploy.ServiceAccount},
+
+		// test
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
 	}
 }
 

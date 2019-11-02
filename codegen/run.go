@@ -19,6 +19,10 @@ func Run(dir string, forceOverwrite bool) error {
 		return err
 	}
 
+	if err := project.Validate(); err != nil {
+		return err
+	}
+
 	files, err := Generate(project)
 	if err != nil {
 		return err

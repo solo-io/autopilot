@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 type TemplateData struct {
 	Project
 
@@ -14,4 +16,17 @@ type TemplateData struct {
 	KindLowerCamel      string // e.g. "canaryResource"
 	KindLower           string // e.g. "canaryresource"
 	KindLowerPlural     string // e.g. "canaryresources"
+}
+
+var invalidMetricsOutputParamErr = fmt.Errorf("metrics is not a valid output parameter")
+
+func (d *TemplateData) Validate() error {
+	for _, phase := range d.Phases {
+		for _, out := range phase.Outputs {
+			if out == Metrics {
+				return invalidMetricsOutputParamErr
+			}
+		}
+	}
+	return nil
 }

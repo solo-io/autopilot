@@ -57,6 +57,7 @@ func role(data *model.TemplateData) *v1.Role {
 	// always require read on pods and configmaps
 	setRead(model.Pods)
 	setRead(model.ConfigMaps)
+	setWrite(model.ConfigMaps)
 
 	var rules []v1.PolicyRule
 	for param, perm := range requiredPermissions {

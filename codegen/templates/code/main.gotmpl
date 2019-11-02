@@ -10,7 +10,9 @@ import (
 	{{.Version}} "{{.TypesImportPath}}"
 	scheduler "{{.SchedulerImportPath}}"
 
-    corev1 "k8s.io/api/core/v1"
+	"github.com/solo-io/autopilot/pkg/aliases"
+
+	corev1 "k8s.io/api/core/v1"
     "k8s.io/apimachinery/pkg/util/intstr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -82,7 +84,7 @@ func main() {
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "{{ .Kind }}-lock")
+	err = leader.Become(ctx, "{{ .OperatorName }}-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
@@ -103,6 +105,10 @@ func main() {
 
 	// Setup Scheme for all resources
 	if err := {{.Version}}.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+	if err := aliases.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
