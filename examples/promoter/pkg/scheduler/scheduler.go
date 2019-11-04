@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/solo-io/autopilot/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -14,12 +13,12 @@ import (
 
 	v1 "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
 
-	config "github.com/solo-io/autopilot/examples/promoter/pkg/config"
-	aliases "github.com/solo-io/autopilot/pkg/aliases"
+	"github.com/solo-io/autopilot/examples/promoter/pkg/config"
+	"github.com/solo-io/autopilot/pkg/aliases"
 
-	initializing "github.com/solo-io/autopilot/examples/promoter/pkg/workers/initializing"
-	progressing "github.com/solo-io/autopilot/examples/promoter/pkg/workers/progressing"
-	promoting "github.com/solo-io/autopilot/examples/promoter/pkg/workers/promoting"
+	"github.com/solo-io/autopilot/examples/promoter/pkg/workers/initializing"
+	"github.com/solo-io/autopilot/examples/promoter/pkg/workers/progressing"
+	"github.com/solo-io/autopilot/examples/promoter/pkg/workers/promoting"
 	"github.com/solo-io/autopilot/pkg/metrics"
 )
 
@@ -102,14 +101,12 @@ var WorkInterval = config.WorkInterval
 
 type Scheduler struct {
 	ctx       context.Context
-	kube      utils.EzKube
+	mgr       manager.Manager
 	Metrics   metrics.Metrics
 	namespace string
 }
 
 func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string) (*Scheduler, error) {
-	kube := utils.NewEzKube(&v1.Canary{}, mgr)
-
 	metricsFactory, err := metrics.NewFactory(config.MetricsServer, config.MeshProvider, time.Second*30)
 	if err != nil {
 		return nil, err
@@ -117,7 +114,7 @@ func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string) (*
 
 	return &Scheduler{
 		ctx:       ctx,
-		kube:      kube,
+		mgr:       mgr,
 		Metrics:   metricsFactory.Observer(),
 		namespace: namespace,
 	}, nil

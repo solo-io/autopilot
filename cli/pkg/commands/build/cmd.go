@@ -2,6 +2,7 @@ package build
 
 import (
 	"fmt"
+	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/util"
 	"os"
 	"os/exec"
@@ -84,9 +85,14 @@ func buildFunc(cmd *cobra.Command, args []string) error {
 		goArgs = append(goArgs, splitArgs...)
 	}
 
+	data, err := codegen.Load("autopilot.yaml")
+	if err != nil {
+		return err
+	}
+
 	opts := util.GoCmdOptions{
 		BinName:     filepath.Join(absProjectPath, "build", "_output", "bin", projectName+"-operator"),
-		PackagePath: util.GetGoPkg(),
+		PackagePath: filepath.Join(util.GetGoPkg(), "cmd", data.OperatorName),
 		Args:        goArgs,
 		Env:         goBuildEnv,
 	}

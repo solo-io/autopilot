@@ -19,10 +19,6 @@ func (d TemplateData) Funcs() template.FuncMap {
 		"split":       splitTrimEmpty,
 
 		// project data
-		"param_name_plural":    paramNamePlural,
-		"param_name_singular":  paramNameSingular,
-		"param_import_prefix":  paramImportPrefix,
-		"param_package":        paramPackage,
 		"has_outputs":          HasOutputs,
 		"has_inputs":           HasInputs,
 		"is_final":             isFinal,
@@ -34,26 +30,6 @@ func (d TemplateData) Funcs() template.FuncMap {
 
 func splitTrimEmpty(s, sep string) []string {
 	return strings.Split(strings.TrimSpace(s), sep)
-}
-
-func paramNamePlural(param Parameter) string {
-	return parameters[param].PluralName
-}
-
-func paramNameSingular(param Parameter) string {
-	return parameters[param].SingleName
-}
-
-func paramImportPrefix(param Parameter) string {
-	return parameters[param].ImportPrefix
-}
-
-func paramPackage(param Parameter) string {
-	return parameters[param].Package
-}
-
-func ParamApiVersion(param Parameter) string {
-	return parameters[param].ApiVersion
 }
 
 func HasOutputs(phase Phase) bool {

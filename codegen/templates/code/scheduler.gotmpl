@@ -17,7 +17,7 @@ import (
 
 {{- range $phase := .Phases }}
     {{- range $param := $phase.Outputs }}
-    {{param_import_prefix $param}} "{{param_package $param}}"
+    {{$param.ImportPrefix}} "{{$param.Package}}"
     {{- end}}
 {{- end}}
 
@@ -54,9 +54,9 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
 {{- range $phase := .Phases }}
     {{- range $param := $phase.Outputs }}
 
-    // Watch for changes to secondary resource {{param_name_plural $param }} and requeue the owner {{$.Kind}}
-    log.Info("Registering watch for primary resource secondary resource {{param_name_plural $param }}")
-    err = c.Watch(&source.Kind{Type: &{{param_import_prefix $param }}.{{param_name_singular $param }}{}}, &handler.EnqueueRequestForOwner{
+    // Watch for changes to secondary resource {{$param.PluralName }} and requeue the owner {{$.Kind}}
+    log.Info("Registering watch for primary resource secondary resource {{$param.PluralName }}")
+    err = c.Watch(&source.Kind{Type: &{{$param.ImportPrefix }}.{{$param.SingleName }}{}}, &handler.EnqueueRequestForOwner{
         IsController: true,
         OwnerType:    &{{$.Version}}.{{$.Kind}}{},
     })
@@ -74,14 +74,12 @@ var WorkInterval = config.WorkInterval
 
 type Scheduler struct {
     ctx context.Context
-    kube utils.EzKube
+    mgr manager.Manager
     Metrics metrics.Metrics
     namespace string
 }
 
 func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string ) (*Scheduler, error) {
-	kube := utils.NewEzKube(&{{$.Version}}.{{$.Kind}}{}, mgr)
-
     metricsFactory, err := metrics.NewFactory(config.MetricsServer, config.MeshProvider, time.Second * 30)
     if err != nil {
     	return nil, err
@@ -89,7 +87,7 @@ func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string ) (
 
     return &Scheduler{
     	ctx:       ctx,
-    	kube:      kube,
+    	mgr:       mgr,
         Metrics:   metricsFactory.Observer(),
         namespace: namespace,
     }, nil
@@ -102,7 +100,9 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{$.KindLowerCamel}}.Namespace = request.Namespace
     {{$.KindLowerCamel}}.Name = request.Name
 
-    if err := s.kube.Get(s.ctx, {{$.KindLowerCamel}}); err != nil {
+    kube := utils.NewEzKube({{$.KindLowerCamel}}, s.mgr)
+
+    if err := kube.Get(s.ctx, {{$.KindLowerCamel}}); err != nil {
         return result, err
     }
     switch {{$.KindLowerCamel}}.Status.Phase {
@@ -126,12 +126,12 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		}
 
             {{- if has_outputs $phase }}
-        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
@@ -140,12 +140,12 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
         {{- else}}
             {{- if has_outputs $phase }}
-        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:s.kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
@@ -153,15 +153,15 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         {{- end}}
 
         {{- range $out := $phase.Outputs }}
-		for _, out := range outputs.{{ param_name_plural $out }} {
-			if err := s.kube.Ensure(s.ctx, out); err != nil {
+		for _, out := range outputs.{{ $out.PluralName }} {
+			if err := kube.Ensure(s.ctx, out); err != nil {
 				return result, err
 			}
 		}
         {{- end}}
 
         {{$.KindLowerCamel}}.Status.Phase = nextPhase
-		if err := s.kube.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
+		if err := kube.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
 			return result, err
 		}
 
@@ -182,9 +182,9 @@ func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}
 
         {{- range $param := $phase.Inputs }}
             {{- if is_metrics $param }}
-    inputs.{{param_name_plural $param}} = s.Metrics
+    inputs.{{$param.PluralName}} = s.Metrics
             {{- else}}
-    inputs.{{param_name_plural $param}}, err = s.kube.List{{param_name_plural $param}}(s.ctx, s.namespace)
+    inputs.{{$param.PluralName}}, err = kube.List{{$param.PluralName}}(s.ctx, s.namespace)
     if err != nil {
         return inputs, err
     }

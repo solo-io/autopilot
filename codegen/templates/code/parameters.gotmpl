@@ -2,11 +2,11 @@ package {{worker_import_prefix $}}
 
 import (
 {{- range $param := $.Inputs }}
-    {{param_import_prefix $param}} "{{param_package $param}}"
+    {{$param.ImportPrefix}} "{{$param.Package}}"
 {{- end}}
 
 {{- range $param := $.Outputs }}
-    {{param_import_prefix $param}} "{{param_package $param}}"
+    {{$param.ImportPrefix}} "{{$param.Package}}"
 {{- end}}
 )
 
@@ -14,7 +14,7 @@ import (
 
 type Inputs struct {
     {{- range $param := $.Inputs }}
-    {{param_name_plural $param}} {{param_import_prefix $param}}.{{param_name_plural $param}}
+    {{$param.PluralName}} {{$param.ImportPrefix}}.{{$param.PluralName}}
     {{- end}}
 }
 {{- end}}
@@ -23,7 +23,7 @@ type Inputs struct {
 
 type Outputs struct {
     {{- range $param := $.Outputs }}
-    {{param_name_plural $param}} {{param_import_prefix $param}}.{{param_name_plural $param}}
+    {{$param.PluralName}} {{$param.ImportPrefix}}.{{$param.PluralName}}
     {{- end}}
 }
 {{- end}}

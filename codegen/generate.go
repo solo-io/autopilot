@@ -139,7 +139,7 @@ func (gf GenFile) genTemplateFunc(data *model.TemplateData) (string, error) {
 
 func projectFiles(data *model.TemplateData) []GenFile {
 	return []GenFile{
-		{OutPath: filepath.Join(data.ProjectPackage, "main.go"), TemplatePath: "code/main.gotmpl"},
+		{OutPath: filepath.Join(data.ProjectPackage, "cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
 		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "code/config.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "code/doc.gotmpl"},

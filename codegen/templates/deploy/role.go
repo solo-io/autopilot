@@ -40,6 +40,9 @@ func role(data *model.TemplateData) *v1.Role {
 		perm := requiredPermissions[param]
 		perm.write = true
 		requiredPermissions[param] = perm
+
+		// writing currently requires reading as we use the EzKube.Ensure method
+		setRead(param)
 	}
 
 	for _, phase := range data.Phases {
@@ -67,7 +70,7 @@ func role(data *model.TemplateData) *v1.Role {
 		}
 		rules = append(rules, v1.PolicyRule{
 			Verbs:     verbs,
-			APIGroups: []string{model.ParamApiVersion(param)},
+			APIGroups: []string{param.ApiGroup},
 			Resources: []string{param.String()},
 		})
 	}
@@ -79,8 +82,11 @@ func role(data *model.TemplateData) *v1.Role {
 
 	rules = append(rules, v1.PolicyRule{
 		Verbs:     []string{"*"},
-		APIGroups: []string{data.ApiVersion},
-		Resources: []string{data.KindLowerPlural},
+		APIGroups: []string{data.Group},
+		Resources: []string{
+			data.KindLowerPlural,
+			data.KindLowerPlural + "/status",
+		},
 	})
 
 	return &v1.Role{
