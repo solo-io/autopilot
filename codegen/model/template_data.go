@@ -13,6 +13,7 @@ type TemplateData struct {
 	TypesImportPath     string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
 	SchedulerImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
 	ConfigImportPath    string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/config"
+	FinalizerImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/finalizer"
 	KindLowerCamel      string // e.g. "canaryResource"
 	KindLower           string // e.g. "canaryresource"
 	KindLowerPlural     string // e.g. "canaryresources"

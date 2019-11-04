@@ -1,0 +1,16 @@
+package finalizer
+
+import (
+	"context"
+    "github.com/solo-io/autopilot/pkg/utils"
+
+    {{.Version}} "{{.TypesImportPath}}"
+)
+
+type Finalizer struct {
+    Kube utils.EzKube
+}
+
+func (f *Finalizer) Finalize(ctx context.Context, {{$.KindLowerCamel}} *{{.Version}}.{{.Kind}}) error {
+    panic("implement me!")
+}

@@ -48,6 +48,7 @@ func Load(file string) (*model.TemplateData, error) {
 	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
 	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
 	configImportPath := filepath.Join(projectGoPkg, "pkg", "config")
+	finalizerImportPath := filepath.Join(projectGoPkg, "pkg", "finalizer")
 
 	data := &model.TemplateData{
 		Project:             project,
@@ -57,6 +58,7 @@ func Load(file string) (*model.TemplateData, error) {
 		TypesImportPath:     apiImportPath,
 		SchedulerImportPath: schedulerImportPath,
 		ConfigImportPath:    configImportPath,
+		FinalizerImportPath: finalizerImportPath,
 		KindLowerCamel:      strcase.ToLowerCamel(project.Kind),
 		KindLower:           strings.ToLower(project.Kind),
 		KindLowerPlural:     pluralize.NewClient().Plural(strings.ToLower(project.Kind)),
@@ -138,7 +140,8 @@ func (gf GenFile) genTemplateFunc(data *model.TemplateData) (string, error) {
 }
 
 func projectFiles(data *model.TemplateData) []GenFile {
-	return []GenFile{
+	files := []GenFile{
+		// code
 		{OutPath: filepath.Join(data.ProjectPackage, "cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
 		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "code/config.gotmpl", SkipOverwrite: true},
@@ -163,6 +166,14 @@ func projectFiles(data *model.TemplateData) []GenFile {
 		// test
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
 	}
+
+	if data.EnableFinalizer {
+		files = append(files, GenFile{
+			OutPath: filepath.Join(data.FinalizerImportPath, "finalizer.go"), TemplatePath: "code/finalizer.gotmpl", SkipOverwrite: true,
+		})
+	}
+
+	return files
 }
 
 func phaseFiles(data *model.TemplateData, phase model.Phase) []GenFile {

@@ -3,17 +3,25 @@ package scheduler
 import (
     "context"
     "fmt"
+    "k8s.io/kubernetes/pkg/util/slice"
     "time"
 
-    "github.com/solo-io/autopilot/pkg/utils"
+    "k8s.io/apimachinery/pkg/api/errors"
     "sigs.k8s.io/controller-runtime/pkg/handler"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/reconcile"
     logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+    "github.com/solo-io/autopilot/pkg/metrics"
+    "github.com/solo-io/autopilot/pkg/utils"
+
     {{.Version}} "{{.TypesImportPath}}"
 
     config "{{.ConfigImportPath}}"
+
+{{- if $.EnableFinalizer }}
+    finalizer "{{.FinalizerImportPath}}"
+{{- end}}
 
 {{- range $phase := .Phases }}
     {{- range $param := $phase.Outputs }}
@@ -21,14 +29,11 @@ import (
     {{- end}}
 {{- end}}
 
-    "github.com/solo-io/autopilot/pkg/metrics"
-
 {{- range $phase := .Phases}}
     {{- if or (has_inputs $phase) (has_outputs $phase) }}
     {{worker_import_prefix $phase}} "{{worker_package $phase}}"
     {{- end}}
 {{- end}}
-
 )
 
 var log = logf.Log.WithName("scheduler")
@@ -72,6 +77,10 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
 
 var WorkInterval = config.WorkInterval
 
+{{- if $.EnableFinalizer }}
+var FinalizerName = "{{$.KindLower}}-finalizer"
+{{- end}}
+
 type Scheduler struct {
     ctx context.Context
     mgr manager.Manager
@@ -103,8 +112,46 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     kube := utils.NewEzKube({{$.KindLowerCamel}}, s.mgr)
 
     if err := kube.Get(s.ctx, {{$.KindLowerCamel}}); err != nil {
+        // garbage collection and finalizers should handle cleaning up after deletion
+        if errors.IsNotFound(err) {
+            return result, nil
+        }
         return result, err
     }
+
+    {{- if $.EnableFinalizer }}
+    // examine DeletionTimestamp to determine if object is under deletion
+    if {{$.KindLowerCamel}}.DeletionTimestamp.IsZero() {
+        // The object is not being deleted, so if it does not have our finalizer,
+        // then lets add the finalizer and update the object. This is equivalent
+        // registering our finalizer.
+        if !utils.ContainsString({{$.KindLowerCamel}}.Finalizers, FinalizerName) {
+            {{$.KindLowerCamel}}.Finalizers = append({{$.KindLowerCamel}}.Finalizers, FinalizerName)
+            if err := kube.Ensure(s.ctx, {{$.KindLowerCamel}}); err != nil {
+                return result, err
+            }
+        }
+    } else {
+        // The object is being deleted
+        if utils.ContainsString({{$.KindLowerCamel}}.Finalizers, FinalizerName) {
+            // our finalizer is present, so lets handle any external dependency
+            if err := (&finalizer.Finalizer{Kube:kube}).Finalize(s.ctx, {{$.KindLowerCamel}}); err != nil {
+                // if fail to delete the external dependency here, return with error
+                // so that it can be retried
+                return result, err
+            }
+
+            // remove our finalizer from the list and update it.
+            {{$.KindLowerCamel}}.Finalizers = utils.RemoveString({{$.KindLowerCamel}}.Finalizers, FinalizerName)
+            if err := kube.Ensure(s.ctx, {{$.KindLowerCamel}}); err != nil {
+                return result, err
+            }
+        }
+
+        return result, nil
+    }
+    {{- end}}
+
     switch {{$.KindLowerCamel}}.Status.Phase {
 {{- range $phase := .Phases}}
     {{- if $phase.Initial }}

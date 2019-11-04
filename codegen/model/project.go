@@ -10,6 +10,9 @@ type Project struct {
 	ApiVersion   string  `json:"apiVersion"`
 	Kind         string  `json:"kind"`
 	Phases       []Phase `json:"phases"`
+
+	// enable use of a Finalizer to handle object deletion
+	EnableFinalizer bool `json:"enableFinalizer"`
 }
 
 type Phase struct {
