@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    app.kubernetes.io/name: quarantine-operator
   name: quarantine-operator
 spec:
   replicas: 1

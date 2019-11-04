@@ -1,4 +1,6 @@
 apiVersion: autopiot.example.io/v1
 kind: Quarantine
 metadata:
+  labels:
+    app.kubernetes.io/name: quarantine-operator
   name: example
