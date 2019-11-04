@@ -1,0 +1,19 @@
+apiVersion: autopiot.example.io/v1
+kind: Quarantine
+operatorName: quarantine-operator
+phases:
+- description: Quarantine has begun initializing
+  initial: true
+  name: Initializing
+  outputs:
+  - deployments
+  - services
+- description: Quarantine has begun processing
+  inputs:
+  - metrics
+  name: Processing
+  outputs:
+  - pods
+- description: Quarantine has finished
+  name: Finished
+enableFinalizer: true

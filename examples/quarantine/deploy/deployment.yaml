@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quarantine-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: quarantine-operator
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        name: quarantine-operator
+      name: quarantine-operator
+    spec:
+      containers:
+      - command:
+        - quarantine-operator
+        env:
+        - name: WATCH_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: quarantine-operator
+        image: REPLACE_IMAGE
+        imagePullPolicy: Always
+        name: quarantine-operator
+        resources: {}
+      serviceAccountName: quarantine-operator

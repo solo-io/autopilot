@@ -1,0 +1,4 @@
+apiVersion: autopiot.example.io/v1
+kind: Quarantine
+metadata:
+  name: example
