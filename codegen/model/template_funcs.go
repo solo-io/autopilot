@@ -25,6 +25,7 @@ func (d TemplateData) Funcs() template.FuncMap {
 		"is_metrics":           isMetrics,
 		"worker_import_prefix": WorkerImportPrefix,
 		"worker_package":       d.workerPackage,
+		"needs_metrics":        d.NeedsMetrics,
 	}
 }
 

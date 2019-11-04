@@ -7,6 +7,7 @@ import (
 	"github.com/solo-io/autopilot/codegen/templates"
 	"github.com/solo-io/autopilot/codegen/templates/deploy"
 	"io/ioutil"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
 	"strings"
@@ -101,7 +102,17 @@ func (gf GenFile) GenPhaseFile(data *model.TemplateData, phase model.Phase) (str
 }
 
 func (gf GenFile) genTemplateFunc(data *model.TemplateData) (string, error) {
-	obj := gf.TemplateFunc(data)
+	obj := gf.TemplateFunc(data).(v1.Object)
+
+	labels := obj.GetLabels()
+	if labels == nil {
+		labels = map[string]string{}
+	}
+
+	labels["app.kubernetes.io/name"] = data.OperatorName
+	labels["app.kubernetes.io/name"] = data.OperatorName
+
+	obj.SetLabels(labels)
 
 	yam, err := yaml.Marshal(obj)
 	if err != nil {
@@ -145,6 +156,7 @@ func projectFiles(data *model.TemplateData) []GenFile {
 		{OutPath: filepath.Join(data.ProjectPackage, "cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
 		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "code/config.gotmpl", SkipOverwrite: true},
+
 		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "code/doc.gotmpl"},
 		{OutPath: filepath.Join(data.TypesImportPath, "phases.go"), TemplatePath: "code/phases.gotmpl"},
 		{OutPath: filepath.Join(data.TypesImportPath, "register.go"), TemplatePath: "code/register.gotmpl"},
@@ -170,6 +182,12 @@ func projectFiles(data *model.TemplateData) []GenFile {
 	if data.EnableFinalizer {
 		files = append(files, GenFile{
 			OutPath: filepath.Join(data.FinalizerImportPath, "finalizer.go"), TemplatePath: "code/finalizer.gotmpl", SkipOverwrite: true,
+		})
+	}
+
+	if data.NeedsMetrics() {
+		files = append(files, GenFile{
+			OutPath: filepath.Join(data.ProjectPackage, "deploy", "prometheus.yaml"), TemplatePath: "deploy/prometheus.yamltmpl",
 		})
 	}
 

@@ -33,16 +33,24 @@ func NewCmd() *cobra.Command {
 	return deployCmd
 }
 
-func deploymentWithImage(deploymentBase, image string) ([]byte, error) {
-	raw, err := ioutil.ReadFile(deploymentBase)
+func replaceImage(file, image string) ([]byte, error) {
+	return readAndReplace(file, "REPLACE_IMAGE", image)
+}
+
+func replaceNamespace(file, namespace string) ([]byte, error) {
+	return readAndReplace(file, "REPLACE_NAMESPACE", namespace)
+}
+
+func readAndReplace(file, old, new string) ([]byte, error) {
+	raw, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	withImage := strings.ReplaceAll(string(raw), "REPLACE_IMAGE", image)
-	return []byte(withImage), nil
+	replaced := strings.ReplaceAll(string(raw), old, new)
+	return []byte(replaced), nil
 }
 
-func deploy(operatorName, image, namespace string, deletePods bool) error {
+func deploy(operatorName, image, namespace string, deletePods, needsMetrics bool) error {
 
 	log.Printf("Pushing image %v", image)
 	push := exec.Command("docker", "push", image)
@@ -72,9 +80,21 @@ func deploy(operatorName, image, namespace string, deletePods bool) error {
 		}
 	}
 
+	if needsMetrics {
+		prometheusBase := "deploy/prometheus.yaml"
+		log.Printf("Deploying prometheus from %v", prometheusBase)
+		raw, err := replaceNamespace(prometheusBase, image)
+		if err != nil {
+			return err
+		}
+		if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
+			return err
+		}
+	}
+
 	deploymentBase := "deploy/deployment.yaml"
 	log.Printf("Deploying %v", deploymentBase)
-	raw, err := deploymentWithImage(deploymentBase, image)
+	raw, err := replaceImage(deploymentBase, image)
 	if err != nil {
 		return err
 	}
@@ -111,7 +131,7 @@ func deployFunc(cmd *cobra.Command, args []string) error {
 
 	log.Infof("Deploying Operator with image %s", image)
 
-	if err := deploy(cfg.OperatorName, image, namespace, deletePods); err != nil {
+	if err := deploy(cfg.OperatorName, image, namespace, deletePods, cfg.NeedsMetrics()); err != nil {
 		return fmt.Errorf("failed to deploy operator with image %s: (%v)", image, err)
 	}
 

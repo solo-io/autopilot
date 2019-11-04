@@ -31,3 +31,14 @@ func (d *TemplateData) Validate() error {
 	}
 	return nil
 }
+
+func (d *TemplateData) NeedsMetrics() bool {
+	for _, phase := range d.Phases {
+		for _, in := range phase.Inputs {
+			if in == Metrics {
+				return true
+			}
+		}
+	}
+	return false
+}
