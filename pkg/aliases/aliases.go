@@ -13,12 +13,14 @@ type (
 	Deployment = appsv1.Deployment
 	Service = corev1.Service
 	TrafficSplit = trafficsplitv1alpha2.TrafficSplit
+	ReplicaSet = appsv1.ReplicaSet
 
 	ConfigMaps = []*ConfigMap
 	Pods = []*Pod
 	Deployments = []*Deployment
 	Services = []*Service
 	TrafficSplits = []*TrafficSplit
+	ReplicaSets = []*ReplicaSet
 )
 
 var (
