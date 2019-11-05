@@ -18,6 +18,16 @@ type {{.Kind}} struct {
     Status {{.Kind}}Status `json:"status,omitempty"`
 }
 
+// {{.Kind}}Status defines an observed condition of {{.Kind}}
+// +k8s:openapi-gen=true
+type {{.Kind}}Status struct {
+    // Phase is a required field. Do not modify it directly
+    Phase {{$.Kind}}Phase `json:"phase,omitempty"`
+
+    // StatusInfo defines the observed state of the cluster
+    {{$.Kind}}StatusInfo
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // {{.Kind}}List contains a list of {{.Kind}}

@@ -1,0 +1,20 @@
+apiVersion: autopiot.example.io/v1
+enableFinalizer: true
+kind: Test
+operatorName: test-operator
+phases:
+- description: Test has begun initializing
+  initial: true
+  name: Initializing
+  inputs:
+  - services
+  outputs:
+  - virtualservices
+- description: Test has begun processing
+  inputs:
+  - metrics
+  name: Processing
+- description: Test has finished
+  name: Finished
+- description: Test has failed
+  name: Failed

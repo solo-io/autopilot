@@ -42,3 +42,22 @@ func (d *TemplateData) NeedsMetrics() bool {
 	}
 	return false
 }
+
+
+func (d *TemplateData) UniqueOutputs() []Parameter {
+	var unique []Parameter
+	addParam := func(param Parameter) {
+		for _, p := range unique {
+			if p == param {
+				return
+			}
+		}
+		unique = append(unique, param)
+	}
+	for _, phase := range d.Phases {
+		for _, out := range phase.Outputs {
+			addParam(out)
+		}
+	}
+	return unique
+}

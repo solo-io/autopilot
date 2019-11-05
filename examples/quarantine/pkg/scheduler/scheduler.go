@@ -153,7 +153,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 	switch quarantine.Status.Phase {
 	case "", v1.QuarantinePhaseInitializing:
 		log.Info("Syncing Quarantine %v in phase Initializing", quarantine.Name)
-		outputs, nextPhase, err := (&initializing.Worker{Kube: kube}).Sync(s.ctx, quarantine)
+		outputs, nextPhase, statusInfo, err := (&initializing.Worker{Kube: kube}).Sync(s.ctx, quarantine)
 		if err != nil {
 			return result, err
 		}
@@ -169,6 +169,9 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		}
 
 		quarantine.Status.Phase = nextPhase
+		if statusInfo != nil {
+			quarantine.Status.StatusInfo = statusInfo
+		}
 		if err := kube.UpdateStatus(s.ctx, quarantine); err != nil {
 			return result, err
 		}
@@ -180,7 +183,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		if err != nil {
 			return result, err
 		}
-		outputs, nextPhase, err := (&processing.Worker{Kube: kube}).Sync(s.ctx, quarantine, inputs)
+		outputs, nextPhase, statusInfo, err := (&processing.Worker{Kube: kube}).Sync(s.ctx, quarantine, inputs)
 		if err != nil {
 			return result, err
 		}
@@ -191,6 +194,9 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		}
 
 		quarantine.Status.Phase = nextPhase
+		if statusInfo != nil {
+			quarantine.Status.StatusInfo = statusInfo
+		}
 		if err := kube.UpdateStatus(s.ctx, quarantine); err != nil {
 			return result, err
 		}
@@ -203,7 +209,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 	}
 	return result, fmt.Errorf("cannot process Quarantine in unknown phase: %v", quarantine.Status.Phase)
 }
-func (s *Scheduler) makeProcessingInputs() (processing.Inputs, error) {
+func (s *Scheduler) makeProcessingInputs(kube utils.EzKube) (processing.Inputs, error) {
 	var (
 		inputs processing.Inputs
 		err    error

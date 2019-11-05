@@ -7,6 +7,7 @@ require (
 	github.com/deislabs/smi-sdk-go v0.2.0
 	github.com/gertd/go-pluralize v0.1.1
 	github.com/go-openapi/spec v0.19.0
+	github.com/golang/protobuf v1.3.2
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/operator-framework/operator-sdk v0.12.0
@@ -17,6 +18,8 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.5.0
 	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
+	istio.io/api v0.0.0-20191101221011-3fcb499e2a05
+	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v0.0.0

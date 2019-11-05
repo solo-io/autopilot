@@ -1,12 +1,18 @@
 package config
 
+// EDIT THIS FILE!  THIS IS CONFIGURATION FOR YOU TO OWN!
+
 import "time"
 
-// The Address of the Prometheus server to connect to for metrics
-var MetricsServer = "http://prometheus:9090"
+var (
+	// the version of the controller
+	Version = "0.0.1"
+	// The Address of the Prometheus server to connect to for metrics
+	MetricsServer = "http://quarantine-operator-prometheus:9090"
 
-// The Mesh Provider (determines what types of metrics to use)
-var MeshProvider = "istio"
+	// The Mesh Provider (determines what types of metrics to use)
+	MeshProvider = "istio"
 
-// Modify the WorkInterval to change the interval at which workers resync
-var WorkInterval = time.Second * 5
+	// Modify the WorkInterval to change the interval at which workers resync
+	WorkInterval = time.Second * 5
+)

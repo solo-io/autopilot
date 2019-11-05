@@ -56,8 +56,7 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
         return err
     }
 
-{{- range $phase := .Phases }}
-    {{- range $param := $phase.Outputs }}
+{{- range $param := unique_outputs }}
 
     // Watch for changes to secondary resource {{$param.PluralName }} and requeue the owner {{$.Kind}}
     log.Info("Registering watch for primary resource secondary resource {{$param.PluralName }}")
@@ -68,7 +67,6 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
     if err != nil {
         return err
     }
-    {{- end}}
 {{- end}}
 
     return nil
@@ -167,18 +165,18 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- else }}
 
         {{- if has_inputs $phase }}
-		inputs, err := s.make{{ $phase.Name}}Inputs()
+		inputs, err := s.make{{ $phase.Name}}Inputs(kube)
 		if err != nil {
 			return result, err
 		}
 
             {{- if has_outputs $phase }}
-        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
@@ -187,12 +185,12 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
         {{- else}}
             {{- if has_outputs $phase }}
-        outputs, nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
@@ -208,6 +206,9 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         {{- end}}
 
         {{$.KindLowerCamel}}.Status.Phase = nextPhase
+        if  statusInfo != nil {
+            {{$.KindLowerCamel}}.Status.{{$.Kind}}StatusInfo = *statusInfo
+        }
 		if err := kube.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
 			return result, err
 		}
@@ -221,7 +222,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
 {{- range $phase := .Phases}}
     {{- if has_inputs $phase }}
-func (s *Scheduler) make{{ $phase.Name}}Inputs() ({{worker_import_prefix $phase}}.Inputs, error) {
+func (s *Scheduler) make{{ $phase.Name}}Inputs(kube utils.EzKube) ({{worker_import_prefix $phase}}.Inputs, error) {
 	var (
 		inputs {{worker_import_prefix $phase}}.Inputs
 	    err error

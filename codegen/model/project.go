@@ -169,6 +169,14 @@ var (
 		Package:      "github.com/solo-io/autopilot/pkg/aliases",
 		ApiGroup:     "split.smi-spec.io",
 	})
+	VirtualServices = register(Parameter{
+		LowerName:    "virtualservices",
+		PluralName:   "VirtualServices",
+		SingleName:   "VirtualService",
+		ImportPrefix: "aliases",
+		Package:      "github.com/solo-io/autopilot/pkg/aliases",
+		ApiGroup:     "networking.istio.io",
+	})
 	Metrics = register(Parameter{
 		LowerName:    "metrics",
 		PluralName:   "Metrics",

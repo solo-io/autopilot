@@ -1,23 +1,18 @@
 package {{.Version}}
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// EDIT THIS FILE!  This file should contain the definitions for your API Spec and Status!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// Important: Run "autopilot generate" to regenerate code after modifying this file
+// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
 // {{.Kind}}Spec defines the desired state of {{.Kind}}
 // +k8s:openapi-gen=true
 type {{.Kind}}Spec struct {
     // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-    // Important: Run "autopilot generate" to regenerate code after modifying this file
-    // Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
-// {{.Kind}}Status defines the observed state of {{.Kind}}
+// {{.Kind}}StatusInfo defines an observed condition of {{.Kind}}
 // +k8s:openapi-gen=true
-type {{.Kind}}Status struct {
-	// Phase is a required field
-	Phase {{$.Kind}}Phase `json:"phase,omitempty"`
-
-    // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-    // Important: Run "autopilot generate" to regenerate code after modifying this file
-    // Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+type {{.Kind}}StatusInfo struct {
+	// INSERT ADDITIONAL STATUS FIELDS - observed state of cluster
 }

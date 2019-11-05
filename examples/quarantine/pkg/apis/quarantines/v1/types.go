@@ -18,6 +18,16 @@ type Quarantine struct {
 	Status QuarantineStatus `json:"status,omitempty"`
 }
 
+// QuarantineStatus defines an observed condition of Quarantine
+// +k8s:openapi-gen=true
+type QuarantineStatus struct {
+	// Phase is a required field. Do not modify it directly
+	Phase QuarantinePhase `json:"phase,omitempty"`
+
+	// StatusInfo defines the observed state of the cluster
+	QuarantineStatusInfo
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // QuarantineList contains a list of Quarantine

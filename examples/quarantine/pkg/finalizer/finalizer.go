@@ -2,7 +2,6 @@ package finalizer
 
 import (
 	"context"
-	"log"
 
 	"github.com/solo-io/autopilot/pkg/utils"
 
@@ -14,6 +13,5 @@ type Finalizer struct {
 }
 
 func (f *Finalizer) Finalize(ctx context.Context, quarantine *v1.Quarantine) error {
-	log.Printf("%v deleted!", quarantine.Name)
-	return nil
+	panic("implement me!")
 }
