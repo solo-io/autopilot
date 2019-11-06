@@ -69,21 +69,25 @@ func MustGetFileDir() string {
 }
 
 // returns absolute path to the .go file containing the calling function
-func GetThisFile() (string, error) {
+func MustGetThisFile() string {
 	_, thisFile, _, ok := runtime.Caller(1)
 	if !ok {
-		return "", fmt.Errorf("failed to get runtime.Caller")
+		log.Fatalf("Failed to get runtime.Caller")
 	}
-	return filepath.Abs(thisFile)
+	abs, err :=  filepath.Abs(thisFile)
+	if err != nil {
+		log.Fatalf("Failed to get absolute path: (%v)", err)
+	}
+	return abs
 }
 
 // returns absolute path to the diretory containing the .go file containing the calling function
-func GetThisDir() (string, error) {
-	thisFile, err := GetThisFile()
-	if err != nil {
-		return "", err
+func MustGetThisDir() string{
+	_, thisFile, _, ok := runtime.Caller(1)
+	if !ok {
+		log.Fatalf("Failed to get runtime.Caller")
 	}
-	return filepath.Abs(filepath.Dir(thisFile))
+	return filepath.Dir(thisFile)
 }
 
 func getHomeDir() (string, error) {

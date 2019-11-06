@@ -3,11 +3,12 @@ package initializing
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/solo-io/autopilot/examples/test/pkg/parameters"
 	"istio.io/api/networking/v1alpha3"
 	alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
 

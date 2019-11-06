@@ -1,0 +1,47 @@
+// run this file in order to generate a kubernetes-YAML file for your project's top-level CRD
+package main
+
+import (
+	"io/ioutil"
+	"log"
+	"path/filepath"
+
+	"sigs.k8s.io/yaml"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/solo-io/autopilot/codegen/util"
+
+	{{.Version}} "{{.TypesImportPath}}"
+)
+
+//go:generate go run create_cr_yaml.go
+
+// TODO: modify this object and re-run the script in order to produce the output YAML file
+var Example{{$.Kind}} = &{{$.Version}}.{{$.Kind}}{
+	ObjectMeta: metav1.ObjectMeta{
+		Namespace: "default",
+		Name:      "example",
+	},
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "{{$.Kind}}",
+		APIVersion: "{{$.ApiVersion}}",
+	},
+	Spec: {{$.Version}}.{{$.Kind}}Spec{
+		// fill me in!
+	},
+}
+
+// modify this string to change the output file path
+var OutputFile = filepath.Join(util.MustGetThisDir(), "..", "deploy", "example_{{ lower $.Kind }}.yaml")
+
+func main() {
+	yam, err := yaml.Marshal(Example{{$.Kind}})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(OutputFile, yam, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}

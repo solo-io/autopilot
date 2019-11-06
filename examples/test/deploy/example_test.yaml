@@ -1,0 +1,19 @@
+apiVersion: autopiot.example.io/v1
+kind: Test
+metadata:
+  creationTimestamp: null
+  name: example
+  namespace: default
+spec:
+  faults:
+    abort:
+      httpStatus: 555
+      percentage:
+        value: 90
+  target:
+    name: podinfo-primary
+    namespace: test
+  threshold: 90
+  timeout: 1m0s
+status:
+  timeStarted: null
