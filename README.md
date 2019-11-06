@@ -11,6 +11,7 @@
 
 - git ops?
 
+- interactive cli
 
 
 quarantine <=> operator

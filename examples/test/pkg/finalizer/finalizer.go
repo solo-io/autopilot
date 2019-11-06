@@ -15,5 +15,5 @@ type Finalizer struct {
 }
 
 func (f *Finalizer) Finalize(ctx context.Context, test *v1.Test) error {
-	panic("implement me!")
+	return nil
 }
