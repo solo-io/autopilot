@@ -6,6 +6,7 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/commands/deploy"
 	"github.com/solo-io/autopilot/cli/pkg/commands/generate"
 	"github.com/solo-io/autopilot/cli/pkg/commands/initialize"
+	"github.com/solo-io/autopilot/cli/pkg/commands/logs"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,7 @@ func AutoPilotCli() *cobra.Command {
 	root.AddCommand(generate.NewCmd())
 	root.AddCommand(build.NewCmd())
 	root.AddCommand(deploy.NewCmd())
+	root.AddCommand(logs.NewCmd())
 
 	root.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 

@@ -25,15 +25,17 @@ func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (Output
 	target := test.Spec.Target
 	host := target.Name + "." + target.Namespace
 
+	var potentialServices []string
 	var targetSvc *parameters.Service
 	for _, svc := range inputs.Services.Items {
+		potentialServices = append(potentialServices, svc.Namespace+"."+svc.Name)
 		if svc.Name == target.Name && svc.Namespace == target.Namespace {
 			targetSvc = &svc
 		}
 	}
 
 	if targetSvc == nil {
-		return Outputs{}, "", &v1.TestStatusInfo{}, fmt.Errorf("invalid spec, service %v not found", target)
+		return Outputs{}, "", &v1.TestStatusInfo{}, fmt.Errorf("invalid spec, service %v not found. potential services: %v", target, potentialServices)
 	}
 
 	fault := (*v1alpha3.HTTPFaultInjection)(&test.Spec.Faults)

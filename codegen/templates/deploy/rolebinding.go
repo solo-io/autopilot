@@ -31,3 +31,29 @@ func roleBinding(data *model.TemplateData) *v1.RoleBinding {
 		},
 	}
 }
+
+func ClusterRoleBinding(data *model.TemplateData) runtime.Object {
+	return clusterRoleBinding(data)
+}
+
+func clusterRoleBinding(data *model.TemplateData) *v1.ClusterRoleBinding {
+	return &v1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: data.OperatorName,
+		},
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1.SchemeGroupVersion.String(),
+			Kind:       "ClusterRoleBinding",
+		},
+		Subjects: []v1.Subject{{
+			Kind:      "ServiceAccount",
+			Name:      data.OperatorName,
+			Namespace: "REPLACE_NAMESPACE",
+		}},
+		RoleRef: v1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     data.OperatorName,
+		},
+	}
+}

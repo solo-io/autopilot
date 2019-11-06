@@ -10,12 +10,30 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func Deployment(data *model.TemplateData) runtime.Object {
-	return deployment(data)
+func NamespaceScopedDeployment(data *model.TemplateData) runtime.Object {
+	return deployment(data, false)
 }
 
-func deployment(data *model.TemplateData) *appsv1.Deployment {
-	labels :=  map[string]string{"name": data.OperatorName}
+func ClusterScopedDeployment(data *model.TemplateData) runtime.Object {
+	return deployment(data, true)
+}
+
+func deployment(data *model.TemplateData, clusterScoped bool) *appsv1.Deployment {
+	labels := map[string]string{"name": data.OperatorName}
+
+	watchNamespaceEnv := v1.EnvVar{
+		Name: k8sutil.WatchNamespaceEnvVar,
+		ValueFrom: &v1.EnvVarSource{
+			FieldRef: &v1.ObjectFieldSelector{
+				FieldPath: "metadata.namespace",
+			},
+		},
+	}
+	if clusterScoped {
+		watchNamespaceEnv.ValueFrom = nil
+		watchNamespaceEnv.Value = metav1.NamespaceAll // watch all namespaces
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,
@@ -31,7 +49,7 @@ func deployment(data *model.TemplateData) *appsv1.Deployment {
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: data.OperatorName,
+					Name:   data.OperatorName,
 					Labels: labels,
 				},
 				Spec: v1.PodSpec{
@@ -42,14 +60,7 @@ func deployment(data *model.TemplateData) *appsv1.Deployment {
 						Command:         []string{data.OperatorName},
 						ImagePullPolicy: v1.PullAlways,
 						Env: []v1.EnvVar{
-							{
-								Name: k8sutil.WatchNamespaceEnvVar,
-								ValueFrom: &v1.EnvVarSource{
-									FieldRef: &v1.ObjectFieldSelector{
-										FieldPath: "metadata.namespace",
-									},
-								},
-							},
+							watchNamespaceEnv,
 							{
 								Name: k8sutil.PodNameEnvVar,
 								ValueFrom: &v1.EnvVarSource{

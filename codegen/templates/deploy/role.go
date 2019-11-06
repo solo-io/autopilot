@@ -12,6 +12,36 @@ func Role(data *model.TemplateData) runtime.Object {
 	return role(data)
 }
 
+func role(data *model.TemplateData) *v1.Role {
+	return &v1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: data.OperatorName,
+		},
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1.SchemeGroupVersion.String(),
+			Kind:       "Role",
+		},
+		Rules: rules(data),
+	}
+}
+
+func ClusterRole(data *model.TemplateData) runtime.Object {
+	return clusterRole(data)
+}
+
+func clusterRole(data *model.TemplateData) *v1.ClusterRole {
+	return &v1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: data.OperatorName,
+		},
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1.SchemeGroupVersion.String(),
+			Kind:       "ClusterRole",
+		},
+		Rules: rules(data),
+	}
+}
+
 type permission struct {
 	read  bool
 	write bool
@@ -23,12 +53,13 @@ func (p permission) verbs() []string {
 		verbs = append(verbs, "get", "list", "watch")
 	}
 	if p.write {
-		verbs = append(verbs, "create", "update", "delete")
+		// writing currently requires reading as we use the EzKube.Ensure method
+		verbs = []string{"*"}
 	}
 	return verbs
 }
 
-func role(data *model.TemplateData) *v1.Role {
+func rules(data *model.TemplateData) []v1.PolicyRule {
 	requiredPermissions := make(map[model.Parameter]permission)
 
 	setRead := func(param model.Parameter) {
@@ -40,9 +71,6 @@ func role(data *model.TemplateData) *v1.Role {
 		perm := requiredPermissions[param]
 		perm.write = true
 		requiredPermissions[param] = perm
-
-		// writing currently requires reading as we use the EzKube.Ensure method
-		setRead(param)
 	}
 
 	for _, phase := range data.Phases {
@@ -57,9 +85,9 @@ func role(data *model.TemplateData) *v1.Role {
 		}
 	}
 
-	// always require read on pods and configmaps
+	// these permissions required by controller-runtime
+	setRead(model.ReplicaSets)
 	setRead(model.Pods)
-	setRead(model.ConfigMaps)
 	setWrite(model.ConfigMaps)
 
 	var rules []v1.PolicyRule
@@ -89,14 +117,5 @@ func role(data *model.TemplateData) *v1.Role {
 		},
 	})
 
-	return &v1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: data.OperatorName,
-		},
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: v1.SchemeGroupVersion.String(),
-			Kind:       "Role",
-		},
-		Rules: rules,
-	}
+	return rules
 }

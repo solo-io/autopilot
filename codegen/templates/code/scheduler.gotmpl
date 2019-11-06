@@ -117,7 +117,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         if errors.IsNotFound(err) {
             return result, nil
         }
-        return result, err
+        return result, fmt.Errorf("failed to retrieve requested {{$.Kind}}: %v", err)
     }
 
     {{- if $.EnableFinalizer }}
@@ -129,7 +129,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         if !utils.ContainsString({{$.KindLowerCamel}}.Finalizers, FinalizerName) {
             {{$.KindLowerCamel}}.Finalizers = append({{$.KindLowerCamel}}.Finalizers, FinalizerName)
             if err := client.Ensure(s.ctx, nil, {{$.KindLowerCamel}}); err != nil {
-                return result, err
+                return result, fmt.Errorf("failed to add finalizer: %v", err)
             }
         }
     } else {
@@ -139,13 +139,13 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
             if err := (&finalizer.Finalizer{Client: client}).Finalize(s.ctx, {{$.KindLowerCamel}}); err != nil {
                 // if fail to delete the external dependency here, return with error
                 // so that it can be retried
-                return result, err
+                return result, fmt.Errorf("failed to run finalizer: %v", err)
             }
 
             // remove our finalizer from the list and update it.
             {{$.KindLowerCamel}}.Finalizers = utils.RemoveString({{$.KindLowerCamel}}.Finalizers, FinalizerName)
             if err := client.Ensure(s.ctx, nil, {{$.KindLowerCamel}}); err != nil {
-                return result, err
+                return result, fmt.Errorf("failed to remove finalizer: %v", err)
             }
         }
 
@@ -160,7 +160,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- else }}
     case {{$.Version}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- end}}
-        log.Info("Syncing {{$.Kind}} %v in phase {{$phase.Name}}", {{$.KindLowerCamel}}.Name)
+        log.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
 
     {{- if is_final $phase }}
         // end state, do not requeue
@@ -170,18 +170,18 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         {{- if has_inputs $phase }}
 		inputs, err := s.make{{ $phase.Name}}Inputs(client)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to make {{ $phase.Name}}Inputs: %v", err)
 		}
 
             {{- if has_outputs $phase }}
         outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
             {{- else}}
         nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
-			return result, err
+            return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
 
             {{- end}}
@@ -190,12 +190,12 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
             {{- if has_outputs $phase }}
         outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
-			return result, err
+           return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
             {{- else}}
         nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
-			return result, err
+            return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
             {{- end}}
         {{- end}}
@@ -203,7 +203,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         {{- range $out := $phase.Outputs }}
 		for _, out := range outputs.{{ $out.PluralName }}.Items {
 			if err := client.Ensure(s.ctx, {{$.KindLowerCamel}}, &out); err != nil {
-				return result, err
+                return result, fmt.Errorf("failed to write output {{ $out.SingleName }}<%v.%v> for phase {{ $phase.Name}}: %v", out.GetNamespace(), out.GetName(), err)
 			}
 		}
         {{- end}}
@@ -213,7 +213,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
             {{$.KindLowerCamel}}.Status.{{$.Kind}}StatusInfo = *statusInfo
         }
 		if err := client.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to update {{$.Kind}}Status: %v", err)
 		}
 
         return result, err

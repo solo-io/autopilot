@@ -79,7 +79,7 @@ func (c *simpleClient) Get(ctx context.Context, obj Object) error {
 }
 
 func (c *simpleClient) List(ctx context.Context, obj List, options ...client.ListOption) error {
-	return c.mgr.GetClient().List(ctx, obj, client.MatchingLabels{"app": "petstore"})
+	return c.mgr.GetClient().List(ctx, obj, options...)
 }
 
 func (c *simpleClient) Create(ctx context.Context, obj Object) error {

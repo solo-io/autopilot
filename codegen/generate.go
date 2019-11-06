@@ -173,9 +173,12 @@ func projectFiles(data *model.TemplateData) []GenFile {
 
 		// deploy
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment.yaml"), TemplateFunc: deploy.Deployment},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-namespace-scoped.yaml"), TemplateFunc: deploy.NamespaceScopedDeployment},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-cluster-scoped.yaml"), TemplateFunc: deploy.ClusterScopedDeployment},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "role.yaml"), TemplateFunc: deploy.Role},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "clusterrole.yaml"), TemplateFunc: deploy.ClusterRole},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "clusterrolebinding.yaml"), TemplateFunc: deploy.ClusterRoleBinding},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "service_account.yaml"), TemplateFunc: deploy.ServiceAccount},
 
 		// hack

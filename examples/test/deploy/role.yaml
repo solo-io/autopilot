@@ -18,23 +18,13 @@ rules:
   resources:
   - virtualservices
   verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - delete
+  - '*'
 - apiGroups:
   - networking.istio.io
   resources:
   - gateways
   verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - delete
+  - '*'
 - apiGroups:
   - ""
   resources:
@@ -48,12 +38,15 @@ rules:
   resources:
   - configmaps
   verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  verbs:
   - get
   - list
   - watch
-  - create
-  - update
-  - delete
 - apiGroups:
   - autopiot.example.io
   resources:

@@ -16,8 +16,10 @@ import (
 )
 
 var (
-	namespace  string
-	deletePods bool
+	namespace     string
+	image         string
+	deletePods    bool
+	clusterScoped bool
 )
 
 func NewCmd() *cobra.Command {
@@ -30,27 +32,62 @@ func NewCmd() *cobra.Command {
 	}
 	deployCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to which to deploy the operator")
 	deployCmd.PersistentFlags().BoolVarP(&deletePods, "deletepods", "d", false, "Delete existing pods after pushing images (to force Kubernetes to pull the newly pushed image)")
+	deployCmd.PersistentFlags().BoolVarP(&clusterScoped, "cluster-scoped", "c", false, "Deploy the operator as a cluster-wide operator. This is required to provide the operator with the ClusterRole required to read and write to other namespaces")
 	return deployCmd
 }
 
-func replaceImage(file, image string) ([]byte, error) {
-	return readAndReplace(file, "REPLACE_IMAGE", image)
-}
-
-func replaceNamespace(file, namespace string) ([]byte, error) {
-	return readAndReplace(file, "REPLACE_NAMESPACE", namespace)
-}
-
-func readAndReplace(file, old, new string) ([]byte, error) {
-	raw, err := ioutil.ReadFile(file)
+func replaceImage(raw []byte, err error) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	return readAndReplace(raw, "REPLACE_IMAGE", image)
+}
+
+func replaceNamespace(raw []byte, err error) ([]byte, error) {
+	if err != nil {
+		return nil, err
+	}
+	return readAndReplace(raw, "REPLACE_NAMESPACE", namespace)
+}
+
+func readAndReplace(raw []byte, old, new string) ([]byte, error) {
 	replaced := strings.ReplaceAll(string(raw), old, new)
 	return []byte(replaced), nil
 }
 
-func deploy(operatorName, image, namespace string, deletePods, needsMetrics bool) error {
+func readAndReplaceManifest(file string) ([]byte, error) {
+	return replaceNamespace(replaceImage(ioutil.ReadFile(file)))
+}
+
+func getManifestsToApply(needsMetrics bool) []string {
+	manifestsToApply := []string{
+		"crd.yaml",
+		"service_account.yaml",
+	}
+	if clusterScoped {
+		manifestsToApply = append(manifestsToApply,
+			"clusterrole.yaml",
+			"clusterrolebinding.yaml",
+			"deployment-cluster-scoped.yaml",
+		)
+	} else {
+		manifestsToApply = append(manifestsToApply,
+			"role.yaml",
+			"rolebinding.yaml",
+			"deployment-namespace-scoped.yaml",
+		)
+	}
+
+	if needsMetrics {
+		manifestsToApply = append(manifestsToApply,
+			"prometheus.yaml",
+		)
+	}
+
+	return manifestsToApply
+}
+
+func deploy(operatorName string, needsMetrics bool) error {
 
 	log.Printf("Pushing image %v", image)
 	push := exec.Command("docker", "push", image)
@@ -60,50 +97,22 @@ func deploy(operatorName, image, namespace string, deletePods, needsMetrics bool
 		return err
 	}
 
-	manifests := []string{
-		"crd.yaml",
-		"role.yaml",
-		"rolebinding.yaml",
-		"service_account.yaml",
-	}
-
 	utils.Kubectl(nil, "create", "ns", namespace)
-
-	for _, man := range manifests {
-		log.Printf("Deploying %v", man)
-		raw, err := ioutil.ReadFile(filepath.Join("deploy", man))
-		if err != nil {
-			return err
-		}
-		if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
-			return err
-		}
-	}
-
-	if needsMetrics {
-		prometheusBase := "deploy/prometheus.yaml"
-		log.Printf("Deploying prometheus from %v", prometheusBase)
-		raw, err := replaceNamespace(prometheusBase, image)
-		if err != nil {
-			return err
-		}
-		if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
-			return err
-		}
-	}
-
-	deploymentBase := "deploy/deployment.yaml"
-	log.Printf("Deploying %v", deploymentBase)
-	raw, err := replaceImage(deploymentBase, image)
-	if err != nil {
-		return err
-	}
-	if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
-		return err
-	}
 
 	if deletePods {
 		if err := utils.Kubectl(nil, "delete", "pod", "-n", namespace, "-l", "name="+operatorName, "--ignore-not-found"); err != nil {
+			return err
+		}
+	}
+
+	for _, man := range getManifestsToApply(needsMetrics) {
+		log.Printf("Deploying %v", man)
+
+		raw, err := readAndReplaceManifest(filepath.Join("deploy", man))
+		if err != nil {
+			return err
+		}
+		if err := utils.KubectlApply(raw, "-n", namespace); err != nil {
 			return err
 		}
 	}
@@ -127,11 +136,11 @@ func deployFunc(cmd *cobra.Command, args []string) error {
 		namespace = cfg.OperatorName
 	}
 
-	image := args[0]
+	image = args[0]
 
 	log.Infof("Deploying Operator with image %s", image)
 
-	if err := deploy(cfg.OperatorName, image, namespace, deletePods, cfg.NeedsMetrics()); err != nil {
+	if err := deploy(cfg.OperatorName, cfg.NeedsMetrics()); err != nil {
 		return fmt.Errorf("failed to deploy operator with image %s: (%v)", image, err)
 	}
 

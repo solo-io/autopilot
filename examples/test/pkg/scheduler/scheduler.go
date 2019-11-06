@@ -110,7 +110,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		if errors.IsNotFound(err) {
 			return result, nil
 		}
-		return result, err
+		return result, fmt.Errorf("failed to retrieve requested Test: %v", err)
 	}
 	// examine DeletionTimestamp to determine if object is under deletion
 	if test.DeletionTimestamp.IsZero() {
@@ -120,7 +120,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		if !utils.ContainsString(test.Finalizers, FinalizerName) {
 			test.Finalizers = append(test.Finalizers, FinalizerName)
 			if err := client.Ensure(s.ctx, nil, test); err != nil {
-				return result, err
+				return result, fmt.Errorf("failed to add finalizer: %v", err)
 			}
 		}
 	} else {
@@ -130,13 +130,13 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 			if err := (&finalizer.Finalizer{Client: client}).Finalize(s.ctx, test); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
-				return result, err
+				return result, fmt.Errorf("failed to run finalizer: %v", err)
 			}
 
 			// remove our finalizer from the list and update it.
 			test.Finalizers = utils.RemoveString(test.Finalizers, FinalizerName)
 			if err := client.Ensure(s.ctx, nil, test); err != nil {
-				return result, err
+				return result, fmt.Errorf("failed to remove finalizer: %v", err)
 			}
 		}
 
@@ -145,23 +145,23 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
 	switch test.Status.Phase {
 	case "", v1.TestPhaseInitializing:
-		log.Info("Syncing Test %v in phase Initializing", test.Name)
+		log.Info("Syncing Test in phase Initializing", "name", test.Name)
 		inputs, err := s.makeInitializingInputs(client)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to make InitializingInputs: %v", err)
 		}
 		outputs, nextPhase, statusInfo, err := (&initializing.Worker{Client: client}).Sync(s.ctx, test, inputs)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to run worker for phase Initializing: %v", err)
 		}
 		for _, out := range outputs.VirtualServices.Items {
 			if err := client.Ensure(s.ctx, test, &out); err != nil {
-				return result, err
+				return result, fmt.Errorf("failed to write output VirtualService<%v.%v> for phase Initializing: %v", out.GetNamespace(), out.GetName(), err)
 			}
 		}
 		for _, out := range outputs.Gateways.Items {
 			if err := client.Ensure(s.ctx, test, &out); err != nil {
-				return result, err
+				return result, fmt.Errorf("failed to write output Gateway<%v.%v> for phase Initializing: %v", out.GetNamespace(), out.GetName(), err)
 			}
 		}
 
@@ -170,19 +170,19 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 			test.Status.TestStatusInfo = *statusInfo
 		}
 		if err := client.UpdateStatus(s.ctx, test); err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to update TestStatus: %v", err)
 		}
 
 		return result, err
 	case v1.TestPhaseProcessing:
-		log.Info("Syncing Test %v in phase Processing", test.Name)
+		log.Info("Syncing Test in phase Processing", "name", test.Name)
 		inputs, err := s.makeProcessingInputs(client)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to make ProcessingInputs: %v", err)
 		}
 		nextPhase, statusInfo, err := (&processing.Worker{Client: client}).Sync(s.ctx, test, inputs)
 		if err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to run worker for phase Processing: %v", err)
 		}
 
 		test.Status.Phase = nextPhase
@@ -190,16 +190,16 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 			test.Status.TestStatusInfo = *statusInfo
 		}
 		if err := client.UpdateStatus(s.ctx, test); err != nil {
-			return result, err
+			return result, fmt.Errorf("failed to update TestStatus: %v", err)
 		}
 
 		return result, err
 	case v1.TestPhaseFinished:
-		log.Info("Syncing Test %v in phase Finished", test.Name)
+		log.Info("Syncing Test in phase Finished", "name", test.Name)
 		// end state, do not requeue
 		return reconcile.Result{}, nil
 	case v1.TestPhaseFailed:
-		log.Info("Syncing Test %v in phase Failed", test.Name)
+		log.Info("Syncing Test in phase Failed", "name", test.Name)
 		// end state, do not requeue
 		return reconcile.Result{}, nil
 	}
