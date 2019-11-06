@@ -2,7 +2,7 @@ package {{worker_import_prefix $}}
 
 import (
 	"context"
-    "github.com/solo-io/autopilot/pkg/utils"
+    "github.com/solo-io/autopilot/pkg/ezkube"
 
     {{.Project.Version}} "{{.Project.TypesImportPath}}"
 )
@@ -10,7 +10,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 type Worker struct {
-    Kube utils.EzKube
+    Client ezkube.Client
 }
 
 {{- if has_inputs $ }}

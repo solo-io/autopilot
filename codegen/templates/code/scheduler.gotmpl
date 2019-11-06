@@ -3,15 +3,18 @@ package scheduler
 import (
     "context"
     "fmt"
-    "k8s.io/kubernetes/pkg/util/slice"
     "time"
 
     "k8s.io/apimachinery/pkg/api/errors"
+    "k8s.io/kubernetes/pkg/util/slice"
+
+    ctl "sigs.k8s.io/controller-runtime/pkg/client"
     "sigs.k8s.io/controller-runtime/pkg/handler"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/reconcile"
     logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+    "github.com/solo-io/autopilot/pkg/ezkube"
     "github.com/solo-io/autopilot/pkg/metrics"
     "github.com/solo-io/autopilot/pkg/utils"
 
@@ -107,9 +110,9 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{$.KindLowerCamel}}.Namespace = request.Namespace
     {{$.KindLowerCamel}}.Name = request.Name
 
-    kube := utils.NewEzKube({{$.KindLowerCamel}}, s.mgr)
+    client := ezkube.NewClient(s.mgr)
 
-    if err := kube.Get(s.ctx, {{$.KindLowerCamel}}); err != nil {
+    if err := client.Get(s.ctx, {{$.KindLowerCamel}}); err != nil {
         // garbage collection and finalizers should handle cleaning up after deletion
         if errors.IsNotFound(err) {
             return result, nil
@@ -125,7 +128,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         // registering our finalizer.
         if !utils.ContainsString({{$.KindLowerCamel}}.Finalizers, FinalizerName) {
             {{$.KindLowerCamel}}.Finalizers = append({{$.KindLowerCamel}}.Finalizers, FinalizerName)
-            if err := kube.Ensure(s.ctx, {{$.KindLowerCamel}}); err != nil {
+            if err := client.Ensure(s.ctx, nil, {{$.KindLowerCamel}}); err != nil {
                 return result, err
             }
         }
@@ -133,7 +136,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         // The object is being deleted
         if utils.ContainsString({{$.KindLowerCamel}}.Finalizers, FinalizerName) {
             // our finalizer is present, so lets handle any external dependency
-            if err := (&finalizer.Finalizer{Kube:kube}).Finalize(s.ctx, {{$.KindLowerCamel}}); err != nil {
+            if err := (&finalizer.Finalizer{Client: client}).Finalize(s.ctx, {{$.KindLowerCamel}}); err != nil {
                 // if fail to delete the external dependency here, return with error
                 // so that it can be retried
                 return result, err
@@ -141,7 +144,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
             // remove our finalizer from the list and update it.
             {{$.KindLowerCamel}}.Finalizers = utils.RemoveString({{$.KindLowerCamel}}.Finalizers, FinalizerName)
-            if err := kube.Ensure(s.ctx, {{$.KindLowerCamel}}); err != nil {
+            if err := client.Ensure(s.ctx, nil, {{$.KindLowerCamel}}); err != nil {
                 return result, err
             }
         }
@@ -165,18 +168,18 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- else }}
 
         {{- if has_inputs $phase }}
-		inputs, err := s.make{{ $phase.Name}}Inputs(kube)
+		inputs, err := s.make{{ $phase.Name}}Inputs(client)
 		if err != nil {
 			return result, err
 		}
 
             {{- if has_outputs $phase }}
-        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, err
 		}
@@ -185,12 +188,12 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
         {{- else}}
             {{- if has_outputs $phase }}
-        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
             {{- else}}
-        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Kube:kube}).Sync(s.ctx, {{$.KindLowerCamel}})
+        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
 			return result, err
 		}
@@ -198,8 +201,8 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         {{- end}}
 
         {{- range $out := $phase.Outputs }}
-		for _, out := range outputs.{{ $out.PluralName }} {
-			if err := kube.Ensure(s.ctx, out); err != nil {
+		for _, out := range outputs.{{ $out.PluralName }}.Items {
+			if err := client.Ensure(s.ctx, {{$.KindLowerCamel}}, &out); err != nil {
 				return result, err
 			}
 		}
@@ -209,7 +212,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
         if  statusInfo != nil {
             {{$.KindLowerCamel}}.Status.{{$.Kind}}StatusInfo = *statusInfo
         }
-		if err := kube.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
+		if err := client.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
 			return result, err
 		}
 
@@ -222,7 +225,8 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
 {{- range $phase := .Phases}}
     {{- if has_inputs $phase }}
-func (s *Scheduler) make{{ $phase.Name}}Inputs(kube utils.EzKube) ({{worker_import_prefix $phase}}.Inputs, error) {
+
+func (s *Scheduler) make{{ $phase.Name}}Inputs(client ezkube.Client) ({{worker_import_prefix $phase}}.Inputs, error) {
 	var (
 		inputs {{worker_import_prefix $phase}}.Inputs
 	    err error
@@ -232,7 +236,7 @@ func (s *Scheduler) make{{ $phase.Name}}Inputs(kube utils.EzKube) ({{worker_impo
             {{- if is_metrics $param }}
     inputs.{{$param.PluralName}} = s.Metrics
             {{- else}}
-    inputs.{{$param.PluralName}}, err = kube.List{{$param.PluralName}}(s.ctx, s.namespace)
+    err = client.List(s.ctx, &inputs.{{$param.PluralName}}, ctl.InNamespace(s.namespace))
     if err != nil {
         return inputs, err
     }

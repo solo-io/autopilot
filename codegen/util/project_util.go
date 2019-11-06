@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
@@ -56,6 +57,33 @@ func MustGetwd() string {
 		log.Fatalf("Failed to get working directory: (%v)", err)
 	}
 	return wd
+}
+
+// gets the directory
+func MustGetFileDir() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get working directory: (%v)", err)
+	}
+	return wd
+}
+
+// returns absolute path to the .go file containing the calling function
+func GetThisFile() (string, error) {
+	_, thisFile, _, ok := runtime.Caller(1)
+	if !ok {
+		return "", fmt.Errorf("failed to get runtime.Caller")
+	}
+	return filepath.Abs(thisFile)
+}
+
+// returns absolute path to the diretory containing the .go file containing the calling function
+func GetThisDir() (string, error) {
+	thisFile, err := GetThisFile()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Abs(filepath.Dir(thisFile))
 }
 
 func getHomeDir() (string, error) {

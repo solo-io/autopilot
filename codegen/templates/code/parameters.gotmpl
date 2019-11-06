@@ -1,29 +1,47 @@
-package {{worker_import_prefix $}}
+// the parameters package makes it easy to interact with input/output types for your phases
+// it also handles registering the types with the kubernetes runtime.Scheme
+package parameters
 
 import (
-{{- range $param := $.Inputs }}
-    {{$param.ImportPrefix}} "{{$param.Package}}"
+{{- range $param := unique_params }}
+    {{- if not (is_metrics $param) }}
+    {{ $param.ImportPrefix }} "{{ $param.Package }}"
+    {{- end}}
 {{- end}}
 
-{{- range $param := $.Outputs }}
-    {{$param.ImportPrefix}} "{{$param.Package}}"
-{{- end}}
+    "k8s.io/apimachinery/pkg/runtime"
 )
 
-{{- if has_inputs $}}
+type (
+{{- range $param := unique_params }}
+    {{- if not (is_metrics $param) }}
 
-type Inputs struct {
-    {{- range $param := $.Inputs }}
-    {{$param.PluralName}} {{$param.ImportPrefix}}.{{$param.PluralName}}
+    // type aliases for {{ $param.ImportPrefix }}.{{$param.SingleName}}
+    {{$param.SingleName}} = {{ $param.ImportPrefix }}.{{$param.SingleName}}
+    {{$param.PluralName}} = {{ $param.ImportPrefix }}.{{$param.SingleName}}List
+
     {{- end}}
-}
-{{- end}}
+{{- end }}
+)
 
-{{- if has_outputs $}}
+var (
+    SchemeBuilder = runtime.SchemeBuilder{}
+)
 
-type Outputs struct {
-    {{- range $param := $.Outputs }}
-    {{$param.PluralName}} {{$param.ImportPrefix}}.{{$param.PluralName}}
+func init() {
+
+{{- $schemesAdded := ""}}
+
+{{- range $param := unique_params }}
+    {{- if $param.IsCrd }}
+        {{- if not (string_contains $schemesAdded $param.ImportPrefix) }}
+    SchemeBuilder = append(SchemeBuilder, {{ $param.ImportPrefix }}.AddToScheme)
+        {{- $schemesAdded = (print $schemesAdded "," $param.ImportPrefix) }}
+        {{- end}}
     {{- end}}
-}
 {{- end}}
+}
+
+func AddToScheme(s *runtime.Scheme) error {
+    return SchemeBuilder.AddToScheme(s)
+}

@@ -50,19 +50,21 @@ func Load(file string) (*model.TemplateData, error) {
 	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
 	configImportPath := filepath.Join(projectGoPkg, "pkg", "config")
 	finalizerImportPath := filepath.Join(projectGoPkg, "pkg", "finalizer")
+	parametersImportPath := filepath.Join(projectGoPkg, "pkg", "parameters")
 
 	data := &model.TemplateData{
-		Project:             project,
-		ProjectPackage:      projectGoPkg,
-		Group:               apiGroup,
-		Version:             apiVersion,
-		TypesImportPath:     apiImportPath,
-		SchedulerImportPath: schedulerImportPath,
-		ConfigImportPath:    configImportPath,
-		FinalizerImportPath: finalizerImportPath,
-		KindLowerCamel:      strcase.ToLowerCamel(project.Kind),
-		KindLower:           strings.ToLower(project.Kind),
-		KindLowerPlural:     pluralize.NewClient().Plural(strings.ToLower(project.Kind)),
+		Project:              project,
+		ProjectPackage:       projectGoPkg,
+		Group:                apiGroup,
+		Version:              apiVersion,
+		TypesImportPath:      apiImportPath,
+		SchedulerImportPath:  schedulerImportPath,
+		ConfigImportPath:     configImportPath,
+		FinalizerImportPath:  finalizerImportPath,
+		ParametersImportPath: parametersImportPath,
+		KindLowerCamel:       strcase.ToLowerCamel(project.Kind),
+		KindLower:            strings.ToLower(project.Kind),
+		KindLowerPlural:      pluralize.NewClient().Plural(strings.ToLower(project.Kind)),
 	}
 
 	// required for use by worker template
@@ -156,6 +158,7 @@ func projectFiles(data *model.TemplateData) []GenFile {
 		{OutPath: filepath.Join(data.ProjectPackage, "cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
 		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "code/config.gotmpl", SkipOverwrite: true},
+		{OutPath: filepath.Join(data.ParametersImportPath, "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
 
 		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "code/doc.gotmpl"},
 		{OutPath: filepath.Join(data.TypesImportPath, "phases.go"), TemplatePath: "code/phases.gotmpl"},
@@ -196,7 +199,7 @@ func projectFiles(data *model.TemplateData) []GenFile {
 
 func phaseFiles(data *model.TemplateData, phase model.Phase) []GenFile {
 	return []GenFile{
-		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
+		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "inputs_outputs.go"), TemplatePath: "code/inputs_outputs.gotmpl"},
 		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "worker.go"), TemplatePath: "code/worker.gotmpl", SkipOverwrite: true},
 	}
 }

@@ -1,6 +1,10 @@
 # todo
 
-- deploy prometheus if metrics set up
+* works across namespaces..
+* bake templates into cli
+* curl script to download
+* add many more aliases/parameter types
+
 - istio types
 - builders
 - generic metrics interface / define in autopilot.yaml

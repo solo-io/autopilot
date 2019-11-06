@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/solo-io/autopilot/pkg/utils"
+	"github.com/solo-io/autopilot/pkg/ezkube"
 
 	v1 "github.com/solo-io/autopilot/examples/test/pkg/apis/tests/v1"
 )
@@ -12,7 +12,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 type Worker struct {
-	Kube utils.EzKube
+	Client ezkube.Client
 }
 
 func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (v1.TestPhase, *v1.TestStatusInfo, error) {

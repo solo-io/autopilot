@@ -22,7 +22,7 @@ type Client interface {
 	// 	simpleClient.List(ctx,
 	// 		client.InNamespace("my-namespace",
 	// 		client.MatchingLabels{"app": "petstore"})
-	List(ctx context.Context, obj Object, options ...client.ListOption) error
+	List(ctx context.Context, obj List, options ...client.ListOption) error
 
 	// create the object passed
 	Create(ctx context.Context, obj Object) error
@@ -78,7 +78,7 @@ func (c *simpleClient) Get(ctx context.Context, obj Object) error {
 	return c.mgr.GetClient().Get(ctx, objectKey, obj)
 }
 
-func (c *simpleClient) List(ctx context.Context, obj Object, options ...client.ListOption) error {
+func (c *simpleClient) List(ctx context.Context, obj List, options ...client.ListOption) error {
 	return c.mgr.GetClient().List(ctx, obj, client.MatchingLabels{"app": "petstore"})
 }
 

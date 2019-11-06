@@ -6,6 +6,17 @@ metadata:
   name: quarantine-operator
 rules:
 - apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - delete
+- apiGroups:
   - ""
   resources:
   - services
@@ -31,17 +42,6 @@ rules:
   - ""
   resources:
   - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - deployments
   verbs:
   - get
   - list

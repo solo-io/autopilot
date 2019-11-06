@@ -3,12 +3,13 @@ package initializing
 import (
 	"context"
 	"fmt"
-	"github.com/solo-io/autopilot/pkg/aliases"
+	"github.com/solo-io/autopilot/examples/test/pkg/parameters"
 	"istio.io/api/networking/v1alpha3"
+	alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 
-	"github.com/solo-io/autopilot/pkg/utils"
+	"github.com/solo-io/autopilot/pkg/ezkube"
 
 	v1 "github.com/solo-io/autopilot/examples/test/pkg/apis/tests/v1"
 )
@@ -16,17 +17,17 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 type Worker struct {
-	Kube utils.EzKube
+	Client ezkube.Client
 }
 
 func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (Outputs, v1.TestPhase, *v1.TestStatusInfo, error) {
 	target := test.Spec.Target
 	host := target.Name + "." + target.Namespace
 
-	var targetSvc *aliases.Service
-	for _, svc := range inputs.Services {
+	var targetSvc *parameters.Service
+	for _, svc := range inputs.Services.Items {
 		if svc.Name == target.Name && svc.Namespace == target.Namespace {
-			targetSvc = svc
+			targetSvc = &svc
 		}
 	}
 
@@ -54,17 +55,20 @@ func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (Output
 	}
 
 	return Outputs{
-		VirtualServices: []*aliases.VirtualService{{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   test.Namespace,
-				Name:        test.Name,
-				Labels:      test.Labels,
-				Annotations: test.Annotations,
-			},
-			Spec: v1alpha3.VirtualService{
-				Hosts: []string{host},
-				Http:  routes,
-			},
-		}},
-	}, v1.TestPhaseProcessing, &v1.TestStatusInfo{TimeStarted: metav1.Time{time.Now()}}, nil
+		VirtualServices: parameters.VirtualServices{
+			Items: []alpha3.VirtualService{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace:   test.Namespace,
+						Name:        test.Name,
+						Labels:      test.Labels,
+						Annotations: test.Annotations,
+					},
+					Spec: v1alpha3.VirtualService{
+						Hosts: []string{host},
+						Http:  routes,
+					},
+				},
+			}},
+	}, v1.TestPhaseProcessing, &v1.TestStatusInfo{TimeStarted: metav1.Time{Time: time.Now()}}, nil
 }

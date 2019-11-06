@@ -11,12 +11,13 @@ import (
 func (d TemplateData) Funcs() template.FuncMap {
 	return template.FuncMap{
 		// string utils
-		"join":        strings.Join,
-		"lower":       strings.ToLower,
-		"lower_camel": strcase.ToLowerCamel,
-		"upper_camel": strcase.ToCamel,
-		"snake":       strcase.ToSnake,
-		"split":       splitTrimEmpty,
+		"join":            strings.Join,
+		"lower":           strings.ToLower,
+		"lower_camel":     strcase.ToLowerCamel,
+		"upper_camel":     strcase.ToCamel,
+		"snake":           strcase.ToSnake,
+		"split":           splitTrimEmpty,
+		"string_contains": strings.Contains,
 
 		// project data
 		"has_outputs":          HasOutputs,
@@ -27,6 +28,7 @@ func (d TemplateData) Funcs() template.FuncMap {
 		"worker_package":       d.workerPackage,
 		"needs_metrics":        d.NeedsMetrics,
 		"unique_outputs":       d.UniqueOutputs,
+		"unique_params":        d.UniqueParams,
 	}
 }
 

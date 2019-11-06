@@ -6,13 +6,27 @@ metadata:
   name: test-operator
 rules:
 - apiGroups:
-  - ""
+  - networking.istio.io
   resources:
-  - services
+  - virtualservices
   verbs:
   - get
   - list
   - watch
+  - create
+  - update
+  - delete
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - gateways
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -33,16 +47,13 @@ rules:
   - update
   - delete
 - apiGroups:
-  - networking.istio.io
+  - ""
   resources:
-  - virtualservices
+  - services
   verbs:
   - get
   - list
   - watch
-  - create
-  - update
-  - delete
 - apiGroups:
   - autopiot.example.io
   resources:

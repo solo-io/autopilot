@@ -2,13 +2,16 @@ package finalizer
 
 import (
 	"context"
+    "github.com/solo-io/autopilot/pkg/ezkube"
     "github.com/solo-io/autopilot/pkg/utils"
 
     {{.Version}} "{{.TypesImportPath}}"
 )
 
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+
 type Finalizer struct {
-    Kube utils.EzKube
+    Client ezkube.Client
 }
 
 func (f *Finalizer) Finalize(ctx context.Context, {{$.KindLowerCamel}} *{{.Version}}.{{.Kind}}) error {

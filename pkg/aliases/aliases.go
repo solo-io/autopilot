@@ -1,3 +1,5 @@
+// This package is a convenience wrapper for commonly used k8s resources and CRDs
+
 package aliases
 
 import (
@@ -25,6 +27,7 @@ type (
 	ReplicaSets = []*ReplicaSet
 	VirtualServices = []*VirtualService
 )
+
 
 var (
 	SchemeBuilder = runtime.SchemeBuilder{}

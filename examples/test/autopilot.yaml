@@ -10,6 +10,7 @@ phases:
   - services
   outputs:
   - virtualservices
+  - gateways
 - description: Test has begun processing
   inputs:
   - metrics

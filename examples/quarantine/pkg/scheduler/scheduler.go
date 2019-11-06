@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/autopilot/pkg/metrics"
 	"github.com/solo-io/autopilot/pkg/utils"
 
@@ -110,9 +111,9 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 	quarantine.Namespace = request.Namespace
 	quarantine.Name = request.Name
 
-	kube := utils.NewEzKube(quarantine, s.mgr)
+	client := ezkube.NewClient(s.mgr)
 
-	if err := kube.Get(s.ctx, quarantine); err != nil {
+	if err := client.Get(s.ctx, quarantine); err != nil {
 		// garbage collection and finalizers should handle cleaning up after deletion
 		if errors.IsNotFound(err) {
 			return result, nil
@@ -126,7 +127,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		// registering our finalizer.
 		if !utils.ContainsString(quarantine.Finalizers, FinalizerName) {
 			quarantine.Finalizers = append(quarantine.Finalizers, FinalizerName)
-			if err := kube.Ensure(s.ctx, quarantine); err != nil {
+			if err := client.Ensure(s.ctx, nil, quarantine); err != nil {
 				return result, err
 			}
 		}
@@ -134,7 +135,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		// The object is being deleted
 		if utils.ContainsString(quarantine.Finalizers, FinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
-			if err := (&finalizer.Finalizer{Kube: kube}).Finalize(s.ctx, quarantine); err != nil {
+			if err := (&finalizer.Finalizer{Client: client}).Finalize(s.ctx, quarantine); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
 				return result, err
@@ -142,7 +143,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
 			// remove our finalizer from the list and update it.
 			quarantine.Finalizers = utils.RemoveString(quarantine.Finalizers, FinalizerName)
-			if err := kube.Ensure(s.ctx, quarantine); err != nil {
+			if err := client.Ensure(s.ctx, nil, quarantine); err != nil {
 				return result, err
 			}
 		}
@@ -153,51 +154,51 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 	switch quarantine.Status.Phase {
 	case "", v1.QuarantinePhaseInitializing:
 		log.Info("Syncing Quarantine %v in phase Initializing", quarantine.Name)
-		outputs, nextPhase, statusInfo, err := (&initializing.Worker{Kube: kube}).Sync(s.ctx, quarantine)
+		outputs, nextPhase, statusInfo, err := (&initializing.Worker{Client: client}).Sync(s.ctx, quarantine)
 		if err != nil {
 			return result, err
 		}
 		for _, out := range outputs.Deployments {
-			if err := kube.Ensure(s.ctx, out); err != nil {
+			if err := client.Ensure(s.ctx, quarantine, out); err != nil {
 				return result, err
 			}
 		}
 		for _, out := range outputs.Services {
-			if err := kube.Ensure(s.ctx, out); err != nil {
+			if err := client.Ensure(s.ctx, quarantine, out); err != nil {
 				return result, err
 			}
 		}
 
 		quarantine.Status.Phase = nextPhase
 		if statusInfo != nil {
-			quarantine.Status.StatusInfo = statusInfo
+			quarantine.Status.QuarantineStatusInfo = *statusInfo
 		}
-		if err := kube.UpdateStatus(s.ctx, quarantine); err != nil {
+		if err := client.UpdateStatus(s.ctx, quarantine); err != nil {
 			return result, err
 		}
 
 		return result, err
 	case v1.QuarantinePhaseProcessing:
 		log.Info("Syncing Quarantine %v in phase Processing", quarantine.Name)
-		inputs, err := s.makeProcessingInputs()
+		inputs, err := s.makeProcessingInputs(client)
 		if err != nil {
 			return result, err
 		}
-		outputs, nextPhase, statusInfo, err := (&processing.Worker{Kube: kube}).Sync(s.ctx, quarantine, inputs)
+		outputs, nextPhase, statusInfo, err := (&processing.Worker{Client: client}).Sync(s.ctx, quarantine, inputs)
 		if err != nil {
 			return result, err
 		}
 		for _, out := range outputs.Pods {
-			if err := kube.Ensure(s.ctx, out); err != nil {
+			if err := client.Ensure(s.ctx, quarantine, out); err != nil {
 				return result, err
 			}
 		}
 
 		quarantine.Status.Phase = nextPhase
 		if statusInfo != nil {
-			quarantine.Status.StatusInfo = statusInfo
+			quarantine.Status.QuarantineStatusInfo = *statusInfo
 		}
-		if err := kube.UpdateStatus(s.ctx, quarantine); err != nil {
+		if err := client.UpdateStatus(s.ctx, quarantine); err != nil {
 			return result, err
 		}
 
@@ -209,7 +210,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 	}
 	return result, fmt.Errorf("cannot process Quarantine in unknown phase: %v", quarantine.Status.Phase)
 }
-func (s *Scheduler) makeProcessingInputs(kube utils.EzKube) (processing.Inputs, error) {
+func (s *Scheduler) makeProcessingInputs(client ezkube.Client) (processing.Inputs, error) {
 	var (
 		inputs processing.Inputs
 		err    error

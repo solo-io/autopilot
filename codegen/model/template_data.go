@@ -10,10 +10,12 @@ type TemplateData struct {
 	Group   string // e.g. "mesh.demos.io"
 	Version string // e.g. "v1"
 
-	TypesImportPath     string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
-	SchedulerImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
-	ConfigImportPath    string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/config"
-	FinalizerImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/finalizer"
+	TypesImportPath      string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
+	SchedulerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
+	ConfigImportPath     string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/config"
+	FinalizerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/finalizer"
+	ParametersImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/parameters"
+
 	KindLowerCamel      string // e.g. "canaryResource"
 	KindLower           string // e.g. "canaryresource"
 	KindLowerPlural     string // e.g. "canaryresources"
@@ -43,7 +45,6 @@ func (d *TemplateData) NeedsMetrics() bool {
 	return false
 }
 
-
 func (d *TemplateData) UniqueOutputs() []Parameter {
 	var unique []Parameter
 	addParam := func(param Parameter) {
@@ -57,6 +58,27 @@ func (d *TemplateData) UniqueOutputs() []Parameter {
 	for _, phase := range d.Phases {
 		for _, out := range phase.Outputs {
 			addParam(out)
+		}
+	}
+	return unique
+}
+
+func (d *TemplateData) UniqueParams() []Parameter {
+	var unique []Parameter
+	addParam := func(param Parameter) {
+		for _, p := range unique {
+			if p == param {
+				return
+			}
+		}
+		unique = append(unique, param)
+	}
+	for _, phase := range d.Phases {
+		for _, p := range phase.Inputs {
+			addParam(p)
+		}
+		for _, p := range phase.Outputs {
+			addParam(p)
 		}
 	}
 	return unique

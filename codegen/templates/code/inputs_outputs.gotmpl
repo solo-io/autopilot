@@ -1,0 +1,36 @@
+package {{worker_import_prefix $}}
+
+import (
+    parameters "{{ $.Project.ParametersImportPath }}"
+
+{{- if needs_metrics }}
+
+    "github.com/solo-io/autopilot/pkg/metrics"
+{{- end }}
+)
+
+{{- if has_inputs $}}
+
+type Inputs struct {
+
+    {{- range $param := $.Inputs }}
+
+        {{- if is_metrics $param }}
+    {{$param.PluralName}} metrics.{{$param.PluralName}}
+
+        {{- else}}
+    {{$param.PluralName}} parameters.{{$param.PluralName}}
+
+        {{- end}}
+    {{- end}}
+}
+{{- end}}
+
+{{- if has_outputs $}}
+
+type Outputs struct {
+    {{- range $param := $.Outputs }}
+    {{$param.PluralName}} parameters.{{$param.PluralName}}
+    {{- end}}
+}
+{{- end}}
