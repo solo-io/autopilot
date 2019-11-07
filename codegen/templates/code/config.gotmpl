@@ -9,6 +9,7 @@ var (
 	Version = "0.0.1"
 
 {{- if needs_metrics }}
+
     // The Address of the Prometheus server to connect to for metrics
     MetricsServer = "http://{{ .OperatorName }}-prometheus:9090"
 

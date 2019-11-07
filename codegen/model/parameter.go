@@ -1,5 +1,7 @@
 package model
 
+import "github.com/sirupsen/logrus"
+
 type Parameter struct {
 	LowerName        string `json:"lowerName"`
 	SingleName       string
@@ -18,13 +20,18 @@ func (p Parameter) String() string {
 // registered parameters
 var Parameters []Parameter
 
-func register(param Parameter) Parameter {
+func Register(param Parameter) Parameter {
+	for _, existing := range Parameters {
+		if existing.LowerName == param.LowerName {
+			logrus.Fatalf("parameter %v already defined", param.LowerName)
+		}
+	}
 	Parameters = append(Parameters, param)
 	return param
 }
 
 var (
-	ConfigMaps = register(Parameter{
+	ConfigMaps = Register(Parameter{
 		LowerName:    "configmaps",
 		PluralName:   "ConfigMaps",
 		SingleName:   "ConfigMap",
@@ -32,7 +39,7 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
-	Services = register(Parameter{
+	Services = Register(Parameter{
 		LowerName:    "services",
 		PluralName:   "Services",
 		SingleName:   "Service",
@@ -40,7 +47,7 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
-	Pods = register(Parameter{
+	Pods = Register(Parameter{
 		LowerName:    "pods",
 		PluralName:   "Pods",
 		SingleName:   "Pod",
@@ -48,7 +55,7 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
-	Deployments = register(Parameter{
+	Deployments = Register(Parameter{
 		LowerName:    "deployments",
 		PluralName:   "Deployments",
 		SingleName:   "Deployment",
@@ -56,7 +63,7 @@ var (
 		Package:      "k8s.io/api/apps/v1",
 		ApiGroup:     "apps",
 	})
-	ReplicaSets = register(Parameter{
+	ReplicaSets = Register(Parameter{
 		LowerName:    "replicasets",
 		PluralName:   "ReplicaSets",
 		SingleName:   "ReplicaSet",
@@ -64,7 +71,7 @@ var (
 		Package:      "k8s.io/api/apps/v1",
 		ApiGroup:     "apps",
 	})
-	TrafficSplits = register(Parameter{
+	TrafficSplits = Register(Parameter{
 		LowerName:    "trafficsplits",
 		PluralName:   "TrafficSplits",
 		SingleName:   "TrafficSplit",
@@ -73,7 +80,7 @@ var (
 		ApiGroup:     "split.smi-spec.io",
 		IsCrd:        true,
 	})
-	VirtualServices = register(Parameter{
+	VirtualServices = Register(Parameter{
 		LowerName:    "virtualservices",
 		PluralName:   "VirtualServices",
 		SingleName:   "VirtualService",
@@ -82,7 +89,7 @@ var (
 		ApiGroup:     "networking.istio.io",
 		IsCrd:        true,
 	})
-	Gateways = register(Parameter{
+	Gateways = Register(Parameter{
 		LowerName:    "gateways",
 		PluralName:   "Gateways",
 		SingleName:   "Gateway",
@@ -91,7 +98,7 @@ var (
 		ApiGroup:     "networking.istio.io",
 		IsCrd:        true,
 	})
-	Metrics = register(Parameter{
+	Metrics = Register(Parameter{
 		LowerName:        "metrics",
 		PluralName:       "Metrics",
 		SingleName:       "Metric",

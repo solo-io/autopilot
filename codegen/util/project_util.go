@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/solo-io/autopilot/pkg/aliases/defaults"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,7 +24,6 @@ const (
 
 	fsep            = string(filepath.Separator)
 	mainFile        = "cmd" + fsep + "manager" + fsep + "main.go"
-	autopilotFile   = "autopilot.yaml"
 	rolesDir        = "roles"
 	helmChartsDir   = "helm-charts"
 	goModFile       = "go.mod"
@@ -42,9 +42,9 @@ func MustInProjectRoot() {
 func CheckProjectRoot() error {
 	// If the current directory has a "build/Dockerfile", then it is safe to say
 	// we are at the project root.
-	if _, err := os.Stat(autopilotFile); err != nil {
+	if _, err := os.Stat(defaults.AutoPilotFile); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("must run command in project root dir: project structure requires %s", autopilotFile)
+			return fmt.Errorf("must run command in project root dir: project structure requires %s", defaults.AutoPilotFile)
 		}
 		return errors.Wrap(err, "error while checking if current directory is the project root")
 	}

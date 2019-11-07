@@ -3,13 +3,22 @@ package model
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
+	v1 "github.com/solo-io/autopilot/api/v1"
 )
 
+// this is the internal representation of the Project written by the user
+// for convenience, the user object is simplified
+// as defined by autopilot.proto.
+// conversion is handled by custom Marshal/Unmarshal functions
 type Project struct {
 	OperatorName string  `json:"operatorName"`
 	ApiVersion   string  `json:"apiVersion"`
 	Kind         string  `json:"kind"`
 	Phases       []Phase `json:"phases"`
+
+	// custom parameters specified by the user
+	// can be used as inputs or outputs
+	CustomParameters []Parameter `json:"customParameters"`
 
 	// enable use of a Finalizer to handle object deletion
 	EnableFinalizer bool `json:"enableFinalizer"`
@@ -24,15 +33,6 @@ type Phase struct {
 
 	// set by load
 	Project *TemplateData `json:"-"`
-}
-
-// with parameter as a string
-type userPhase struct {
-	Name        string   `json:"name,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Initial     bool     `json:"initial,omitempty"`
-	Inputs      []string `json:"inputs,omitempty"`
-	Outputs     []string `json:"outputs,omitempty"`
 }
 
 func paramNames(params []Parameter) []string {
@@ -65,7 +65,7 @@ func paramsFromNames(names []string) ([]Parameter, error) {
 }
 
 func (p *Phase) MarshalJSON() ([]byte, error) {
-	user := &userPhase{
+	user := &v1.Phase{
 		Name:        p.Name,
 		Description: p.Description,
 		Initial:     p.Initial,
@@ -76,7 +76,7 @@ func (p *Phase) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Phase) UnmarshalJSON(b []byte) error {
-	var user userPhase
+	var user v1.Phase
 	if err := json.Unmarshal(b, &user); err != nil {
 		return err
 	}

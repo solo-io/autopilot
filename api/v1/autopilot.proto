@@ -1,0 +1,86 @@
+// autopilot-operator.proto defines the API Schema for the autopilot.yaml configuration file.
+// This file is used to generate and re-generate the project structure, as well
+// as execute tasks related to build and deployment. It can be consumed
+// both via the `ap` CLI as well as in `codegen` packages.
+syntax = "proto3";
+package autopilot;
+
+option go_package = "github.com/solo-io/autopilot/api/v1";
+
+// The AutoPilotProject file is the root configuration file for the project itself
+// this file will be used to build and deploy the autopilot operator
+// Loaded automatically by the autopilot CLI
+// Default location is 'autopilot.yaml'
+message AutoPilotProject {
+    // the name (kubernetes Kind) of the top-level
+    // CRD for the operator
+    // Specified via the `ap init <Kind>` command
+    string kind = 1;
+
+    // the ApiVersion of the top-level
+    // CRD for the operator
+    string apiVersion = 2;
+
+    // Each phase represents a different
+    // stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
+    //
+    // Each phase specifies a unique name
+    // and its own set of inputs and outputs.
+    repeated Phase phases = 3;
+
+    // enable use of a Finalizer to handle object deletion
+    bool enableFinalizer = 4;
+
+    // custom Parameters which extend AutoPilot's builtin types
+    repeated Parameter customParameters = 5;
+}
+
+// MeshProviders provide an interface to monitoring and managing a specific
+// mesh.
+// AutoPilot does not abstract the mesh API - AutoPilot developers must
+// still reason able about Provider-specific CRDs. AutoPilot's job is to
+// abstract operational concerns such as discovering control plane configuration
+// and monitoring metrics.
+message Phase {
+    // name of the phase. must be unique
+    string name = 1;
+
+    // description of the phase. used for comments and docs
+    string description = 2;
+
+    // indicates whether this is the initial phase of the system.
+    // exactly one phase must be the initial phase
+    bool initial = 3;
+
+    // the set of inputs for this phase
+    // the inputs will be retrieved by the scheduler
+    // and passed to the worker as input parameters
+    //
+    // custom inputs can be defined in the
+    // autopilot.yaml
+    repeated string inputs = 4;
+
+    // the set of outputs for this phase
+    // the inputs will be propagated to k8s storage (etcd) by the scheduler.
+    //
+    // custom outputs can be defined in the
+    // autopilot.yaml
+    repeated string outputs = 5;
+}
+
+// Custom Parameters allow code to be generated
+// for inputs/outputs that are not built-in to AutoPilot.
+// These types must be Kubernetes-compatible Go structs.
+message Parameter {
+    // the fully lower-case name of this resource
+    // e.g. "pods", "services", "replicasets", "configmaps"
+    string lowerName = 1;
+
+    // the singular CamelCased name (Kind)
+    string singleName = 2;
+    string pluralName = 3;
+    string importPrefix = 4;
+    string package = 5;
+    string apiGroup = 6;
+    bool isCrd = 7;
+}

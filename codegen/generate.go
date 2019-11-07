@@ -52,6 +52,11 @@ func Load(file string) (*model.TemplateData, error) {
 	finalizerImportPath := filepath.Join(projectGoPkg, "pkg", "finalizer")
 	parametersImportPath := filepath.Join(projectGoPkg, "pkg", "parameters")
 
+	// register all custom types
+	for _, custom := range project.CustomParameters {
+		model.Register(custom)
+	}
+
 	data := &model.TemplateData{
 		Project:              project,
 		ProjectPackage:       projectGoPkg,

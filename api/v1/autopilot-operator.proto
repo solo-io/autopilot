@@ -1,0 +1,45 @@
+// autopilot-operator.proto defines the API Schema for the autopilot-operator.yaml configuration file.
+// this file provides the bootstrap configuration that is loaded to the
+// operator at boot-time/runtime
+syntax = "proto3";
+package autopilot;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/solo-io/autopilot/api/v1";
+
+
+// The AutoPilotOperator file is the bootstrap
+// Configuration file for the Operator.
+// It is stored and mounted to the operator as a Kubernetes ConfigMap.
+// The Operator will hot-reload when the configuration file changes.
+// Default name is 'autopilot-operator.yaml' and should be stored in the project root.
+message AutoPilotOperator {
+    // Version of the operator
+    // used for reporting, metrics, etc (can be any format)
+    // default is "0.0.1"
+    string version = 1;
+
+    // MeshProvider determines how the operator will connect to a service mesh
+    // Default is "SMI"
+    MeshProvider MeshProvider = 2;
+
+    // WorkInterval to sets the interval at which CRD workers resync.
+    // Default is 5s
+    google.protobuf.Duration WorkInterval = 3;
+}
+
+// MeshProviders provide an interface to monitoring and managing a specific
+// mesh.
+// AutoPilot does not abstract the mesh API - AutoPilot developers must
+// still reason able about Provider-specific CRDs. AutoPilot's job is to
+// abstract operational concerns such as discovering control plane configuration
+// and monitoring metrics.
+enum MeshProvider {
+    // the Operator will utilize the Service Mesh Interface (SMI) for metrics and configuration.
+    // Compatible with multiple meshes (may require installation of an SMI Adapter).
+    SMI = 0;
+
+    // the Operator will utilize Istio mesh for metrics and configuration
+    Istio = 1;
+}

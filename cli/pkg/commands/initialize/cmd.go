@@ -5,6 +5,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/autopilot/pkg/aliases/defaults"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -70,7 +71,7 @@ func initAutopilotProject(name string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(lowerName, "autopilot.yaml"), yam, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(lowerName, defaults.AutoPilotFile), yam, 0644); err != nil {
 		return err
 	}
 

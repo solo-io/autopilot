@@ -5,6 +5,7 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/autopilot/pkg/aliases/defaults"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -127,7 +128,7 @@ func deployFunc(cmd *cobra.Command, args []string) error {
 
 	util.MustInProjectRoot()
 
-	cfg, err := codegen.Load("autopilot.yaml")
+	cfg, err := codegen.Load(defaults.AutoPilotFile)
 	if err != nil {
 		return err
 	}

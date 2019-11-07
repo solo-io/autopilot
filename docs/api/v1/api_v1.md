@@ -1,0 +1,170 @@
+# Protocol Documentation
+<a name="top"></a>
+
+## Table of Contents
+
+- [autopilot.proto](#autopilot.proto)
+    - [AutoPilotProject](#autopilot.AutoPilotProject)
+    - [Phase](#autopilot.Phase)
+  
+  
+  
+  
+
+- [autopilot-operator.proto](#autopilot-operator.proto)
+    - [AutoPilotOperator](#autopilot.AutoPilotOperator)
+  
+    - [MeshProvider](#autopilot.MeshProvider)
+  
+  
+  
+
+- [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="autopilot.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## autopilot.proto
+autopilot-operator.proto defines the API Schema for the autopilot.yaml configuration file.
+This file is used to generate and re-generate the project structure, as well
+as execute tasks related to build and deployment. It can be consumed
+both via the `ap` CLI as well as in `codegen` packages.
+
+
+<a name="autopilot.AutoPilotProject"></a>
+
+### AutoPilotProject
+The AutoPilotProject file is the root configuration file for the project itself
+this file will be used to build and deploy the autopilot operator
+Loaded automatically by the autopilot CLI
+Default location is 'autopilot.yaml'
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| kind | [string](#string) |  | the name (kubernetes Kind) of the top-level CRD for the operator Specified via the `ap init <Kind>` command |
+| apiVersion | [string](#string) |  | the ApiVersion of the top-level CRD for the operator |
+| phases | [Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
+
+Each phase specifies a unique name and its own set of inputs and outputs. |
+| enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
+
+
+
+
+
+
+<a name="autopilot.Phase"></a>
+
+### Phase
+MeshProviders provide an interface to monitoring and managing a specific
+mesh.
+AutoPilot does not abstract the mesh API - AutoPilot developers must
+still reason able about Provider-specific CRDs. AutoPilot's job is to
+abstract operational concerns such as discovering control plane configuration
+and monitoring metrics.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  | name of the phase. must be unique |
+| description | [string](#string) |  | description of the phase. used for comments and docs |
+| initial | [bool](#bool) |  | indicates whether this is the initial phase of the system. exactly one phase must be the initial phase |
+| inputs | [string](#string) | repeated | the set of inputs for this phase the inputs will be retrieved by the scheduler and passed to the worker as input parameters
+
+custom inputs can be defined in the autopilot.yaml |
+| outputs | [string](#string) | repeated | the set of outputs for this phase the inputs will be propagated to k8s storage (etcd) by the scheduler.
+
+custom outputs can be defined in the autopilot.yaml |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="autopilot-operator.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## autopilot-operator.proto
+autopilot-operator.proto defines the API Schema for the autopilot-operator.yaml configuration file.
+this file provides the bootstrap configuration that is loaded to the
+operator at boot-time/runtime
+
+
+<a name="autopilot.AutoPilotOperator"></a>
+
+### AutoPilotOperator
+The AutoPilotOperator file is the bootstrap
+Configuration file for the Operator.
+It is stored and mounted to the operator as a Kubernetes ConfigMap.
+The Operator will hot-reload when the configuration file changes.
+Default name is 'autopilot-operator.yaml' and should be stored in the project root.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| version | [string](#string) |  | Version of the operator used for reporting, metrics, etc (can be any format) default is "0.0.1" |
+| MeshProvider | [MeshProvider](#autopilot.MeshProvider) |  | MeshProvider determines how the operator will connect to a service mesh Default is "SMI" |
+| WorkInterval | [google.protobuf.Duration](#google.protobuf.Duration) |  | WorkInterval to sets the interval at which CRD workers resync. Default is 5s |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="autopilot.MeshProvider"></a>
+
+### MeshProvider
+MeshProviders provide an interface to monitoring and managing a specific
+mesh.
+AutoPilot does not abstract the mesh API - AutoPilot developers must
+still reason able about Provider-specific CRDs. AutoPilot's job is to
+abstract operational concerns such as discovering control plane configuration
+and monitoring metrics.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| SMI | 0 | the Operator will utilize the Service Mesh Interface (SMI) for metrics and configuration. Compatible with multiple meshes (may require installation of an SMI Adapter). |
+| Istio | 1 | the Operator will utilize Istio mesh for metrics and configuration |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+## Scalar Value Types
+
+| .proto Type | Notes | C++ Type | Java Type | Python Type |
+| ----------- | ----- | -------- | --------- | ----------- |
+| <a name="double" /> double |  | double | double | float |
+| <a name="float" /> float |  | float | float | float |
+| <a name="int32" /> int32 | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead. | int32 | int | int |
+| <a name="int64" /> int64 | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead. | int64 | long | int/long |
+| <a name="uint32" /> uint32 | Uses variable-length encoding. | uint32 | int | int/long |
+| <a name="uint64" /> uint64 | Uses variable-length encoding. | uint64 | long | int/long |
+| <a name="sint32" /> sint32 | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s. | int32 | int | int |
+| <a name="sint64" /> sint64 | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s. | int64 | long | int/long |
+| <a name="fixed32" /> fixed32 | Always four bytes. More efficient than uint32 if values are often greater than 2^28. | uint32 | int | int |
+| <a name="fixed64" /> fixed64 | Always eight bytes. More efficient than uint64 if values are often greater than 2^56. | uint64 | long | int/long |
+| <a name="sfixed32" /> sfixed32 | Always four bytes. | int32 | int | int |
+| <a name="sfixed64" /> sfixed64 | Always eight bytes. | int64 | long | int/long |
+| <a name="bool" /> bool |  | bool | boolean | boolean |
+| <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode |
+| <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str |
