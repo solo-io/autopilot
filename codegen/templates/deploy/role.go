@@ -110,8 +110,13 @@ func rules(data *model.ProjectData) []v1.PolicyRule {
 	}
 
 	sort.SliceStable(rules, func(i, j int) bool {
-		return rules[i].APIGroups[0] < rules[j].APIGroups[0] &&
-			rules[i].Resources[0] < rules[j].Resources[0]
+		if rules[i].APIGroups[0] < rules[j].APIGroups[0] {
+			return true
+		}
+		if rules[i].Resources[0] < rules[j].Resources[0] {
+			return true
+		}
+		return rules[i].Verbs[0] < rules[i].Verbs[0]
 	})
 
 	rules = append(rules, v1.PolicyRule{

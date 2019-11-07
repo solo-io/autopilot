@@ -52,7 +52,7 @@ data:
       scrape_interval: 5s
     scrape_configs:
 
-    # Scrape config for Istio Envoy sidecar
+    # Scrape config for Envoy sidecar
     - job_name: 'envoy-stats'
       metrics_path: /stats/prometheus
       kubernetes_sd_configs:

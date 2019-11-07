@@ -8,21 +8,7 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - networking.istio.io
-  resources:
-  - virtualservices
-  verbs:
-  - '*'
-- apiGroups:
-  - networking.istio.io
-  resources:
-  - gateways
+  - configmaps
   verbs:
   - '*'
 - apiGroups:
@@ -34,12 +20,6 @@ rules:
   - list
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - '*'
-- apiGroups:
   - apps
   resources:
   - replicasets
@@ -47,6 +27,26 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - gateways
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - virtualservices
+  verbs:
+  - '*'
 - apiGroups:
   - autopiot.example.io
   resources:
