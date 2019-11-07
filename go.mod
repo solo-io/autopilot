@@ -5,7 +5,10 @@ go 1.13
 require (
 	github.com/Azure/go-autorest/autorest v0.9.2 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gertd/go-pluralize v0.1.1
+	github.com/go-logr/logr v0.1.0
+	github.com/gogo/protobuf v1.3.0
 	github.com/golang/protobuf v1.3.2
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/mitchellh/go-homedir v1.1.0

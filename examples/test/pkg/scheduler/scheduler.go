@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	ctl "sigs.k8s.io/controller-runtime/pkg/client"
@@ -15,13 +17,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/solo-io/autopilot/pkg/config"
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/autopilot/pkg/metrics"
 	"github.com/solo-io/autopilot/pkg/utils"
 
 	v1 "github.com/solo-io/autopilot/examples/test/pkg/apis/tests/v1"
-
-	config "github.com/solo-io/autopilot/examples/test/pkg/config"
 	finalizer "github.com/solo-io/autopilot/examples/test/pkg/finalizer"
 	initializing "github.com/solo-io/autopilot/examples/test/pkg/workers/initializing"
 	processing "github.com/solo-io/autopilot/examples/test/pkg/workers/processing"
@@ -72,32 +73,39 @@ func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) er
 
 }
 
-var WorkInterval = config.WorkInterval
 var FinalizerName = "test-finalizer"
 
 type Scheduler struct {
-	ctx       context.Context
-	mgr       manager.Manager
-	Metrics   metrics.Metrics
-	namespace string
+	ctx          context.Context
+	mgr          manager.Manager
+	metrics      metrics.Metrics
+	namespace    string
+	workInterval time.Duration
 }
 
 func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string) (*Scheduler, error) {
-	metricsFactory, err := metrics.NewFactory(config.MetricsServer, config.MeshProvider, time.Second*30)
+	cfg := config.ConfigFromContext(ctx)
+	metricsFactory, err := metrics.NewFactory(cfg.MeshProvider, time.Second*30)
+	if err != nil {
+		return nil, err
+	}
+
+	workInterval, err := ptypes.Duration(cfg.WorkInterval)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Scheduler{
-		ctx:       ctx,
-		mgr:       mgr,
-		Metrics:   metricsFactory.Observer(),
-		namespace: namespace,
+		ctx:          ctx,
+		mgr:          mgr,
+		metrics:      metricsFactory.Observer(),
+		namespace:    namespace,
+		workInterval: workInterval,
 	}, nil
 }
 
 func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	result := reconcile.Result{RequeueAfter: WorkInterval}
+	result := reconcile.Result{RequeueAfter: s.workInterval}
 
 	test := &v1.Test{}
 	test.Namespace = request.Namespace
@@ -224,7 +232,7 @@ func (s *Scheduler) makeProcessingInputs(client ezkube.Client) (processing.Input
 		inputs processing.Inputs
 		err    error
 	)
-	inputs.Metrics = s.Metrics
+	inputs.Metrics = s.metrics
 
 	return inputs, err
 }

@@ -25,7 +25,6 @@ type ProjectData struct {
 
 	TypesImportPath      string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
 	SchedulerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
-	ConfigImportPath     string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/config"
 	FinalizerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/finalizer"
 	ParametersImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/parameters"
 
@@ -50,7 +49,6 @@ func NewTemplateData(project v1.AutoPilotProject) (*ProjectData, error) {
 
 	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
 	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
-	configImportPath := filepath.Join(projectGoPkg, "pkg", "config")
 	finalizerImportPath := filepath.Join(projectGoPkg, "pkg", "finalizer")
 	parametersImportPath := filepath.Join(projectGoPkg, "pkg", "parameters")
 
@@ -66,7 +64,6 @@ func NewTemplateData(project v1.AutoPilotProject) (*ProjectData, error) {
 		Version:              apiVersion,
 		TypesImportPath:      apiImportPath,
 		SchedulerImportPath:  schedulerImportPath,
-		ConfigImportPath:     configImportPath,
 		FinalizerImportPath:  finalizerImportPath,
 		ParametersImportPath: parametersImportPath,
 		KindLowerCamel:       strcase.ToLowerCamel(project.Kind),

@@ -9,5 +9,5 @@ var (
 
 	// configuration file for the autopilot operator
 	// these files will be loaded at boot time by the operator
-	ConfigFile = "autopilot-operator.yaml"
+	OperatorFile = "autopilot-operator.yaml"
 )

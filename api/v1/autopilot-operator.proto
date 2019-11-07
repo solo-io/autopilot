@@ -14,18 +14,32 @@ option go_package = "github.com/solo-io/autopilot/api/v1";
 // The Operator will hot-reload when the configuration file changes.
 // Default name is 'autopilot-operator.yaml' and should be stored in the project root.
 message AutoPilotOperator {
-    // Version of the operator
-    // used for reporting, metrics, etc (can be any format)
+    // version of the operator
+    // used for logging and metrics
     // default is "0.0.1"
     string version = 1;
 
-    // MeshProvider determines how the operator will connect to a service mesh
+    // meshProvider determines how the operator will connect to a service mesh
     // Default is "SMI"
-    MeshProvider MeshProvider = 2;
+    MeshProvider meshProvider = 2;
 
-    // WorkInterval to sets the interval at which CRD workers resync.
+    // workInterval to sets the interval at which CRD workers resync.
     // Default is 5s
-    google.protobuf.Duration WorkInterval = 3;
+    google.protobuf.Duration workInterval = 3;
+
+    // Serve metrics on this address. Set to empty string to disable metrics
+    // defaults to ":9090"
+    string metricsAddr = 4;
+
+    // Enable leader election. This will prevent more than one operator from running at a time
+    // defaults to true
+    bool enableLeaderElection = 5;
+
+    // if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace
+    // if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding)
+    // can also be set via the WATCH_NAMESPACE environment variable
+    string watchNamespace = 6;
+
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific

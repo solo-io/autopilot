@@ -1,17 +1,26 @@
 package metrics
 
 import (
-	"strings"
+	v1 "github.com/solo-io/autopilot/api/v1"
 	"time"
 )
 
 type Factory struct {
-	MeshProvider string
+	MeshProvider v1.MeshProvider
 	Client       *PrometheusClient
 }
 
-func NewFactory(metricsServer string, meshProvider string, timeout time.Duration) (*Factory, error) {
-	client, err := NewPrometheusClient(metricsServer, timeout)
+func getMetricsServer(meshProvider v1.MeshProvider) string {
+	switch meshProvider {
+	case v1.MeshProvider_Istio:
+		return "https://prometheus.istio-system:9090"
+	}
+	panic("currently unsupported: " + meshProvider.String())
+}
+
+func NewFactory(meshProvider v1.MeshProvider, timeout time.Duration) (*Factory, error) {
+	metricsAddr := getMetricsServer(meshProvider)
+	client, err := NewPrometheusClient(metricsAddr, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -24,37 +33,13 @@ func NewFactory(metricsServer string, meshProvider string, timeout time.Duration
 
 func (factory *Factory) Observer() Metrics {
 	provider := factory.MeshProvider
-	switch {
-	case provider == "none":
-		return &HttpObserver{
-			client: factory.Client,
-		}
-	case provider == "kubernetes":
-		return &HttpObserver{
-			client: factory.Client,
-		}
-	case provider == "appmesh":
-		return &EnvoyObserver{
-			client: factory.Client,
-		}
-	case provider == "nginx":
-		return &NginxObserver{
-			client: factory.Client,
-		}
-	case strings.HasPrefix(provider, "gloo"):
-		return &GlooObserver{
-			client: factory.Client,
-		}
-	case provider == "smi:linkerd":
-		return &LinkerdObserver{
-			client: factory.Client,
-		}
-	case provider == "linkerd":
-		return &LinkerdObserver{
+	switch provider {
+	case v1.MeshProvider_Istio:
+		return &IstioObserver{
 			client: factory.Client,
 		}
 	default:
-		return &IstioObserver{
+		return &HttpObserver{
 			client: factory.Client,
 		}
 	}

@@ -6,7 +6,7 @@ import (
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/solo-io/autopilot/pkg/run"
 )
 
 type (
@@ -24,14 +24,6 @@ type (
 	Gateways = istiov1alpha3.GatewayList
 )
 
-var (
-	SchemeBuilder = runtime.SchemeBuilder{}
-)
-
 func init() {
-	SchemeBuilder = append(SchemeBuilder, istiov1alpha3.AddToScheme)
-}
-
-func AddToScheme(s *runtime.Scheme) error {
-	return SchemeBuilder.AddToScheme(s)
+	run.RegisterAddToScheme(istiov1alpha3.AddToScheme)
 }

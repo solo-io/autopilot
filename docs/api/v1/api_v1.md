@@ -142,9 +142,12 @@ Default name is 'autopilot-operator.yaml' and should be stored in the project ro
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| version | [string](#string) |  | Version of the operator used for reporting, metrics, etc (can be any format) default is "0.0.1" |
-| MeshProvider | [MeshProvider](#autopilot.MeshProvider) |  | MeshProvider determines how the operator will connect to a service mesh Default is "SMI" |
-| WorkInterval | [google.protobuf.Duration](#google.protobuf.Duration) |  | WorkInterval to sets the interval at which CRD workers resync. Default is 5s |
+| version | [string](#string) |  | version of the operator used for reporting, metrics, etc (can be any format) default is "0.0.1" |
+| meshProvider | [MeshProvider](#autopilot.MeshProvider) |  | meshProvider determines how the operator will connect to a service mesh Default is "SMI" |
+| workInterval | [google.protobuf.Duration](#google.protobuf.Duration) |  | workInterval to sets the interval at which CRD workers resync. Default is 5s |
+| metricsAddr | [string](#string) |  | Serve metrics on this address. Set to empty string to disable metrics defaults to ":9090" |
+| enableLeaderElection | [bool](#bool) |  | Enable leader election. This will prevent more than one operator from running at a time defaults to true |
+| watchNamespace | [string](#string) |  | if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding) |
 
 
 

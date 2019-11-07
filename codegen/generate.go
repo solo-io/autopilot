@@ -126,7 +126,6 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		// code
 		{OutPath: filepath.Join(data.ProjectPackage, "cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl"},
 		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
-		{OutPath: filepath.Join(data.ConfigImportPath, "config.go"), TemplatePath: "code/config.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join(data.ParametersImportPath, "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
 
 		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "code/doc.gotmpl"},

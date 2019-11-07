@@ -9,7 +9,7 @@ import (
     {{- end}}
 {{- end}}
 
-    "k8s.io/apimachinery/pkg/runtime"
+    "github.com/solo-io/autopilot/pkg/run"
 )
 
 type (
@@ -24,10 +24,6 @@ type (
 {{- end }}
 )
 
-var (
-    SchemeBuilder = runtime.SchemeBuilder{}
-)
-
 func init() {
 
 {{- $schemesAdded := ""}}
@@ -35,13 +31,9 @@ func init() {
 {{- range $param := unique_params }}
     {{- if $param.IsCrd }}
         {{- if not (string_contains $schemesAdded $param.ImportPrefix) }}
-    SchemeBuilder = append(SchemeBuilder, {{ $param.ImportPrefix }}.AddToScheme)
+    run.RegisterAddToScheme({{ $param.ImportPrefix }}.AddToScheme)
         {{- $schemesAdded = (print $schemesAdded "," $param.ImportPrefix) }}
         {{- end}}
     {{- end}}
 {{- end}}
-}
-
-func AddToScheme(s *runtime.Scheme) error {
-    return SchemeBuilder.AddToScheme(s)
 }
