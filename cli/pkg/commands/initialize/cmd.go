@@ -41,7 +41,7 @@ func initFunc(cmd *cobra.Command, args []string) error {
 func initAutopilotProject(name string) error {
 	kind := strcase.ToCamel(name)
 	lowerName := strings.ToLower(name)
-	cfg := model.Project{
+	cfg := v1.AutoPilotProject{
 		OperatorName: lowerName + "-operator",
 		ApiVersion:   "autopiot.example.io/v1",
 		Kind:         kind,

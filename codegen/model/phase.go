@@ -6,12 +6,9 @@ import (
 	v1 "github.com/solo-io/autopilot/api/v1"
 )
 
-// this is the internal representation of the Project written by the user
-// for convenience, the user object is simplified
-// as defined by autopilot.proto.
-// conversion is handled by custom Marshal/Unmarshal functions
-type Project v1.AutoPilotProject
-
+// this is the internal representation of the Phases written by the user
+// the phase replaces the inputs and output strings with the actual Parameter types
+// the phase also contains a reference to the parent project
 type Phase struct {
 	v1.Phase
 
