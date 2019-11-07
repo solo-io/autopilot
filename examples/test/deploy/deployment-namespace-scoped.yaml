@@ -34,4 +34,13 @@ spec:
         imagePullPolicy: Always
         name: test-operator
         resources: {}
+        volumeMounts:
+        - mountPath: /config
+          name: test-operator
+          readOnly: true
+        workingDir: /config
       serviceAccountName: test-operator
+      volumes:
+      - configMap:
+          name: test-operator
+        name: test-operator

@@ -13,18 +13,19 @@ import (
 )
 
 func Run(dir string, forceOverwrite bool) error {
-	config := filepath.Join(dir, defaults.AutoPilotFile)
+	project := filepath.Join(dir, defaults.AutoPilotFile)
+	operator := filepath.Join(dir, defaults.OperatorFile)
 
-	project, err := Load(config)
+	data, err := Load(project, operator)
 	if err != nil {
 		return err
 	}
 
-	if err := project.Validate(); err != nil {
+	if err := data.Validate(); err != nil {
 		return err
 	}
 
-	files, err := Generate(project)
+	files, err := Generate(data)
 	if err != nil {
 		return err
 	}
@@ -69,12 +70,12 @@ func Run(dir string, forceOverwrite bool) error {
 		}
 	}
 
-	log.Printf("Generating Deepcopy types for %v", project.TypesImportPath)
-	if err := util.DeepcopyGen(project.TypesImportPath); err != nil {
+	log.Printf("Generating Deepcopy types for %v", data.TypesImportPath)
+	if err := util.DeepcopyGen(data.TypesImportPath); err != nil {
 		return err
 	}
 
-	log.Printf("Finished generating %v", project.ApiVersion+"."+project.Kind)
+	log.Printf("Finished generating %v", data.ApiVersion+"."+data.Kind)
 
 	return nil
 }

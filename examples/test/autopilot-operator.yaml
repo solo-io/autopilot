@@ -1,0 +1,5 @@
+enableLeaderElection: true
+meshProvider: Istio
+metricsAddr: :9090
+version: 0.0.1
+workInterval: 5s

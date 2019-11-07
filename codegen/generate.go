@@ -154,6 +154,7 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-namespace-scoped.yaml"), TemplateFunc: deploy.NamespaceScopedDeployment},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-cluster-scoped.yaml"), TemplateFunc: deploy.ClusterScopedDeployment},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "configmap.yaml"), TemplateFunc: deploy.ConfigMap},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "role.yaml"), TemplateFunc: deploy.Role},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "clusterrole.yaml"), TemplateFunc: deploy.ClusterRole},
@@ -171,7 +172,7 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		})
 	}
 
-	if data.NeedsMetrics() {
+	if data.NeedsMetrics() && data.MeshProvider == v1.MeshProvider_Custom {
 		files = append(files, GenFile{
 			OutPath: filepath.Join(data.ProjectPackage, "deploy", "prometheus.yaml"), TemplatePath: "deploy/prometheus.yamltmpl",
 		})

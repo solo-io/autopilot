@@ -1,0 +1,27 @@
+# API version of the core api CRD
+# https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/
+coreCrd:
+  # CRD APIVersion
+  apiVersion: autopiot.example.io/v1
+  # CRD "Kind" name
+  kind: Test
+# name of the operator as it will appear on pods, volumes,
+# and other k8s resources utilized by the operator
+operatorName: test-operator
+phases:
+- description: Test has begun initializing
+  initial: true
+  name: Initializing
+  inputs:
+  - services
+  outputs:
+  - virtualservices
+  - gateways
+- description: Test has begun processing
+  inputs:
+  - metrics
+  name: Processing
+- description: Test has finished
+  name: Finished
+- description: Test has failed
+  name: Failed

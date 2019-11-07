@@ -62,6 +62,7 @@ func readAndReplaceManifest(file string) ([]byte, error) {
 func getManifestsToApply(needsMetrics bool) []string {
 	manifestsToApply := []string{
 		"crd.yaml",
+		"configmap.yaml",
 		"service_account.yaml",
 	}
 	if clusterScoped {

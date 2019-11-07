@@ -142,12 +142,12 @@ Default name is 'autopilot-operator.yaml' and should be stored in the project ro
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| version | [string](#string) |  | version of the operator used for reporting, metrics, etc (can be any format) default is "0.0.1" |
+| version | [string](#string) |  | version of the operator used for logging and metrics default is "0.0.1" |
 | meshProvider | [MeshProvider](#autopilot.MeshProvider) |  | meshProvider determines how the operator will connect to a service mesh Default is "SMI" |
 | workInterval | [google.protobuf.Duration](#google.protobuf.Duration) |  | workInterval to sets the interval at which CRD workers resync. Default is 5s |
 | metricsAddr | [string](#string) |  | Serve metrics on this address. Set to empty string to disable metrics defaults to ":9090" |
 | enableLeaderElection | [bool](#bool) |  | Enable leader election. This will prevent more than one operator from running at a time defaults to true |
-| watchNamespace | [string](#string) |  | if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding) |
+| watchNamespace | [string](#string) |  | if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding) can also be set via the WATCH_NAMESPACE environment variable |
 
 
 
@@ -170,6 +170,7 @@ and monitoring metrics.
 | ---- | ------ | ----------- |
 | SMI | 0 | the Operator will utilize the Service Mesh Interface (SMI) for metrics and configuration. Compatible with multiple meshes (may require installation of an SMI Adapter). |
 | Istio | 1 | the Operator will utilize Istio mesh for metrics and configuration |
+| Custom | 2 | the Operator will utilize a locally deployed Prometheus instance for metrics |
 
 
  <!-- end enums -->

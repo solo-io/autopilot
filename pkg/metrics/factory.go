@@ -2,6 +2,7 @@ package metrics
 
 import (
 	v1 "github.com/solo-io/autopilot/api/v1"
+	"os"
 	"time"
 )
 
@@ -11,9 +12,12 @@ type Factory struct {
 }
 
 func getMetricsServer(meshProvider v1.MeshProvider) string {
+	if metricsServer := os.Getenv("METRICS_SERVER"); metricsServer != "" {
+		return metricsServer
+	}
 	switch meshProvider {
 	case v1.MeshProvider_Istio:
-		return "https://prometheus.istio-system:9090"
+		return "http://prometheus.istio-system:9090"
 	}
 	panic("currently unsupported: " + meshProvider.String())
 }

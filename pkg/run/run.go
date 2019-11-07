@@ -12,7 +12,6 @@ import (
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
-	"log"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -47,6 +46,7 @@ type AddToManager func(ctx context.Context, mgr ctrl.Manager, namespace string) 
 
 // the main entrypoint for the AutoPilot Operator
 func Run(addToManager AddToManager) error {
+	logger := logf.Log
 
 	// initialize scheme
 	scheme := runtime.NewScheme()
@@ -80,40 +80,107 @@ func Run(addToManager AddToManager) error {
 	// cancel the root context on Signal
 	ctx := contextWithStop(cfg.Ctx, ctrl.SetupSignalHandler())
 
-	// set up the config watcher
-	watcher, err := fsnotify.NewWatcher()
+	cfgs, err := watchOperatorConfigs(ctx, logger, cfg.OperatorFile)
 	if err != nil {
-		return errors.Wrapf(err, "failed to start file watcher")
+		logger.Error(err, "failed starting config watcher, using default config: %#v", config.DefaultConfig)
+		cfgs = singleConfig(ctx, &config.DefaultConfig)
 	}
-
-	if err := watcher.Add(cfg.OperatorFile); err != nil {
-		return errors.Wrapf(err, "starting file watch for %v", cfg.OperatorFile)
-	}
-
-	defer watcher.Close()
-
-	logger := logf.Log
 
 	go runOperatorOnConfigChange(
 		ctx,
-		watcher,
+		cfgs,
 		logger,
 		scheme,
-		addToManager,
-		cfg.OperatorFile)
+		addToManager)
 
 	<-ctx.Done()
 	logger.Info("Gracefully shut down...")
 	return nil
 }
 
+// a channel that only ever sends a single config
+func singleConfig(ctx context.Context, operator *v1.AutoPilotOperator) <-chan *v1.AutoPilotOperator {
+	configs := make(chan *v1.AutoPilotOperator)
+	go func() {
+		select {
+		case <-ctx.Done():
+			return
+		case configs <- operator:
+		}
+	}()
+	return configs
+}
+
+func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile string) (<-chan *v1.AutoPilotOperator, error) {
+	configs := make(chan *v1.AutoPilotOperator)
+
+	// set up the config watcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to start file watcher")
+	}
+
+	if err := watcher.Add(operatorFile); err != nil {
+		return nil, errors.Wrapf(err, "starting file watch for %v", operatorFile)
+	}
+
+	// get initial read on cfg to send
+	operator, err := config.ConfigFromFile(operatorFile)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer watcher.Close()
+
+		// send initial config
+		select {
+		case <-ctx.Done():
+			return
+		case configs <- operator:
+		}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				logger.Info("new Operator config detected!", "event", event)
+
+				// set up filewatcher for the operator config
+				operator, err := config.ConfigFromFile(operatorFile)
+				if err != nil {
+					logger.Error(err, "failed to read operator config file")
+					continue
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+				case configs <- operator:
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error(err, "file watcher encountered error")
+			}
+		}
+	}()
+
+	return configs, nil
+}
+
 func runOperatorOnConfigChange(
 	ctx context.Context,
-	watcher *fsnotify.Watcher,
+	configs <-chan *v1.AutoPilotOperator,
 	logger logr.Logger,
 	scheme *runtime.Scheme,
-	addTomanager AddToManager,
-	operatorFile string) {
+	addTomanager AddToManager) {
 
 	var operatorCtx context.Context
 	var cancel context.CancelFunc = func() {}
@@ -121,19 +188,13 @@ func runOperatorOnConfigChange(
 		select {
 		case <-ctx.Done():
 			return
-		case event, ok := <-watcher.Events:
+		case operator, ok := <-configs:
 			if !ok {
 				return
 			}
-			logger.Info("Operator File change detected! restarting...", "event", event)
+			logger.Info("Starting Operator with config", "config", operator)
 
 			cancel()
-			// set up filewatcher for the operator config
-			operator, err := config.ConfigFromFile(operatorFile)
-			if err != nil {
-				logger.Error(err, "failed to read operator config file")
-				continue
-			}
 
 			// initialize a new context for the operator
 			operatorCtx, cancel = operatorContext(ctx, operator)
@@ -149,12 +210,6 @@ func runOperatorOnConfigChange(
 				logger.Error(err, "failed to read operator config file")
 				continue
 			}
-
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
-			}
-			log.Println("error:", err)
 		}
 	}
 }
