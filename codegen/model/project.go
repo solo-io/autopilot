@@ -1,8 +1,8 @@
 package model
 
 import (
-	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 )
 
@@ -10,37 +10,43 @@ import (
 // for convenience, the user object is simplified
 // as defined by autopilot.proto.
 // conversion is handled by custom Marshal/Unmarshal functions
-type Project struct {
-	OperatorName string  `json:"operatorName"`
-	ApiVersion   string  `json:"apiVersion"`
-	Kind         string  `json:"kind"`
-	Phases       []Phase `json:"phases"`
-
-	// custom parameters specified by the user
-	// can be used as inputs or outputs
-	CustomParameters []Parameter `json:"customParameters"`
-
-	// enable use of a Finalizer to handle object deletion
-	EnableFinalizer bool `json:"enableFinalizer"`
-}
+type Project v1.AutoPilotProject
 
 type Phase struct {
-	Name        string      `json:"name,omitempty"`
-	Description string      `json:"description,omitempty"`
-	Initial     bool        `json:"initial,omitempty"`
-	Inputs      []Parameter `json:"inputs,omitempty"`
-	Outputs     []Parameter `json:"outputs,omitempty"`
+	v1.Phase
+
+	// internal representation of inputs/outputs
+	Inputs  []Parameter
+	Outputs []Parameter
 
 	// set by load
-	Project *TemplateData `json:"-"`
+	Project *ProjectData `json:"-"`
 }
 
-func paramNames(params []Parameter) []string {
-	var names []string
-	for _, p := range params {
-		names = append(names, p.LowerName)
+// return a model.Phase from a v1.Phase or die
+func ModelPhase(data *ProjectData, phase *v1.Phase) (Phase, error) {
+	inputs, err := paramsFromNames(phase.Inputs)
+	if err != nil {
+		return Phase{}, errors.Wrapf(err, "phase %v inputs", phase.Name)
 	}
-	return names
+	outputs, err := paramsFromNames(phase.Outputs)
+	if err != nil {
+		return Phase{}, errors.Wrapf(err, "phase %v outputs", phase.Name)
+	}
+	return Phase{
+		Phase:   *phase,
+		Project: data,
+		Inputs:  inputs,
+		Outputs: outputs,
+	}, nil
+}
+
+func MustPhase(data *ProjectData, phase *v1.Phase) Phase {
+	p, err := ModelPhase(data, phase)
+	if err != nil {
+		logrus.Fatalf("failed to parse phase: %v", err)
+	}
+	return p
 }
 
 func paramsFromNames(names []string) ([]Parameter, error) {
@@ -62,39 +68,4 @@ func paramsFromNames(names []string) ([]Parameter, error) {
 		params = append(params, *p)
 	}
 	return params, nil
-}
-
-func (p *Phase) MarshalJSON() ([]byte, error) {
-	user := &v1.Phase{
-		Name:        p.Name,
-		Description: p.Description,
-		Initial:     p.Initial,
-		Inputs:      paramNames(p.Inputs),
-		Outputs:     paramNames(p.Outputs),
-	}
-	return json.Marshal(user)
-}
-
-func (p *Phase) UnmarshalJSON(b []byte) error {
-	var user v1.Phase
-	if err := json.Unmarshal(b, &user); err != nil {
-		return err
-	}
-	inputs, err := paramsFromNames(user.Inputs)
-	if err != nil {
-		return err
-	}
-	outputs, err := paramsFromNames(user.Outputs)
-	if err != nil {
-		return err
-	}
-
-	*p = Phase{
-		Name:        user.Name,
-		Description: user.Description,
-		Initial:     user.Initial,
-		Inputs:      inputs,
-		Outputs:     outputs,
-	}
-	return nil
 }

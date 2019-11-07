@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/util"
-	"github.com/solo-io/autopilot/pkg/aliases/defaults"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -86,10 +85,7 @@ func buildFunc(cmd *cobra.Command, args []string) error {
 		goArgs = append(goArgs, splitArgs...)
 	}
 
-	data, err := codegen.Load(defaults.AutoPilotFile)
-	if err != nil {
-		return err
-	}
+	data := codegen.MustLoad()
 
 	opts := util.GoCmdOptions{
 		BinName:     filepath.Join(absProjectPath, "build", "_output", "bin", projectName+"-operator"),

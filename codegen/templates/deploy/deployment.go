@@ -10,15 +10,15 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func NamespaceScopedDeployment(data *model.TemplateData) runtime.Object {
+func NamespaceScopedDeployment(data *model.ProjectData) runtime.Object {
 	return deployment(data, false)
 }
 
-func ClusterScopedDeployment(data *model.TemplateData) runtime.Object {
+func ClusterScopedDeployment(data *model.ProjectData) runtime.Object {
 	return deployment(data, true)
 }
 
-func deployment(data *model.TemplateData, clusterScoped bool) *appsv1.Deployment {
+func deployment(data *model.ProjectData, clusterScoped bool) *appsv1.Deployment {
 	labels := map[string]string{"name": data.OperatorName}
 
 	watchNamespaceEnv := v1.EnvVar{

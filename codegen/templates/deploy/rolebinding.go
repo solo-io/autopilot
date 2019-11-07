@@ -7,11 +7,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func RoleBinding(data *model.TemplateData) runtime.Object {
+func RoleBinding(data *model.ProjectData) runtime.Object {
 	return roleBinding(data)
 }
 
-func roleBinding(data *model.TemplateData) *v1.RoleBinding {
+func roleBinding(data *model.ProjectData) *v1.RoleBinding {
 	return &v1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,
@@ -32,11 +32,11 @@ func roleBinding(data *model.TemplateData) *v1.RoleBinding {
 	}
 }
 
-func ClusterRoleBinding(data *model.TemplateData) runtime.Object {
+func ClusterRoleBinding(data *model.ProjectData) runtime.Object {
 	return clusterRoleBinding(data)
 }
 
-func clusterRoleBinding(data *model.TemplateData) *v1.ClusterRoleBinding {
+func clusterRoleBinding(data *model.ProjectData) *v1.ClusterRoleBinding {
 	return &v1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,

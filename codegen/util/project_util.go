@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	"github.com/solo-io/autopilot/pkg/aliases/defaults"
+	"github.com/solo-io/autopilot/pkg/defaults"
 	"io/ioutil"
 	"os"
 	"path/filepath"

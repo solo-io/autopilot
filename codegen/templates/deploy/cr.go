@@ -6,11 +6,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func CustomResource(data *model.TemplateData) runtime.Object {
+func CustomResource(data *model.ProjectData) runtime.Object {
 	return customResource(data)
 }
 
-func customResource(data *model.TemplateData) *unstructured.Unstructured {
+func customResource(data *model.ProjectData) *unstructured.Unstructured {
 	cr := &unstructured.Unstructured{}
 	cr.SetAPIVersion(data.ApiVersion)
 	cr.SetKind(data.Kind)

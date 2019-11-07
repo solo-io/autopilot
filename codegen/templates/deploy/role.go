@@ -8,11 +8,11 @@ import (
 	"sort"
 )
 
-func Role(data *model.TemplateData) runtime.Object {
+func Role(data *model.ProjectData) runtime.Object {
 	return role(data)
 }
 
-func role(data *model.TemplateData) *v1.Role {
+func role(data *model.ProjectData) *v1.Role {
 	return &v1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,
@@ -25,11 +25,11 @@ func role(data *model.TemplateData) *v1.Role {
 	}
 }
 
-func ClusterRole(data *model.TemplateData) runtime.Object {
+func ClusterRole(data *model.ProjectData) runtime.Object {
 	return clusterRole(data)
 }
 
-func clusterRole(data *model.TemplateData) *v1.ClusterRole {
+func clusterRole(data *model.ProjectData) *v1.ClusterRole {
 	return &v1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,
@@ -59,23 +59,29 @@ func (p permission) verbs() []string {
 	return verbs
 }
 
-func rules(data *model.TemplateData) []v1.PolicyRule {
-	requiredPermissions := make(map[model.Parameter]permission)
+func rules(data *model.ProjectData) []v1.PolicyRule {
+	type paramPermission struct {
+		model.Parameter
+		permission
+	}
+	requiredPermissions := make(map[string]paramPermission)
 
 	setRead := func(param model.Parameter) {
-		perm := requiredPermissions[param]
+		perm := requiredPermissions[param.String()]
+		perm.Parameter = param
 		perm.read = true
-		requiredPermissions[param] = perm
+		requiredPermissions[param.String()] = perm
 	}
 	setWrite := func(param model.Parameter) {
-		perm := requiredPermissions[param]
+		perm := requiredPermissions[param.String()]
+		perm.Parameter = param
 		perm.write = true
-		requiredPermissions[param] = perm
+		requiredPermissions[param.String()] = perm
 	}
 
 	for _, phase := range data.Phases {
 		for _, param := range phase.Inputs {
-			if param == model.Metrics {
+			if param.Equals(model.Metrics) {
 				continue
 			}
 			setRead(param)
@@ -91,8 +97,8 @@ func rules(data *model.TemplateData) []v1.PolicyRule {
 	setWrite(model.ConfigMaps)
 
 	var rules []v1.PolicyRule
-	for param, perm := range requiredPermissions {
-		verbs := perm.verbs()
+	for _, param := range requiredPermissions {
+		verbs := param.verbs()
 		if len(verbs) == 0 {
 			continue
 		}

@@ -8,7 +8,6 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/solo-io/autopilot/api/v1";
 
-
 // The AutoPilotOperator file is the bootstrap
 // Configuration file for the Operator.
 // It is stored and mounted to the operator as a Kubernetes ConfigMap.

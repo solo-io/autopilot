@@ -8,7 +8,7 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-func (d TemplateData) Funcs() template.FuncMap {
+func (d ProjectData) Funcs() template.FuncMap {
 	return template.FuncMap{
 		// string utils
 		"join":            strings.Join,
@@ -49,13 +49,13 @@ func isFinal(phase Phase) bool {
 }
 
 func isMetrics(param Parameter) bool {
-	return param == Metrics
+	return param.Equals(Metrics)
 }
 
 func WorkerImportPrefix(phase Phase) string {
 	return strings.ToLower(phase.Name)
 }
 
-func (d TemplateData) workerPackage(phase Phase) string {
+func (d ProjectData) workerPackage(phase Phase) string {
 	return filepath.Join(phase.Project.ProjectPackage, "pkg", "workers", strings.ToLower(phase.Name))
 }

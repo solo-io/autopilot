@@ -4,9 +4,8 @@ go 1.13
 
 require (
 	github.com/Azure/go-autorest/autorest v0.9.2 // indirect
-	github.com/deislabs/smi-sdk-go v0.2.0
+	github.com/Azure/go-autorest/autorest/adal v0.8.0 // indirect
 	github.com/gertd/go-pluralize v0.1.1
-	github.com/go-openapi/spec v0.19.0
 	github.com/golang/protobuf v1.3.2
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/mitchellh/go-homedir v1.1.0
@@ -18,7 +17,6 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.5.0
 	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
 	istio.io/api v0.0.0-20191101221011-3fcb499e2a05
 	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
@@ -28,8 +26,6 @@ require (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.0.0
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
-	k8s.io/kube-openapi v0.0.0-20190918143330-0270cf2f1c1d
-	k8s.io/kubernetes v1.15.4
 	k8s.io/utils v0.0.0-20190506122338-8fab8cb257d5
 	sigs.k8s.io/controller-runtime v0.3.0
 	sigs.k8s.io/yaml v1.1.0

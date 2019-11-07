@@ -7,11 +7,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func ServiceAccount(data *model.TemplateData) runtime.Object {
+func ServiceAccount(data *model.ProjectData) runtime.Object {
 	return serviceAccount(data)
 }
 
-func serviceAccount(data *model.TemplateData) *v1.ServiceAccount {
+func serviceAccount(data *model.ProjectData) *v1.ServiceAccount {
 	return &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: data.OperatorName,

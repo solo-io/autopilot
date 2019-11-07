@@ -1,26 +1,31 @@
 package model
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/sirupsen/logrus"
+	v1 "github.com/solo-io/autopilot/api/v1"
+	"reflect"
+)
 
-type Parameter struct {
-	LowerName        string `json:"lowerName"`
-	SingleName       string
-	PluralName       string
-	ImportPrefix     string
-	Package          string
-	ApiGroup         string
-	IsCrd            bool
-	NotAKubeResource bool
-}
+type Parameter v1.Parameter
 
 func (p Parameter) String() string {
 	return string(p.LowerName)
 }
 
+func (p Parameter) Equals(parameter Parameter) bool {
+	return reflect.DeepEqual(p, parameter)
+}
+
 // registered parameters
 var Parameters []Parameter
 
-func Register(param Parameter) Parameter {
+// register the proto version of the parameter
+func Register(param v1.Parameter) Parameter {
+	return RegisterModel(Parameter(param))
+}
+
+// register the parameter for code generation
+func RegisterModel(param Parameter) Parameter {
 	for _, existing := range Parameters {
 		if existing.LowerName == param.LowerName {
 			logrus.Fatalf("parameter %v already defined", param.LowerName)
@@ -31,7 +36,7 @@ func Register(param Parameter) Parameter {
 }
 
 var (
-	ConfigMaps = Register(Parameter{
+	ConfigMaps = RegisterModel(Parameter{
 		LowerName:    "configmaps",
 		PluralName:   "ConfigMaps",
 		SingleName:   "ConfigMap",
@@ -39,7 +44,7 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
-	Services = Register(Parameter{
+	Services = RegisterModel(Parameter{
 		LowerName:    "services",
 		PluralName:   "Services",
 		SingleName:   "Service",
@@ -47,7 +52,7 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
-	Pods = Register(Parameter{
+	Pods = RegisterModel(Parameter{
 		LowerName:    "pods",
 		PluralName:   "Pods",
 		SingleName:   "Pod",
@@ -55,7 +60,7 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
-	Deployments = Register(Parameter{
+	Deployments = RegisterModel(Parameter{
 		LowerName:    "deployments",
 		PluralName:   "Deployments",
 		SingleName:   "Deployment",
@@ -63,7 +68,7 @@ var (
 		Package:      "k8s.io/api/apps/v1",
 		ApiGroup:     "apps",
 	})
-	ReplicaSets = Register(Parameter{
+	ReplicaSets = RegisterModel(Parameter{
 		LowerName:    "replicasets",
 		PluralName:   "ReplicaSets",
 		SingleName:   "ReplicaSet",
@@ -71,7 +76,7 @@ var (
 		Package:      "k8s.io/api/apps/v1",
 		ApiGroup:     "apps",
 	})
-	TrafficSplits = Register(Parameter{
+	TrafficSplits = RegisterModel(Parameter{
 		LowerName:    "trafficsplits",
 		PluralName:   "TrafficSplits",
 		SingleName:   "TrafficSplit",
@@ -80,7 +85,7 @@ var (
 		ApiGroup:     "split.smi-spec.io",
 		IsCrd:        true,
 	})
-	VirtualServices = Register(Parameter{
+	VirtualServices = RegisterModel(Parameter{
 		LowerName:    "virtualservices",
 		PluralName:   "VirtualServices",
 		SingleName:   "VirtualService",
@@ -89,7 +94,7 @@ var (
 		ApiGroup:     "networking.istio.io",
 		IsCrd:        true,
 	})
-	Gateways = Register(Parameter{
+	Gateways = RegisterModel(Parameter{
 		LowerName:    "gateways",
 		PluralName:   "Gateways",
 		SingleName:   "Gateway",
@@ -98,12 +103,11 @@ var (
 		ApiGroup:     "networking.istio.io",
 		IsCrd:        true,
 	})
-	Metrics = Register(Parameter{
-		LowerName:        "metrics",
-		PluralName:       "Metrics",
-		SingleName:       "Metric",
-		ImportPrefix:     "metrics",
-		Package:          "github.com/solo-io/autopilot/pkg/metrics",
-		NotAKubeResource: true,
+	Metrics = RegisterModel(Parameter{
+		LowerName:    "metrics",
+		PluralName:   "Metrics",
+		SingleName:   "Metric",
+		ImportPrefix: "metrics",
+		Package:      "github.com/solo-io/autopilot/pkg/metrics",
 	})
 )

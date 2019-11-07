@@ -8,11 +8,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func CustomResourceDefinition(data *model.TemplateData) runtime.Object {
+func CustomResourceDefinition(data *model.ProjectData) runtime.Object {
 	return customResourceDefinition(data)
 }
 
-func customResourceDefinition(data *model.TemplateData) *apiextv1beta1.CustomResourceDefinition {
+func customResourceDefinition(data *model.ProjectData) *apiextv1beta1.CustomResourceDefinition {
 	crd := &apiextv1beta1.CustomResourceDefinition{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: apiextv1beta1.SchemeGroupVersion.String(),

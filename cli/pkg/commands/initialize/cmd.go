@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
+	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/model"
-	"github.com/solo-io/autopilot/pkg/aliases/defaults"
+	"github.com/solo-io/autopilot/pkg/defaults"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -44,18 +45,18 @@ func initAutopilotProject(name string) error {
 		OperatorName: lowerName + "-operator",
 		ApiVersion:   "autopiot.example.io/v1",
 		Kind:         kind,
-		Phases: []model.Phase{
+		Phases: []*v1.Phase{
 			{
 				Name:        "Initializing",
 				Description: kind + " has begun initializing",
-				Outputs:     []model.Parameter{model.TrafficSplits},
+				Outputs:     []string{model.TrafficSplits.LowerName},
 				Initial:     true,
 			},
 			{
 				Name:        "Processing",
 				Description: kind + " has begun processing",
-				Inputs:      []model.Parameter{model.Metrics},
-				Outputs:     []model.Parameter{model.TrafficSplits},
+				Inputs:      []string{model.Metrics.LowerName},
+				Outputs:     []string{model.TrafficSplits.LowerName},
 			},
 			{
 				Name:        "Finished",

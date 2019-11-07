@@ -12,12 +12,13 @@ Developers define an `autopilot.yaml` and `autopilot-operator.yaml` which specif
 
 AutoPilot makes use of these files to (re-)generate the project skeleton, build, deploy, and manage the lifecycle of the operator via the `ap` CLI.
 
+The `ap` CLI is designed to manage the full lifecycle of the operator, but this can be done with standard tooling (`go`, `docker`, `kubectl`, `helm`, etc.). 
+
 # How is it different from SDKs like Operator Framework and Kubebuilder?
 
 The [Operator Framework](https://github.com/operator-framework) and [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder) are open-ended SDKs that take a far less opinionated approach to building Kubernetes software.
 
-**AutoPilot** provides a *scheduler* on top of the 
-where users can write stateless Work functions for various states of their top-level CRD. State information is stored
+**AutoPilot** provides a more opinionated control loop via a generated *scheduler* that implements the [Controller-Runtime Reconciler interface](https://github.com/kubernetes-sigs/controller-runtime/blob/master/pkg/reconcile/reconcile.go#L80), for which users write stateless Work functions for various states of their top-level CRD. State information is stored
  on the *status* of the CRD, promoting a stateless design for AutoPilot operators.
  
 **AutoPilot** additionally provides primitives, generated code, and helper functions for interacting with a variery of service meshes. While AutoPilot can be used to build operators that do not configure or monitor a mesh, much of *AutoPilot*'s design has been oriented to facilitate easy integration with popular service meshes, as well as the Service Mesh Interface (SMI).
@@ -27,11 +28,7 @@ Finally, **AutoPilot** favors simplicity over flexibility, though it is the inte
 # Roadmap
 - Support for managing multiple (remote) clusters.
 
-
-
-The `ap` CLI is used to generate code, 
-
-The `ap` CLI is also designed to build and deploy the operator, but this can be done with standard tooling (`go`, `docker`, `kubectl`, etc.). 
+## scrap
 
 AutoPilot provides an opinionated structure 
 for executing an operator's 
@@ -49,6 +46,11 @@ AutoPilot is composed of 3 components:
 
 
 # todo
+
+- validate method for project config
+    - check operatorName is kube compliant
+    - apiVerson, kind, phases are correct
+    - customParameters
 
 - e2e metrics test with istio
 - automated e2e with test repo

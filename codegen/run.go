@@ -3,6 +3,7 @@ package codegen
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/autopilot/pkg/defaults"
 	"golang.org/x/tools/imports"
 	"io/ioutil"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func Run(dir string, forceOverwrite bool) error {
-	config := filepath.Join(dir, "autopilot.yaml")
+	config := filepath.Join(dir, defaults.AutoPilotFile)
 
 	project, err := Load(config)
 	if err != nil {

@@ -57,10 +57,7 @@ func logs(operatorName string) error {
 func logsFunc(cmd *cobra.Command, args []string) error {
 	util.MustInProjectRoot()
 
-	cfg, err := codegen.Load("autopilot.yaml")
-	if err != nil {
-		return err
-	}
+	cfg := codegen.MustLoad()
 
 	if namespace == "" {
 		namespace = cfg.OperatorName

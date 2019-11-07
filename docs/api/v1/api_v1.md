@@ -37,16 +37,18 @@ both via the `ap` CLI as well as in `codegen` packages.
 <a name="autopilot.AutoPilotProject"></a>
 
 ### AutoPilotProject
-The AutoPilotProject file is the root configuration file for the project itself
-this file will be used to build and deploy the autopilot operator
-Loaded automatically by the autopilot CLI
-Default location is 'autopilot.yaml'
+The AutoPilotProject file is the root configuration file for the project itself.
+
+This file will be used to build and deploy the autopilot operator.
+It is loaded automatically by the autopilot CLI. Its
+default location is 'autopilot.yaml'
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | kind | [string](#string) |  | the name (kubernetes Kind) of the top-level CRD for the operator Specified via the `ap init <Kind>` command |
 | apiVersion | [string](#string) |  | the ApiVersion of the top-level CRD for the operator |
+| operatorName | [string](#string) |  | the name of the Operator this is used to name and label loggers, k8s resources, and metrics exposed by the operator. Should be [valid Kube resource names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names). |
 | phases | [Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
 
 Each phase specifies a unique name and its own set of inputs and outputs. |
@@ -86,6 +88,7 @@ These types must be Kubernetes-compatible Go structs.
 ### Phase
 MeshProviders provide an interface to monitoring and managing a specific
 mesh.
+
 AutoPilot does not abstract the mesh API - AutoPilot developers must
 still reason able about Provider-specific CRDs. AutoPilot's job is to
 abstract operational concerns such as discovering control plane configuration
