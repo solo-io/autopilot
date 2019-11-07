@@ -83,7 +83,7 @@ type Scheduler struct {
 }
 
 func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string) (*Scheduler, error) {
-	metricsFactory, err := metrics.NewFactory(config.LocalMetricsServer, config.MeshProvider, time.Second*30)
+	metricsFactory, err := metrics.NewFactory(config.MetricsServer, config.MeshProvider, time.Second*30)
 	if err != nil {
 		return nil, err
 	}
