@@ -76,11 +76,25 @@ message Parameter {
     // e.g. "pods", "services", "replicasets", "configmaps"
     string lowerName = 1;
 
-    // the singular CamelCased name (Kind)
+    // the singular CamelCased name of the resource
+    // equivalent to Kind
     string singleName = 2;
+
+    // the plural CamelCased name of the resource
+    // equivalent to the pluralized form of Kind
     string pluralName = 3;
+
+    // import prefix used by generated code
     string importPrefix = 4;
+
+    // go package (import path) to the go struct for the resource
     string package = 5;
+
+    // Kubernetes API group for the resource
+    // e.g. "networking.istio.io"
     string apiGroup = 6;
+
+    // indicates whether the resource is a CRD
+    // if true, the Resource will be added to the operator's runtime.Scheme
     bool isCrd = 7;
 }

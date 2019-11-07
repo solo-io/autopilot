@@ -5,6 +5,7 @@
 
 - [autopilot.proto](#autopilot.proto)
     - [AutoPilotProject](#autopilot.AutoPilotProject)
+    - [Parameter](#autopilot.Parameter)
     - [Phase](#autopilot.Phase)
   
   
@@ -50,6 +51,30 @@ Default location is 'autopilot.yaml'
 
 Each phase specifies a unique name and its own set of inputs and outputs. |
 | enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
+| customParameters | [Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend AutoPilot's builtin types |
+
+
+
+
+
+
+<a name="autopilot.Parameter"></a>
+
+### Parameter
+Custom Parameters allow code to be generated
+for inputs/outputs that are not built-in to AutoPilot.
+These types must be Kubernetes-compatible Go structs.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| lowerName | [string](#string) |  | the fully lower-case name of this resource e.g. "pods", "services", "replicasets", "configmaps" |
+| singleName | [string](#string) |  | the singular CamelCased name of the resource equivalent to Kind |
+| pluralName | [string](#string) |  | the plural CamelCased name of the resource equivalent to the pluralized form of Kind |
+| importPrefix | [string](#string) |  | import prefix used by generated code |
+| package | [string](#string) |  | go package (import path) to the go struct for the resource |
+| apiGroup | [string](#string) |  | Kubernetes API group for the resource e.g. "networking.istio.io" |
+| isCrd | [bool](#bool) |  | indicates whether the resource is a CRD if true, the Resource will be added to the operator's runtime.Scheme |
 
 
 
