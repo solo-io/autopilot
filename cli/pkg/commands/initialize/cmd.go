@@ -6,12 +6,13 @@ import (
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/autopilot/pkg/config"
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sigs.k8s.io/yaml"
 	"strings"
 )
 
@@ -41,7 +42,11 @@ func initFunc(cmd *cobra.Command, args []string) error {
 func initAutopilotProject(name string) error {
 	kind := strcase.ToCamel(name)
 	lowerName := strings.ToLower(name)
-	cfg := v1.AutoPilotProject{
+	if err := os.MkdirAll(lowerName, 0777); err != nil {
+		return err
+	}
+
+	cfg := &v1.AutoPilotProject{
 		OperatorName: lowerName + "-operator",
 		ApiVersion:   "autopiot.example.io/v1",
 		Kind:         kind,
@@ -64,15 +69,20 @@ func initAutopilotProject(name string) error {
 			},
 		},
 	}
-	yam, err := yaml.Marshal(cfg)
+	yam, err := util.MarshalYaml(cfg)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(lowerName, 0777); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(lowerName, defaults.AutoPilotFile), yam, 0644); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(lowerName, defaults.AutoPilotFile), yam, 0644); err != nil {
+	operator := &config.DefaultConfig
+	yam, err = util.MarshalYaml(operator)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(filepath.Join(lowerName, defaults.OperatorFile), yam, 0644); err != nil {
 		return err
 	}
 

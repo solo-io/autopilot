@@ -14,6 +14,7 @@ import (
 // used for rendering templates
 type ProjectData struct {
 	v1.AutoPilotProject
+	v1.AutoPilotOperator
 
 	// internal implementation of phases
 	Phases []Phase `json:"phases"`
@@ -33,7 +34,7 @@ type ProjectData struct {
 	KindLowerPlural string // e.g. "canaryresources"
 }
 
-func NewTemplateData(project v1.AutoPilotProject) (*ProjectData, error) {
+func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator) (*ProjectData, error) {
 	projectGoPkg := util.GetGoPkg()
 
 	apiVersionParts := strings.Split(project.ApiVersion, "/")
@@ -59,6 +60,7 @@ func NewTemplateData(project v1.AutoPilotProject) (*ProjectData, error) {
 
 	data := &ProjectData{
 		AutoPilotProject:     project,
+		AutoPilotOperator:    operator,
 		ProjectPackage:       projectGoPkg,
 		Group:                apiGroup,
 		Version:              apiVersion,

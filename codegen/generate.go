@@ -20,7 +20,7 @@ import (
 
 // load the default config or die
 func MustLoad() *model.ProjectData {
-	data, err := Load(defaults.AutoPilotFile)
+	data, err := Load(defaults.AutoPilotFile, defaults.OperatorFile)
 	if err != nil {
 		logrus.Fatalf("failed to load autopilot.yaml: %v", err)
 	}
@@ -28,8 +28,9 @@ func MustLoad() *model.ProjectData {
 }
 
 // load the provided config as template data
-func Load(file string) (*model.ProjectData, error) {
-	raw, err := ioutil.ReadFile(file)
+func Load(autoPilotYaml, operatorYaml string) (*model.ProjectData, error) {
+	// load autopilot.yaml
+	raw, err := ioutil.ReadFile(autoPilotYaml)
 	if err != nil {
 		return nil, err
 	}
@@ -38,11 +39,21 @@ func Load(file string) (*model.ProjectData, error) {
 		return nil, err
 	}
 
-	if err := os.Chdir(filepath.Dir(file)); err != nil {
+	// load autopilot-operator.yaml
+	raw, err = ioutil.ReadFile(operatorYaml)
+	if err != nil {
+		return nil, err
+	}
+	var operator v1.AutoPilotOperator
+	if err := util.UnmarshalYaml(raw, &operator); err != nil {
 		return nil, err
 	}
 
-	return model.NewTemplateData(project)
+	if err := os.Chdir(filepath.Dir(autoPilotYaml)); err != nil {
+		return nil, err
+	}
+
+	return model.NewTemplateData(project, operator)
 }
 
 type GenFile struct {

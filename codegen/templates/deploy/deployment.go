@@ -74,6 +74,20 @@ func deployment(data *model.ProjectData, clusterScoped bool) *appsv1.Deployment 
 								Value: data.OperatorName,
 							},
 						},
+						WorkingDir: "/",
+						VolumeMounts: []v1.VolumeMount{{
+							Name:      data.OperatorName,
+							ReadOnly:  true,
+							MountPath: "/",
+						}},
+					}},
+					Volumes: []v1.Volume{{
+						Name: data.OperatorName,
+						VolumeSource: v1.VolumeSource{
+							ConfigMap: &v1.ConfigMapVolumeSource{
+								LocalObjectReference: v1.LocalObjectReference{Name: data.OperatorName},
+							},
+						},
 					}},
 				},
 			},
