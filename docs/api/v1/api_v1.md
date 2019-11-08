@@ -100,6 +100,7 @@ and monitoring metrics.
 | name | [string](#string) |  | name of the phase. must be unique |
 | description | [string](#string) |  | description of the phase. used for comments and docs |
 | initial | [bool](#bool) |  | indicates whether this is the initial phase of the system. exactly one phase must be the initial phase |
+| final | [bool](#bool) |  | indicates whether this is a "final" or "resting" phase of the system. when the CRD is in the final phase, no more processing will be done on it |
 | inputs | [string](#string) | repeated | the set of inputs for this phase the inputs will be retrieved by the scheduler and passed to the worker as input parameters
 
 custom inputs can be defined in the autopilot.yaml |

@@ -168,6 +168,12 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- end}}
         log.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
 
+    {{- if $phase.Final }}
+        // {{$phase.Name}} is a final phase, do not requeue
+        return reconcile.Result{}, nil
+    {{ continue}}
+    {{- end }}
+
     {{- if has_inputs $phase }}
 		inputs, err := s.make{{ $phase.Name}}Inputs(client)
 		if err != nil {

@@ -15,5 +15,5 @@ type Worker struct {
 }
 
 func (w *Worker) Sync(ctx context.Context, test *v1.Test) (v1.TestPhase, *v1.TestStatusInfo, error) {
-	panic("implement me!")
+	return v1.TestPhaseFailed, &v1.TestStatusInfo{}, nil
 }

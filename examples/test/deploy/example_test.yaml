@@ -1,4 +1,4 @@
-apiVersion: autopiot.example.io/v1
+apiVersion: autopilot.example.io/v1
 kind: Test
 metadata:
   creationTimestamp: null
@@ -13,7 +13,7 @@ spec:
   target:
     name: podinfo-primary
     namespace: test
-  threshold: 90
+  threshold: 100
   timeout: 1m0s
 status:
   timeStarted: null

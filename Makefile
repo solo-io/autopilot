@@ -1,7 +1,9 @@
 .PHONY: autopilot
 
-ap: autopilot
+autopilot: ap
 
-autopilot:
+# Build the AutoPilot CLI
+ap:
 	go generate ./...
 	go build -o ${GOPATH}/bin/$@ cli/cmd/main.go
+

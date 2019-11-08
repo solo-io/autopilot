@@ -1,4 +1,4 @@
-apiVersion: autopiot.example.io/v1
+apiVersion: autopilot.example.io/v1
 enableFinalizer: true
 kind: Test
 operatorName: test-operator

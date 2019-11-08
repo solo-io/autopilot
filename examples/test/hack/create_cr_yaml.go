@@ -28,7 +28,7 @@ var ExampleTest = &v1.Test{
 	},
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "Test",
-		APIVersion: "autopiot.example.io/v1",
+		APIVersion: "autopilot.example.io/v1",
 	},
 	Spec: v1.TestSpec{
 		Target: v12.ObjectReference{
@@ -45,7 +45,7 @@ var ExampleTest = &v1.Test{
 				},
 			},
 		},
-		Threshold: 90,
+		Threshold: 100,
 		Timeout:   metav1.Duration{time.Minute},
 	},
 }

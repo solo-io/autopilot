@@ -3,9 +3,9 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     app.kubernetes.io/name: test-operator
-  name: tests.autopiot.example.io
+  name: tests.autopilot.example.io
 spec:
-  group: autopiot.example.io
+  group: autopilot.example.io
   names:
     kind: Test
     listKind: TestList

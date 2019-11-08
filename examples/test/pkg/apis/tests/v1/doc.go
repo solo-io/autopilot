@@ -1,4 +1,4 @@
-// Package v1 contains API Schema definitions for the autopiot.example.io v1 API group
+// Package v1 contains API Schema definitions for the autopilot.example.io v1 API group
 // +k8s:deepcopy-gen=package,register
-// +groupName=autopiot.example.io
+// +groupName=autopilot.example.io
 package v1

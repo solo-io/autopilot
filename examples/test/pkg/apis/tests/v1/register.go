@@ -2,7 +2,7 @@
 
 // Package v1 contains API Schema definitions for the canaries v1 API group
 // +k8s:deepcopy-gen=package,register
-// +groupName=autopiot.example.io
+// +groupName=autopilot.example.io
 package v1
 
 import (
@@ -17,7 +17,7 @@ import (
 
 var (
 	// SchemeGroupVersion is group version used to register these objects
-	SchemeGroupVersion = schema.GroupVersion{Group: "autopiot.example.io", Version: "v1"}
+	SchemeGroupVersion = schema.GroupVersion{Group: "autopilot.example.io", Version: "v1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}

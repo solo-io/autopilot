@@ -48,7 +48,7 @@ func initAutopilotProject(name string) error {
 
 	cfg := &v1.AutoPilotProject{
 		OperatorName: lowerName + "-operator",
-		ApiVersion:   "autopiot.example.io/v1",
+		ApiVersion:   "autopilot.example.io/v1",
 		Kind:         kind,
 		Phases: []*v1.Phase{
 			{
@@ -66,6 +66,7 @@ func initAutopilotProject(name string) error {
 			{
 				Name:        "Finished",
 				Description: kind + " has finished",
+				Final:       true,
 			},
 		},
 	}

@@ -201,6 +201,10 @@ func Generate(data *model.ProjectData) ([]GenFile, error) {
 	}
 
 	for _, phase := range data.AutoPilotProject.Phases {
+		if phase.Final {
+			// do not generate workers/params for final phases
+			continue
+		}
 		phase := model.MustPhase(data, phase)
 		for _, phaseFile := range phaseFiles(data, phase) {
 			contents, err := phaseFile.GenPhaseFile(data, phase)

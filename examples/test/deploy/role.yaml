@@ -48,7 +48,7 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - autopiot.example.io
+  - autopilot.example.io
   resources:
   - tests
   - tests/status
