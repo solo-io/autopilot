@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	forceOverwrite bool
+	group   string
+	version string
 )
 
 func NewCmd() *cobra.Command {
@@ -28,6 +29,9 @@ func NewCmd() *cobra.Command {
 `,
 		RunE: initFunc,
 	}
+	genCmd.PersistentFlags().StringVar(&group, "group", "example.io", "API Group for the Top-Level CRD")
+	genCmd.PersistentFlags().StringVar(&version, "version", "v1", "API Version for the Top-Level CRD")
+
 	return genCmd
 }
 
@@ -48,7 +52,7 @@ func initAutopilotProject(name string) error {
 
 	cfg := &v1.AutoPilotProject{
 		OperatorName: lowerName + "-operator",
-		ApiVersion:   "autopilot.example.io/v1",
+		ApiVersion:   group + "/" + version,
 		Kind:         kind,
 		Phases: []*v1.Phase{
 			{
