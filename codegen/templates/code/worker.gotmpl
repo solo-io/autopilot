@@ -2,6 +2,7 @@ package {{worker_import_prefix $}}
 
 import (
 	"context"
+    "github.com/go-logr/logr"
     "github.com/solo-io/autopilot/pkg/ezkube"
 
     {{.Project.Version}} "{{.Project.TypesImportPath}}"
@@ -11,6 +12,7 @@ import (
 
 type Worker struct {
     Client ezkube.Client
+    Logger logr.Logger
 }
 
 {{- if has_inputs $ }}

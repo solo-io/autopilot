@@ -3,8 +3,10 @@ package scheduler
 import (
     "context"
     "fmt"
-    "github.com/golang/protobuf/ptypes"
     "time"
+
+    "github.com/go-logr/logr"
+    "github.com/golang/protobuf/ptypes"
 
     "k8s.io/apimachinery/pkg/api/errors"
     "k8s.io/kubernetes/pkg/util/slice"
@@ -18,6 +20,7 @@ import (
     "github.com/solo-io/autopilot/pkg/config"
     "github.com/solo-io/autopilot/pkg/ezkube"
     "github.com/solo-io/autopilot/pkg/metrics"
+    "github.com/solo-io/autopilot/pkg/scheduler"
     "github.com/solo-io/autopilot/pkg/utils"
 
     {{.Version}} "{{.TypesImportPath}}"
@@ -41,13 +44,13 @@ import (
 
 var log = logf.Log.WithName("scheduler")
 
-func AddToManager(ctx context.Context, mgr manager.Manager, namespace string) error {
-    scheduler, err := NewScheduler(ctx, mgr, namespace)
+func AddToManager(params scheduler.Params) error {
+    scheduler, err := NewScheduler(params)
     if err != nil {
     	return err
     }
     // Create a new controller
-    c, err := controller.New("{{.KindLowerCamel}}-controller", mgr, controller.Options{Reconciler: scheduler})
+    c, err := controller.New("{{.KindLowerCamel}}-controller", params.Manager, controller.Options{Reconciler: scheduler})
     if err != nil {
         return err
     }
@@ -83,13 +86,14 @@ var FinalizerName = "{{$.KindLower}}-finalizer"
 type Scheduler struct {
     ctx context.Context
     mgr manager.Manager
-    metrics metrics.Metrics
     namespace string
+    logger logr.Logger
+    metrics metrics.Metrics
     workInterval time.Duration
 }
 
-func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string ) (*Scheduler, error) {
-	cfg := config.ConfigFromContext(ctx)
+func NewScheduler(params scheduler.Params) (*Scheduler, error) {
+	cfg := config.ConfigFromContext(params.Ctx)
     metricsFactory, err := metrics.NewFactory(cfg, time.Second * 30)
     if err != nil {
     	return nil, err
@@ -101,10 +105,11 @@ func NewScheduler(ctx context.Context, mgr manager.Manager, namespace string ) (
     }
 
     return &Scheduler{
-    	ctx:       ctx,
-    	mgr:       mgr,
+    	ctx:       params.Ctx,
+    	mgr:       params.Manager,
+        namespace: params.Namespace,
+        logger:    params.Logger,
         metrics:   metricsFactory.Observer(),
-        namespace: namespace,
     	workInterval: workInterval,
     }, nil
 }
@@ -175,6 +180,11 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
     {{- else }}
 
+        worker := &{{worker_import_prefix $phase}}.Worker{
+        	Client: client,
+        	Logger: s.logger,
+        }
+
         {{- if has_inputs $phase }}
 		inputs, err := s.make{{ $phase.Name}}Inputs(client)
 		if err != nil {
@@ -182,7 +192,7 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		}
 
             {{- if has_outputs $phase }}
-        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        outputs, nextPhase, statusInfo, err := worker.Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}

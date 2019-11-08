@@ -16,3 +16,4 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+test/e2e/test

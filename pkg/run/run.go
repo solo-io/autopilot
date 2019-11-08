@@ -10,6 +10,7 @@ import (
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/pkg/config"
 	"github.com/solo-io/autopilot/pkg/defaults"
+	"github.com/solo-io/autopilot/pkg/scheduler"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -41,8 +42,8 @@ type Options struct {
 	OperatorFile string
 }
 
-// Function to wire controllers into the Manager
-type AddToManager func(ctx context.Context, mgr ctrl.Manager, namespace string) error
+// Function to wire the scheduler into the Manager
+type AddToManager func(params scheduler.Params) error
 
 // the main entrypoint for the AutoPilot Operator
 func Run(addToManager AddToManager) error {
@@ -204,6 +205,7 @@ func runOperatorOnConfigChange(
 				config:       operator,
 				scheme:       scheme,
 				addTomanager: addTomanager,
+				logger:       logger,
 			}
 
 			if err := instance.Start(); err != nil {
@@ -220,6 +222,7 @@ type operatorInstance struct {
 	config       *v1.AutoPilotOperator
 	scheme       *runtime.Scheme
 	addTomanager AddToManager
+	logger       logr.Logger
 }
 
 func (r *operatorInstance) Start() error {
@@ -232,7 +235,14 @@ func (r *operatorInstance) Start() error {
 	if err != nil {
 		return err
 	}
-	if err := r.addTomanager(r.ctx, mgr, r.config.WatchNamespace); err != nil {
+	params := scheduler.Params{
+		Ctx:       r.ctx,
+		Manager:   mgr,
+		Namespace: r.config.WatchNamespace,
+		Logger:    r.logger,
+	}
+
+	if err := r.addTomanager(params); err != nil {
 		return err
 	}
 

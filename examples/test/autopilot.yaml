@@ -3,19 +3,19 @@ enableFinalizer: true
 kind: Test
 operatorName: test-operator
 phases:
-- description: Test has begun initializing
-  initial: true
-  name: Initializing
-  inputs:
-  - services
-  outputs:
-  - virtualservices
-  - gateways
-- description: Test has begun processing
-  inputs:
-  - metrics
-  name: Processing
-- description: Test has finished
-  name: Finished
-- description: Test has failed
-  name: Failed
+  - description: Test has begun initializing
+    initial: true
+    name: Initializing
+    inputs:
+      - services
+    outputs:
+      - virtualservices
+      - gateways
+  - description: Test has begun processing
+    inputs:
+      - metrics
+    name: Processing
+  - description: Test has finished
+    name: Finished
+  - description: Test has failed
+    name: Failed

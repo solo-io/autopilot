@@ -25,6 +25,10 @@ The [Operator Framework](https://github.com/operator-framework) and [kubebuilder
 
 Finally, **AutoPilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
 
+# Hello World
+
+
+
 # Roadmap
 - Support for managing multiple (remote) clusters.
 
@@ -55,8 +59,15 @@ AutoPilot is composed of 3 components:
     - check operatorName is kube compliant
     - apiVerson, kind, phases are correct
     - customParameters
+    - final phase with i/o
+
+- code generated headers in the right places
+
 
 - e2e metrics test with istio
+
+
+
 - automated e2e with test repo
 
 - configmap with config settings
