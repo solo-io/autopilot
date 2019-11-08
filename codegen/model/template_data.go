@@ -118,6 +118,10 @@ func (d *ProjectData) NeedsMetrics() bool {
 	return false
 }
 
+func (d *ProjectData) NeedsPrometheus() bool {
+	return d.NeedsMetrics() && d.MeshProvider == v1.MeshProvider_Custom
+}
+
 func (d *ProjectData) UniqueOutputs() []Parameter {
 	var unique []Parameter
 	addParam := func(param Parameter) {

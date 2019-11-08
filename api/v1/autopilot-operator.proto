@@ -23,22 +23,26 @@ message AutoPilotOperator {
     // Default is "SMI"
     MeshProvider meshProvider = 2;
 
+    // controlPlaneNs is the namespace the control plane lives in
+    // Default is "istio-system"
+    string controlPlaneNs = 3;
+
     // workInterval to sets the interval at which CRD workers resync.
     // Default is 5s
-    google.protobuf.Duration workInterval = 3;
+    google.protobuf.Duration workInterval = 4;
 
     // Serve metrics on this address. Set to empty string to disable metrics
     // defaults to ":9090"
-    string metricsAddr = 4;
+    string metricsAddr = 5;
 
     // Enable leader election. This will prevent more than one operator from running at a time
     // defaults to true
-    bool enableLeaderElection = 5;
+    bool enableLeaderElection = 6;
 
     // if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace
     // if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding)
     // can also be set via the WATCH_NAMESPACE environment variable
-    string watchNamespace = 6;
+    string watchNamespace = 7;
 
 }
 

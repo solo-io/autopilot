@@ -19,6 +19,8 @@ var DefaultConfig = v1.AutoPilotOperator{
 
 	MeshProvider: v1.MeshProvider_Istio,
 
+	ControlPlaneNs: defaults.IstioNamespace,
+
 	WorkInterval: ptypes.DurationProto(time.Second * 5),
 
 	MetricsAddr: ":9090",

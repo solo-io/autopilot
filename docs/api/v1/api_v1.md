@@ -144,6 +144,7 @@ Default name is 'autopilot-operator.yaml' and should be stored in the project ro
 | ----- | ---- | ----- | ----------- |
 | version | [string](#string) |  | version of the operator used for logging and metrics default is "0.0.1" |
 | meshProvider | [MeshProvider](#autopilot.MeshProvider) |  | meshProvider determines how the operator will connect to a service mesh Default is "SMI" |
+| controlPlaneNs | [string](#string) |  | controlPlaneNs is the namespace the control plane lives in Default is "istio-system" |
 | workInterval | [google.protobuf.Duration](#google.protobuf.Duration) |  | workInterval to sets the interval at which CRD workers resync. Default is 5s |
 | metricsAddr | [string](#string) |  | Serve metrics on this address. Set to empty string to disable metrics defaults to ":9090" |
 | enableLeaderElection | [bool](#bool) |  | Enable leader election. This will prevent more than one operator from running at a time defaults to true |

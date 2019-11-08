@@ -10,4 +10,7 @@ var (
 	// configuration file for the autopilot operator
 	// these files will be loaded at boot time by the operator
 	OperatorFile = "autopilot-operator.yaml"
+
+	// Default installation namespace for Istio
+	IstioNamespace = "istio-system"
 )

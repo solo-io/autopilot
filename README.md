@@ -47,6 +47,10 @@ AutoPilot is composed of 3 components:
 
 # todo
 
+- refactor metrics. make a factory for it
+- Query method on workers that take metrics as an input
+
+
 - validate method for project config
     - check operatorName is kube compliant
     - apiVerson, kind, phases are correct

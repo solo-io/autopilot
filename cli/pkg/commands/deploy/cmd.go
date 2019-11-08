@@ -88,7 +88,7 @@ func getManifestsToApply(needsMetrics bool) []string {
 	return manifestsToApply
 }
 
-func deploy(operatorName string, needsMetrics bool) error {
+func deploy(operatorName string, needsPrometheus bool) error {
 
 	log.Printf("Pushing image %v", image)
 	push := exec.Command("docker", "push", image)
@@ -106,7 +106,7 @@ func deploy(operatorName string, needsMetrics bool) error {
 		}
 	}
 
-	for _, man := range getManifestsToApply(needsMetrics) {
+	for _, man := range getManifestsToApply(needsPrometheus) {
 		log.Printf("Deploying %v", man)
 
 		raw, err := readAndReplaceManifest(filepath.Join("deploy", man))
@@ -138,7 +138,7 @@ func deployFunc(cmd *cobra.Command, args []string) error {
 
 	log.Infof("Deploying Operator with image %s", image)
 
-	if err := deploy(cfg.OperatorName, cfg.NeedsMetrics()); err != nil {
+	if err := deploy(cfg.OperatorName, cfg.NeedsPrometheus()); err != nil {
 		return fmt.Errorf("failed to deploy operator with image %s: (%v)", image, err)
 	}
 

@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"os"
 	"time"
@@ -11,26 +12,26 @@ type Factory struct {
 	Client       *PrometheusClient
 }
 
-func getMetricsServer(meshProvider v1.MeshProvider) string {
+func getMetricsServer(meshProvider v1.MeshProvider, controlPlaneNs string) string {
 	if metricsServer := os.Getenv("METRICS_SERVER"); metricsServer != "" {
 		return metricsServer
 	}
 	switch meshProvider {
 	case v1.MeshProvider_Istio:
-		return "http://prometheus.istio-system:9090"
+		return fmt.Sprintf("http://prometheus.%v:9090", controlPlaneNs)
 	}
 	panic("currently unsupported: " + meshProvider.String())
 }
 
-func NewFactory(meshProvider v1.MeshProvider, timeout time.Duration) (*Factory, error) {
-	metricsAddr := getMetricsServer(meshProvider)
+func NewFactory(cfg *v1.AutoPilotOperator, timeout time.Duration) (*Factory, error) {
+	metricsAddr := getMetricsServer(cfg.MeshProvider, cfg.ControlPlaneNs)
 	client, err := NewPrometheusClient(metricsAddr, timeout)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Factory{
-		MeshProvider: meshProvider,
+		MeshProvider: cfg.MeshProvider,
 		Client:       client,
 	}, nil
 }
