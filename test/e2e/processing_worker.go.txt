@@ -1,0 +1,40 @@
+package processing
+
+import (
+	"context"
+	"time"
+
+	"github.com/go-logr/logr"
+	"github.com/solo-io/autopilot/pkg/ezkube"
+
+	v1 "github.com/solo-io/autopilot/test/e2e/test/pkg/apis/tests/v1"
+)
+
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+
+type Worker struct {
+	Client ezkube.Client
+	Logger logr.Logger
+}
+
+func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (v1.TestPhase, *v1.TestStatusInfo, error) {
+	w.Logger.Info("checking deployment metrics", "deployment", test.Name, "threshold", test.Spec.SuccessThreshold)
+
+	val, err := inputs.Metrics.GetRequestSuccessRate(test.Name, test.Namespace, "5s")
+	if err != nil {
+		return "", nil, err
+	}
+
+	status := test.Status.TestStatusInfo
+	status.Results = append(status.Results, val)
+
+	phase := v1.TestPhaseProcessing
+	switch {
+	case val < test.Spec.SuccessThreshold:
+		phase = v1.TestPhaseFailed
+	case time.Now().Sub(test.Status.TimeStarted.Time) >= test.Spec.Duration.Duration:
+		phase = v1.TestPhasePassed
+	}
+
+	return phase, &status, nil
+}

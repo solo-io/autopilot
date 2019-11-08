@@ -1,0 +1,52 @@
+package initializing
+
+import (
+	"context"
+	"github.com/go-logr/logr"
+	"github.com/solo-io/autopilot/pkg/ezkube"
+	"github.com/solo-io/autopilot/test/e2e/test/pkg/parameters"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
+
+	v1 "github.com/solo-io/autopilot/test/e2e/test/pkg/apis/tests/v1"
+)
+
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+
+type Worker struct {
+	Client ezkube.Client
+	Logger logr.Logger
+}
+
+func (w *Worker) Sync(ctx context.Context, test *v1.Test) (Outputs, v1.TestPhase, *v1.TestStatusInfo, error) {
+	w.Logger.Info("initializing deployment", "name", test.Name)
+
+	labels := map[string]string{"app": "deploy"}
+	return Outputs{
+		Deployments: parameters.Deployments{
+			Items: []appsv1.Deployment{{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      test.Name,
+					Namespace: test.Namespace,
+				},
+				Spec: appsv1.DeploymentSpec{
+					Replicas: pointer.Int32Ptr(1),
+					Selector: &metav1.LabelSelector{
+						MatchLabels: labels,
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   test.Name,
+							Labels: labels,
+						},
+						Spec: test.Spec.PodSpec,
+					}},
+			}},
+		},
+	},
+		v1.TestPhaseProcessing,
+		&v1.TestStatusInfo{TimeStarted: metav1.Now()},
+		nil
+}
