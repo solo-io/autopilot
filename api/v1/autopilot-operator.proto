@@ -44,6 +44,10 @@ message AutoPilotOperator {
     // can also be set via the WATCH_NAMESPACE environment variable
     string watchNamespace = 7;
 
+    // The namespace to use for Leader Election (requires read/write ConfigMap permissions)
+    // defaults to the watchNamespace
+    string leaderElectionNamespace = 8;
+
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific

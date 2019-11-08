@@ -173,53 +173,50 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- end}}
         log.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
 
-    {{- if $phase.Final }}
+{{- if $phase.Final }}
 
         // {{$phase.Name}} is a final phase, do not requeue
         return reconcile.Result{}, nil
 
-    {{- else }}
+{{- else }} // begin worker phase
 
         worker := &{{worker_import_prefix $phase}}.Worker{
         	Client: client,
         	Logger: s.logger,
         }
 
-        {{- if has_inputs $phase }}
+    {{- if has_inputs $phase }}
 		inputs, err := s.make{{ $phase.Name}}Inputs(client)
 		if err != nil {
 			return result, fmt.Errorf("failed to make {{ $phase.Name}}Inputs: %v", err)
 		}
 
-            {{- if has_outputs $phase }}
+        {{- if has_outputs $phase }}
         outputs, nextPhase, statusInfo, err := worker.Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
 			return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
-            {{- else}}
-        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
+        {{- else}}
+        nextPhase, statusInfo, err := worker.Sync(s.ctx, {{$.KindLowerCamel}}, inputs)
 		if err != nil {
             return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
 
-            {{- end}}
+        {{- end}}
 
         {{- else}}
-            {{- if has_outputs $phase }}
-        outputs, nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}})
+        {{- if has_outputs $phase }}
+        outputs, nextPhase, statusInfo, err := worker.Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
            return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
-            {{- else}}
-        nextPhase, statusInfo, err := (&{{worker_import_prefix $phase}}.Worker{Client:client}).Sync(s.ctx, {{$.KindLowerCamel}})
+        {{- else}}
+        nextPhase, statusInfo, err := worker.Sync(s.ctx, {{$.KindLowerCamel}})
 		if err != nil {
             return result, fmt.Errorf("failed to run worker for phase {{ $phase.Name}}: %v", err)
 		}
-            {{- end}}
         {{- end}}
-
-    {{- end }}
-
+    {{- end}}
 
     {{- range $out := $phase.Outputs }}
 		for _, out := range outputs.{{ $out.PluralName }}.Items {
@@ -239,6 +236,10 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
         return result, err
     {{- end}}
+
+{{- end }} // end worker phase
+
+
     }
     return result, fmt.Errorf("cannot process {{.Kind}} in unknown phase: %v", {{$.KindLowerCamel}}.Status.Phase)
 }

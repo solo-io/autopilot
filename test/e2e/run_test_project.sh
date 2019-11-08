@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+IMAGE_REPO="docker.io/ilackarms"
+
 set -e
 
 echo "Initializing test operator"
@@ -8,7 +10,7 @@ ap init --group test --version v1 Test
 pushd test
 
 cat > autopilot.yaml <<EOF
-apiVersion: test/v1
+apiVersion: test.autopilot.io/v1
 kind: Test
 operatorName: test-operator
 phases:
@@ -45,3 +47,4 @@ echo "Writing Processing worker..."
 
 cp ../processing_worker.go.txt pkg/workers/processing/worker.go
 
+ap build ${IMAGE_REPO}/test

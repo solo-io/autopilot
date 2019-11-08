@@ -51,57 +51,38 @@ AutoPilot is composed of 3 components:
 
 # todo
 
+# cleanup
+- example
+- docs 
 - refactor metrics. make a factory for it
-- Query method on workers that take metrics as an input
-
-
+- code generated headers in the right places
+- improve docs generation template
+- bake templates into cli
+- add many more aliases/parameter types
+## test
+- e2e metrics test with istio
+## features
+- git ops
+- define custom metrics queries in autopilot.yaml
 - validate method for project config
     - check operatorName is kube compliant
     - apiVerson, kind, phases are correct
     - customParameters
     - final phase with i/o
-
-- code generated headers in the right places
-
-
-- e2e metrics test with istio
-
-
-
-- automated e2e with test repo
-
-- configmap with config settings
-    - generated from yaml file
-    - main func watches for the file, restarts 
-
-- do docs generation for autopilot api
-- schema generation
-
-
-* bake templates into cli
-* curl script to download
-* add many more aliases/parameter types
-
-- types from config files # partial
-    - istio types
-
+- add user config to configmap with config settings
+- curl script to download
 - builders
 
-- generic metrics interface / define in autopilot.yaml
 
-- git ops?
-
-- fix the metrics at boot thing
-
+## punt
+- schema generation
 - interactive cli
 
 
-quarantine <=> operator
-|
-3 traffic split
 
 
-deployment => pods
+
+
 
 
 # done 

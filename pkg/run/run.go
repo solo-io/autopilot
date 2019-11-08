@@ -5,21 +5,31 @@ import (
 	"flag"
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
+	"github.com/gogo/protobuf/proto"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/pkg/config"
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"github.com/solo-io/autopilot/pkg/scheduler"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	// load auth plugins
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 var (
 	// the global scheme used by the operator
-	schemeBuilder = runtime.SchemeBuilder{}
+	schemeBuilder = runtime.SchemeBuilder{
+		clientgoscheme.AddToScheme,
+	}
 
 	// update the DefaultRunOptions at init time to manually override default run options
 	DefaultRunOptions = Options{
@@ -83,7 +93,7 @@ func Run(addToManager AddToManager) error {
 
 	cfgs, err := watchOperatorConfigs(ctx, logger, cfg.OperatorFile)
 	if err != nil {
-		logger.Error(err, "failed starting config watcher, using default config: %#v", config.DefaultConfig)
+		logger.Error(err, "failed starting config watcher, using default config", "config", config.DefaultConfig)
 		cfgs = singleConfig(ctx, &config.DefaultConfig)
 	}
 
@@ -141,6 +151,8 @@ func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile 
 		case configs <- operator:
 		}
 
+		lastConfig := operator
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -149,7 +161,7 @@ func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile 
 				if !ok {
 					return
 				}
-				logger.Info("new Operator config detected!", "event", event)
+				logger.Info("new Operator config detected!", "file", event.Name)
 
 				// set up filewatcher for the operator config
 				operator, err := config.ConfigFromFile(operatorFile)
@@ -158,10 +170,15 @@ func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile 
 					continue
 				}
 
+				if proto.Equal(lastConfig, operator) {
+					continue
+				}
+
 				select {
 				case <-ctx.Done():
 					return
 				case configs <- operator:
+					lastConfig = operator
 				}
 
 			case err, ok := <-watcher.Errors:
@@ -208,10 +225,17 @@ func runOperatorOnConfigChange(
 				logger:       logger,
 			}
 
-			if err := instance.Start(); err != nil {
-				logger.Error(err, "failed to read operator config file")
-				continue
-			}
+			go func() {
+				logger.Info("Warning: Flushing Operator Metrics!")
+
+				// metrics must be flushed as the new Controller re-registers metrics with the same name
+				metrics.Registry = prometheus.NewRegistry()
+
+				if err := instance.Start(); err != nil {
+					logger.Error(err, "failed to start operator instance")
+					os.Exit(1)
+				}
+			}()
 		}
 	}
 }
@@ -227,9 +251,10 @@ type operatorInstance struct {
 
 func (r *operatorInstance) Start() error {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             r.scheme,
-		MetricsBindAddress: r.config.MetricsAddr,
-		LeaderElection:     r.config.EnableLeaderElection,
+		Scheme:                  r.scheme,
+		MetricsBindAddress:      r.config.MetricsAddr,
+		LeaderElection:          r.config.EnableLeaderElection,
+		LeaderElectionNamespace: r.config.WatchNamespace,
 		// TODO: webhook support
 	})
 	if err != nil {
