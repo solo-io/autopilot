@@ -9,13 +9,30 @@ import (
 // TestSpec defines the desired state of Test
 // +k8s:openapi-gen=true
 type TestSpec struct {
+	// spec of the service to run
 	PodSpec v1.PodSpec `json:"podSpec"`
+
+	// port the service is listening on
+	Port int32 `json:"port"`
+
+	// command to run against the service
+	LoadTest LoadTest `json:"loadTest"`
 
 	// Service must stay above this number in order to pass
 	SuccessThreshold float64 `json:"successThreshold"`
 
 	// Duration of the test
 	Duration metav1.Duration `json:"duration"`
+}
+
+type LoadTest struct {
+	Scheme      string   `json:"scheme,omitempty"`
+	Path        string   `json:"path,omitempty"`
+	Body        string   `json:"body,omitempty"`
+
+	Method      string   `json:"method,omitempty"`
+	Concurrency int      `json:"concurrency,omitempty"`
+	ExtraArgs   []string `json:"extraArgs,omitempty"`
 }
 
 // TestStatusInfo defines an observed condition of Test

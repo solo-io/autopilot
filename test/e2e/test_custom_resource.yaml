@@ -1,0 +1,63 @@
+apiVersion: test.autopilot.io/v1
+kind: Test
+metadata:
+  name: example
+  namespace: e2etest
+spec:
+  duration: 60s
+  podSpec:
+    containers:
+      - name: podinfod
+        image: stefanprodan/podinfo:3.1.4
+        imagePullPolicy: Always
+        ports:
+          - name: http
+            containerPort: 9898
+            protocol: TCP
+          - name: http-metrics
+            containerPort: 9797
+            protocol: TCP
+          - name: grpc
+            containerPort: 9999
+            protocol: TCP
+        command:
+          - ./podinfo
+          - --port=9898
+          - --port-metrics=9797
+          - --grpc-port=9999
+          - --grpc-service-name=podinfo
+          - --level=info
+          - --random-delay=false
+          - --random-error=false
+        env:
+          - name: PODINFO_UI_COLOR
+            value: cyan
+        livenessProbe:
+          exec:
+            command:
+              - podcli
+              - check
+              - http
+              - localhost:9898/healthz
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+              - podcli
+              - check
+              - http
+              - localhost:9898/readyz
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+  port: 9898
+  successThreshold: 99
+  loadTest:
+    path: /status/500

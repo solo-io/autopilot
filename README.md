@@ -59,8 +59,12 @@ AutoPilot is composed of 3 components:
 - improve docs generation template
 - bake templates into cli
 - add many more aliases/parameter types
+- clean up CLI messages
+- generate CLI docs
+
 ## test
 - e2e metrics test with istio
+
 ## features
 - git ops
 - define custom metrics queries in autopilot.yaml
@@ -72,7 +76,8 @@ AutoPilot is composed of 3 components:
 - add user config to configmap with config settings
 - curl script to download
 - builders
-
+- ap undeploy
+- label everything for easy deletion/listing
 
 ## punt
 - schema generation

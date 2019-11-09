@@ -9,28 +9,7 @@ ap init --group test --version v1 Test
 
 pushd test
 
-cat > autopilot.yaml <<EOF
-apiVersion: test.autopilot.io/v1
-kind: Test
-operatorName: test-operator
-phases:
-  - description: Test has begun initializing
-    initial: true
-    name: Initializing
-    outputs:
-      - deployments
-      - services
-  - description: Test has begun processing
-    inputs:
-      - metrics
-    name: Processing
-  - description: Test has passed
-    name: Passed
-    final: true
-  - description: Test has failed
-    name: Failed
-    final: true
-EOF
+cp ../autopilot.yaml.txt autopilot.yaml
 
 ap generate
 

@@ -1,0 +1,21 @@
+apiVersion: test.autopilot.io/v1
+kind: Test
+operatorName: test-operator
+phases:
+  - description: Test has begun initializing
+    initial: true
+    name: Initializing
+    outputs:
+      - deployments
+      - services
+      - jobs
+  - description: Test has begun processing
+    inputs:
+      - metrics
+    name: Processing
+  - description: Test has passed
+    name: Passed
+    final: true
+  - description: Test has failed
+    name: Failed
+    final: true

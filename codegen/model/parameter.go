@@ -60,6 +60,14 @@ var (
 		Package:      "k8s.io/api/core/v1",
 		ApiGroup:     "",
 	})
+	Jobs = RegisterModel(Parameter{
+		LowerName:    "jobs",
+		PluralName:   "Jobs",
+		SingleName:   "Job",
+		ImportPrefix: "batchv1",
+		Package:      "k8s.io/api/batch/v1",
+		ApiGroup:     "batch",
+	})
 	Deployments = RegisterModel(Parameter{
 		LowerName:    "deployments",
 		PluralName:   "Deployments",

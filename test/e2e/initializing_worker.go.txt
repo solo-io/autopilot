@@ -2,13 +2,16 @@ package initializing
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/autopilot/test/e2e/test/pkg/parameters"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
+	"time"
 
 	v1 "github.com/solo-io/autopilot/test/e2e/test/pkg/apis/tests/v1"
 )
@@ -20,33 +23,115 @@ type Worker struct {
 	Logger logr.Logger
 }
 
+const loadTesterImage = "docker.io/rcmorano/docker-hey"
+
 func (w *Worker) Sync(ctx context.Context, test *v1.Test) (Outputs, v1.TestPhase, *v1.TestStatusInfo, error) {
 	w.Logger.Info("initializing deployment", "name", test.Name)
 
-	labels := map[string]string{"app": "deploy"}
+	heyCommand := heyArgs{
+		Name:      test.Name,
+		Namespace: test.Namespace,
+		Duration:  test.Spec.Duration.Duration,
+		Port:      test.Spec.Port,
+		LoadTest:  test.Spec.LoadTest,
+	}.command()
+
+	labels := map[string]string{"app": test.Name}
 	return Outputs{
 		Deployments: parameters.Deployments{
-			Items: []appsv1.Deployment{{
+			Items: []appsv1.Deployment{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      test.Name,
+						Namespace: test.Namespace,
+					},
+					Spec: appsv1.DeploymentSpec{
+						Replicas: pointer.Int32Ptr(1),
+						Selector: &metav1.LabelSelector{
+							MatchLabels: labels,
+						},
+						Template: corev1.PodTemplateSpec{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:   test.Name,
+								Labels: labels,
+							},
+							Spec: test.Spec.PodSpec,
+						}},
+				},
+			},
+		},
+		Services: parameters.Services{
+			Items: []corev1.Service{{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      test.Name,
 					Namespace: test.Namespace,
 				},
-				Spec: appsv1.DeploymentSpec{
-					Replicas: pointer.Int32Ptr(1),
-					Selector: &metav1.LabelSelector{
-						MatchLabels: labels,
-					},
+				Spec: corev1.ServiceSpec{
+					Selector: labels,
+					Ports: []corev1.ServicePort{{
+						Port: test.Spec.Port,
+					}},
+				},
+			}},
+		},
+		Jobs: parameters.Jobs{
+			Items: []batchv1.Job{{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      test.Name + "-loadtester",
+					Namespace: test.Namespace,
+				},
+				Spec: batchv1.JobSpec{
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Name:   test.Name,
-							Labels: labels,
+							Name:      test.Name + "-loadtester",
+							Namespace: test.Namespace,
 						},
-						Spec: test.Spec.PodSpec,
-					}},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{{
+								Name:            "hey",
+								Image:           loadTesterImage,
+								Command:         heyCommand,
+								ImagePullPolicy: corev1.PullAlways,
+							}},
+						},
+					},
+				},
 			}},
 		},
 	},
 		v1.TestPhaseProcessing,
 		&v1.TestStatusInfo{TimeStarted: metav1.Now()},
 		nil
+}
+
+type heyArgs struct {
+	Name      string
+	Namespace string
+	Duration  time.Duration
+	Port      int32
+	v1.LoadTest
+}
+
+func (a heyArgs) command() []string {
+	if a.Method == "" {
+		a.Method = "GET"
+	}
+	if a.Scheme == "" {
+		a.Scheme = "http"
+	}
+	url := fmt.Sprintf("%v://%v.%v:%v%v", a.Scheme, a.Name, a.Namespace, a.Port, a.Path)
+
+	args := []string{
+		"-m", a.Method,
+		"-z", a.Duration.String(),
+	}
+
+	if a.Concurrency != 0 {
+		args = append(args,
+			"-c", fmt.Sprintf("%v", a.Concurrency))
+	}
+
+	args = append(args, a.ExtraArgs...)
+
+	return append(args, url)
 }
