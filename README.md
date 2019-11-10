@@ -78,6 +78,8 @@ AutoPilot is composed of 3 components:
 - builders
 - ap undeploy
 - label everything for easy deletion/listing
+- expose garbage collection func to workers
+    - rollback the phase when something ensure fails? (option in config)
 
 ## punt
 - schema generation
