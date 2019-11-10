@@ -2,11 +2,12 @@ package logs
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/spf13/cobra"
-	"os"
-	"os/exec"
 )
 
 var (
@@ -38,10 +39,6 @@ func logs(operatorName string) error {
 
 	if follow {
 		args = append(args, "-f")
-	}
-
-	if namespace != "" {
-		args = append(args, )
 	}
 
 	logs := exec.Command("kubectl", args...)

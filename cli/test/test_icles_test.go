@@ -1,9 +1,10 @@
 package test
 
 import (
-	"github.com/solo-io/autopilot/cli/pkg/commands"
 	"os"
 	"testing"
+
+	"github.com/solo-io/autopilot/cli/pkg/commands"
 )
 
 func TestIcles(t *testing.T) {

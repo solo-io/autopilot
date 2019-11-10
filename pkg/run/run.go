@@ -3,6 +3,8 @@ package run
 import (
 	"context"
 	"flag"
+	"os"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
 	"github.com/gogo/protobuf/proto"
@@ -17,7 +19,6 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"

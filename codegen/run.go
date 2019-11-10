@@ -1,11 +1,12 @@
 package codegen
 
 import (
+	"io/ioutil"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"golang.org/x/tools/imports"
-	"io/ioutil"
 
 	"os"
 	"path/filepath"

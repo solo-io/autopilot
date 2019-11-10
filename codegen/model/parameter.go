@@ -1,9 +1,10 @@
 package model
 
 import (
+	"reflect"
+
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
-	"reflect"
 )
 
 type Parameter v1.Parameter

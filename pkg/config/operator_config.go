@@ -2,14 +2,15 @@ package config
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
+	"time"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/pkg/defaults"
-	"io/ioutil"
-	"os"
-	"time"
 )
 
 // the default config represents a boilerplate config wired to be run with istio (installed to istio-system)

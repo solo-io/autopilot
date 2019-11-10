@@ -2,17 +2,18 @@ package codegen
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"text/template"
+
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/autopilot/codegen/templates"
 	"github.com/solo-io/autopilot/codegen/templates/deploy"
 	"github.com/solo-io/autopilot/pkg/defaults"
-	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
-	"path/filepath"
-	"text/template"
 
 	"github.com/solo-io/autopilot/codegen/util"
 	"sigs.k8s.io/yaml"

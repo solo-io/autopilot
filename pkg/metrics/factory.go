@@ -2,9 +2,10 @@ package metrics
 
 import (
 	"fmt"
-	v1 "github.com/solo-io/autopilot/api/v1"
 	"os"
 	"time"
+
+	v1 "github.com/solo-io/autopilot/api/v1"
 )
 
 type Factory struct {

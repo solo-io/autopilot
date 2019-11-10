@@ -2,13 +2,14 @@ package util
 
 import (
 	"fmt"
-	"github.com/solo-io/autopilot/pkg/defaults"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/solo-io/autopilot/pkg/defaults"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -22,11 +23,11 @@ const (
 	GoModEnv   = "GO111MODULE"
 	SrcDir     = "src"
 
-	fsep            = string(filepath.Separator)
-	mainFile        = "cmd" + fsep + "manager" + fsep + "main.go"
-	rolesDir        = "roles"
-	helmChartsDir   = "helm-charts"
-	goModFile       = "go.mod"
+	fsep          = string(filepath.Separator)
+	mainFile      = "cmd" + fsep + "manager" + fsep + "main.go"
+	rolesDir      = "roles"
+	helmChartsDir = "helm-charts"
+	goModFile     = "go.mod"
 )
 
 // MustInProjectRoot checks if the current dir is the project root, and exits
@@ -74,7 +75,7 @@ func MustGetThisFile() string {
 	if !ok {
 		log.Fatalf("Failed to get runtime.Caller")
 	}
-	abs, err :=  filepath.Abs(thisFile)
+	abs, err := filepath.Abs(thisFile)
 	if err != nil {
 		log.Fatalf("Failed to get absolute path: (%v)", err)
 	}
@@ -82,7 +83,7 @@ func MustGetThisFile() string {
 }
 
 // returns absolute path to the diretory containing the .go file containing the calling function
-func MustGetThisDir() string{
+func MustGetThisDir() string {
 	_, thisFile, _, ok := runtime.Caller(1)
 	if !ok {
 		log.Fatalf("Failed to get runtime.Caller")

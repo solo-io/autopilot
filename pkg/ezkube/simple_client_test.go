@@ -2,6 +2,7 @@ package ezkube_test
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/solo-io/autopilot/pkg/ezkube"
@@ -15,17 +16,17 @@ import (
 
 var _ = Describe("SimpleClient", func() {
 	var (
-		mgr manager.Manager
+		mgr    manager.Manager
 		cancel context.CancelFunc
 	)
-	BeforeEach(func(){
+	BeforeEach(func() {
 		mgr, cancel = test.MustManager()
 	})
 	AfterEach(func() {
 		cancel()
 	})
 	It("ensures resources to the cluster", func() {
-		r :=   rand.String(4)
+		r := rand.String(4)
 		parentName := "parent-" + r
 		childName := "child-" + r
 
@@ -70,7 +71,7 @@ var _ = Describe("SimpleClient", func() {
 			},
 		}
 		Eventually(func() error {
-		err = client.Get(context.TODO(), actualChild)
+			err = client.Get(context.TODO(), actualChild)
 			return err
 		}).Should(Not(HaveOccurred()))
 		Expect(actualChild.Data).To(Equal(child.Data))

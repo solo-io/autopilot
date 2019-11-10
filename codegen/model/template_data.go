@@ -2,13 +2,14 @@ package model
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/util"
-	"path/filepath"
-	"strings"
 )
 
 // used for rendering templates

@@ -2,6 +2,11 @@ package initialize
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
@@ -10,10 +15,6 @@ import (
 	"github.com/solo-io/autopilot/pkg/config"
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var (

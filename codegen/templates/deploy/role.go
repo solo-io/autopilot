@@ -1,11 +1,12 @@
 package deploy
 
 import (
+	"sort"
+
 	"github.com/solo-io/autopilot/codegen/model"
 	v1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sort"
 )
 
 func Role(data *model.ProjectData) runtime.Object {

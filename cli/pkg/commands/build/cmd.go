@@ -2,12 +2,13 @@ package build
 
 import (
 	"fmt"
-	"github.com/solo-io/autopilot/codegen"
-	"github.com/solo-io/autopilot/codegen/util"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/solo-io/autopilot/codegen"
+	"github.com/solo-io/autopilot/codegen/util"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
