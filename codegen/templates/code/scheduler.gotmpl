@@ -171,14 +171,15 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- else }}
     case {{$.Version}}.{{$.Kind}}Phase{{$phase.Name}}:
     {{- end}}
-        log.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
 
 {{- if $phase.Final }}
+        log.Info("{{$.Kind}} is in phase {{$phase.Name}}. Removing from queue.", "name", {{$.KindLowerCamel}}.Name)
 
         // {{$phase.Name}} is a final phase, do not requeue
         return reconcile.Result{}, nil
 
 {{- else }} // begin worker phase
+        log.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
 
         worker := &{{worker_import_prefix $phase}}.Worker{
         	Client: client,
