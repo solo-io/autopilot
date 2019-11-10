@@ -1,0 +1,28 @@
+package metrics
+
+import (
+	"time"
+
+	"github.com/solo-io/autopilot/pkg/metrics"
+)
+
+type {{$.Kind}}Metrics interface {
+	metrics.Metrics
+{{- range $query := $.Queries }}
+	Get{{upper_camel $query.Name}}({{ range $param := $query.Parameters }}{{$param}}{{end}} string) (*metrics.QueryResult, error)
+{{- end }}
+}
+
+type metricsClient struct {
+	metrics.Metrics
+}
+
+{{ range $query := $.Queries -}}
+func (c *metricsClient) Get{{upper_camel $query.Name}}({{ range $param := $query.Parameters }}{{$param}}{{end}} string) (*metrics.QueryResult, error) {
+	queryTemplate := `{{ $query.QueryTemplate }}`
+	queryParameters :=
+	{{ range $param := $query.Parameters }}
+	{{$param}}
+	{{end}}
+}
+{{- end }}

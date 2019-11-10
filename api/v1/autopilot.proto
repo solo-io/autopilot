@@ -39,6 +39,9 @@ message AutoPilotProject {
 
     // custom Parameters which extend AutoPilot's builtin types
     repeated Parameter customParameters = 6;
+
+    // custom Queries which extend AutoPilot's metrics queries
+    repeated MetricsQuery customQueries = 7;
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific
@@ -109,3 +112,46 @@ message Parameter {
     // if true, the Resource will be added to the operator's runtime.Scheme
     bool isCrd = 7;
 }
+
+// MetricsQueries extend the query options available to workers.
+// Mesh Queries are accessible to workers via generated client code
+// that lives in <project root>/pkg/metrics
+//
+//
+// The following MetricsQuery:
+//
+// name: success-rate
+// parameters:
+// - Name
+// - Namespace
+// - Interval
+// queryTemplate: |
+//     sum(
+//         rate(
+//             envoy_cluster_upstream_rq{
+//                 kubernetes_namespace="{{ .Namespace }}",
+//                 kubernetes_pod_name=~"{{ .Name }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)",
+//                 envoy_response_code!~"5.*"
+//             }[{{ .Interval }}]
+//         )
+//     )
+//     /
+//     sum(
+//         rate(
+//             envoy_cluster_upstream_rq{
+//                 kubernetes_namespace="{{ .Namespace }}",
+//                 kubernetes_pod_name=~"{{ .Name }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)"
+//             }[{{ .Interval }}]
+//         )
+//     )
+//     * 100
+//
+// would produce the following `pkg/metrics/metrics.go`:
+//aaww
+
+message MeshQuery {
+    string name = 1;
+    string queryTemplate = 2;
+    repeated string parameterNames = 3;
+}
+
