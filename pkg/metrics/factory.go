@@ -19,6 +19,8 @@ func getMetricsServer(meshProvider v1.MeshProvider, controlPlaneNs string) strin
 	switch meshProvider {
 	case v1.MeshProvider_Istio:
 		return fmt.Sprintf("http://prometheus.%v:9090", controlPlaneNs)
+	case v1.MeshProvider_SMI:
+		return fmt.Sprintf("http://prometheus.%v:9090", controlPlaneNs)
 	}
 	panic("currently unsupported: " + meshProvider.String())
 }
@@ -41,6 +43,10 @@ func (factory *Factory) Observer() Metrics {
 	switch provider {
 	case v1.MeshProvider_Istio:
 		return &IstioObserver{
+			client: factory.Client,
+		}
+	case v1.MeshProvider_SMI:
+		return &EnvoyObserver{
 			client: factory.Client,
 		}
 	default:
