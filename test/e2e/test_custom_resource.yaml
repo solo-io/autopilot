@@ -60,4 +60,4 @@ spec:
   port: 9898
   successThreshold: 99
   loadTest:
-    path: /status/500
+    path: /status/200

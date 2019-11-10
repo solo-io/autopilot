@@ -13,6 +13,7 @@ import (
 	"github.com/solo-io/autopilot/pkg/config"
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"github.com/solo-io/autopilot/pkg/scheduler"
+	"github.com/solo-io/autopilot/pkg/utils"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -250,11 +251,27 @@ type operatorInstance struct {
 }
 
 func (r *operatorInstance) Start() error {
+
+	enableLeaderElection := r.config.EnableLeaderElection
+	leaderElectionNamespace := r.config.LeaderElectionNamespace
+
+	if enableLeaderElection {
+		leaderNs, err := utils.GetInClusterNamesapce()
+		if err != nil {
+			// override if running out-of-cluster
+			r.logger.Info("Skipping leader-election when running out of cluster")
+			enableLeaderElection = false
+		} else if leaderElectionNamespace == "" {
+			// use currently deployed namespace as default leader ns
+			leaderElectionNamespace = leaderNs
+		}
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  r.scheme,
 		MetricsBindAddress:      r.config.MetricsAddr,
-		LeaderElection:          r.config.EnableLeaderElection,
-		LeaderElectionNamespace: r.config.WatchNamespace,
+		LeaderElection:          enableLeaderElection,
+		LeaderElectionNamespace: leaderElectionNamespace,
 		// TODO: webhook support
 	})
 	if err != nil {

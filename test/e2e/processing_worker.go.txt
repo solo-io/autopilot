@@ -2,6 +2,7 @@ package processing
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -20,7 +21,9 @@ type Worker struct {
 func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (v1.TestPhase, *v1.TestStatusInfo, error) {
 	w.Logger.Info("checking deployment metrics", "deployment", test.Name, "threshold", test.Spec.SuccessThreshold)
 
-	val, err := inputs.Metrics.GetRequestSuccessRate(test.Name, test.Namespace, "5s")
+	interval := strings.TrimSuffix(test.Spec.Duration.Duration.String(), "0")
+
+	val, err := inputs.Metrics.GetRequestSuccessRate(test.Name, test.Namespace, interval)
 	if err != nil {
 		return "", nil, err
 	}

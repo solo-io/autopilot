@@ -9,6 +9,11 @@ ap init --group test --version v1 Test
 
 pushd test
 
+
+echo "Cleaning up previous Test"
+kubectl delete -f ../test_custom_resource.yaml --ignore-not-found
+
+
 cp ../autopilot.yaml.txt autopilot.yaml
 
 ap generate
@@ -27,3 +32,9 @@ echo "Writing Processing worker..."
 cp ../processing_worker.go.txt pkg/workers/processing/worker.go
 
 ap build ${IMAGE_REPO}/test
+ap deploy ${IMAGE_REPO}/test -d
+
+kubectl delete ns test-operator
+
+kubectl label namespace e2etest istio-injection=enabled --overwrite
+kubectl apply -f ../test_custom_resource.yaml
