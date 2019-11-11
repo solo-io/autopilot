@@ -4,33 +4,47 @@ IMAGE_REPO="docker.io/ilackarms"
 
 set -e
 
-echo "Initializing test operator"
+echo "Initializing canary operator"
 ap init canary && pushd canary
 
 echo "Cleaning up previous CanaryDeployment"
-kubectl delete -f ../test_custom_resource.yaml --ignore-not-found
+kubectl delete -f ../canary_example.yaml --ignore-not-found
 
 cp ../autopilot.yaml.txt autopilot.yaml
 
 ap generate
 
-exit 0
-
-echo "Writing spec.go"
-cp ../spec.go.txt pkg/apis/tests/v1/spec.go && ap generate
+echo "Writing spec.go && generating zz_deepcopy..."
+cp ../spec.go.txt pkg/apis/canarydeployments/v1/spec.go && ap generate
 
 echo "Writing initializing worker..."
 
 cp ../initializing_worker.go.txt pkg/workers/initializing/worker.go
 
-echo "Writing Processing worker..."
+echo "Writing Waiting worker..."
 
-cp ../processing_worker.go.txt pkg/workers/processing/worker.go
+cp ../waiting_worker.go.txt pkg/workers/waiting/worker.go
 
-ap build ${IMAGE_REPO}/test
-ap deploy ${IMAGE_REPO}/test -d
+echo "Writing Evaluating worker..."
 
-kubectl delete ns test-operator
+cp ../evaluating_worker.go.txt pkg/workers/evaluating/worker.go
+
+echo "Writing Promoting worker..."
+
+cp ../promoting_worker.go.txt pkg/workers/promoting/worker.go
+
+echo "Writing Rollback worker..."
+
+cp ../rollback_worker.go.txt pkg/workers/rollback/worker.go
+
+echo "Writing shared code..."
+mkdir -p pkg/weights
+cp ../virtual_service_weights.go.txt pkg/weights/virtual_service_weights.go
+
+ap build ${IMAGE_REPO}/canary
+ap deploy ${IMAGE_REPO}/canary -d
+
+kubectl delete ns canary-operator
 
 kubectl label namespace e2etest istio-injection=enabled --overwrite
-kubectl apply -f ../test_custom_resource.yaml
+kubectl apply -f ../canary_example.yaml

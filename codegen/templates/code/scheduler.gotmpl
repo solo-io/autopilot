@@ -3,6 +3,7 @@ package scheduler
 import (
     "context"
     "fmt"
+    "reflect"
     "time"
 
     "github.com/go-logr/logr"
@@ -15,7 +16,6 @@ import (
     "sigs.k8s.io/controller-runtime/pkg/handler"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/reconcile"
-    logf "sigs.k8s.io/controller-runtime/pkg/log"
 
     "github.com/solo-io/autopilot/pkg/config"
     "github.com/solo-io/autopilot/pkg/ezkube"
@@ -44,8 +44,6 @@ import (
 {{- end}}
 )
 
-var log = logf.Log.WithName("scheduler")
-
 func AddToManager(params scheduler.Params) error {
     scheduler, err := NewScheduler(params)
     if err != nil {
@@ -58,7 +56,7 @@ func AddToManager(params scheduler.Params) error {
     }
 
     // Watch for changes to primary resource {{.Kind}}
-    log.Info("Registering watch for primary resource {{.Kind}}")
+    params.Logger.Info("Registering watch for primary resource {{.Kind}}")
     err = c.Watch(&source.Kind{Type: &{{$.Version}}.{{$.Kind}}{}}, &handler.EnqueueRequestForObject{})
     if err != nil {
         return err
@@ -67,7 +65,7 @@ func AddToManager(params scheduler.Params) error {
 {{- range $param := unique_outputs }}
 
     // Watch for changes to secondary resource {{$param.PluralName }} and requeue the owner {{$.Kind}}
-    log.Info("Registering watch for secondary resource {{$param.PluralName }}")
+    params.Logger.Info("Registering watch for secondary resource {{$param.PluralName }}")
     err = c.Watch(&source.Kind{Type: &{{$param.ImportPrefix }}.{{$param.SingleName }}{}}, &handler.EnqueueRequestForOwner{
         IsController: true,
         OwnerType:    &{{$.Version}}.{{$.Kind}}{},
@@ -168,6 +166,14 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     }
     {{- end}}
 
+    // store original status for comparison after sync
+    status :=  {{$.KindLowerCamel}}.Status
+
+    logger := s.logger.WithValues(
+        "{{$.KindLowerCamel}}", {{$.KindLowerCamel}}.Namespace+"."+{{$.KindLowerCamel}}.Name,
+        "phase", {{$.KindLowerCamel}}.Status.Phase,
+    )
+
     switch {{$.KindLowerCamel}}.Status.Phase {
 {{- range $phase := .Phases}}
     {{- if $phase.Initial }}
@@ -177,20 +183,17 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
     {{- end}}
 
 {{- if $phase.Final }}
-        log.Info("{{$.Kind}} is in phase {{$phase.Name}}. Removing from queue.", "name", {{$.KindLowerCamel}}.Name)
+        logger.Info("{{$.Kind}} is in final phase {{$phase.Name}}. Removing from queue.", "name", {{$.KindLowerCamel}}.Name)
 
         // {{$phase.Name}} is a final phase, do not requeue
-        return reconcile.Result{}, nil
+        result.RequeueAfter = 0
 
 {{- else }} // begin worker phase
-        log.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
+        logger.Info("Syncing {{$.Kind}} in phase {{$phase.Name}}", "name", {{$.KindLowerCamel}}.Name)
 
         worker := &{{worker_import_prefix $phase}}.Worker{
         	Client: client,
-        	Logger: s.logger.WithValues(
-        		"{{$.KindLowerCamel}}", {{$.KindLowerCamel}}.Namespace+"."+{{$.KindLowerCamel}}.Name,
-        		"phase", {{$.KindLowerCamel}}.Status.Phase,
-            ),
+        	Logger: logger,
         }
 
     {{- if has_inputs $phase }}
@@ -234,22 +237,31 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		}
     {{- end}}
 
-    {{$.KindLowerCamel}}.Status.Phase = nextPhase
-        if  statusInfo != nil {
-        {{$.KindLowerCamel}}.Status.{{$.Kind}}StatusInfo = *statusInfo
+        // update the {{$.Kind}} status with the worker's results
+        {{$.KindLowerCamel}}.Status.Phase = nextPhase
+        if statusInfo != nil {
+        	logger.Info("Updating status of primary resource")
+            {{$.KindLowerCamel}}.Status.{{$.Kind}}StatusInfo = *statusInfo
         }
-		if err := client.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
-			return result, fmt.Errorf("failed to update {{$.Kind}}Status: %v", err)
-		}
 
-        return result, err
     {{- end}}
+
 
 {{- end }} // end worker phase
 
-
+    default:
+        return result, fmt.Errorf("cannot process {{.Kind}} in unknown phase: %v", {{$.KindLowerCamel}}.Status.Phase)
     }
-    return result, fmt.Errorf("cannot process {{.Kind}} in unknown phase: %v", {{$.KindLowerCamel}}.Status.Phase)
+
+    {{$.KindLowerCamel}}.Status.ObservedGeneration = {{$.KindLowerCamel}}.Generation
+
+    if !reflect.DeepEqual(status, {{$.KindLowerCamel}}.Status) {
+        if err := client.UpdateStatus(s.ctx, {{$.KindLowerCamel}}); err != nil {
+            return result, fmt.Errorf("failed to update {{$.Kind}}Status: %v", err)
+        }
+    }
+
+    return result, nil
 }
 
 {{- range $phase := .Phases}}

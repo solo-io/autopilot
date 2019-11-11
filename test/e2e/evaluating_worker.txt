@@ -2,6 +2,7 @@ package evaluating
 
 import (
 	"context"
+	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -60,14 +61,22 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("virtual service not found for canary %v", canary.Name)
 	}
 
-	if err := stepWeights(&virtualService); err != nil {
-		return Outputs{}, "", nil, errors.Wrapf(err, "invalid virtual service found for canary %v", canary.Name)
+	primaryWeight, canaryWeight, err := weights.GetWeights(virtualService)
+	if err != nil {
+		return Outputs{}, "", nil, errors.Wrapf(err, "failed to get virtual service weights for canary %v", canary.Name)
+	}
+
+	// once primary weight is below 0, we just monitor all the traffic going to canary
+	if primaryWeight > 0 {
+		if err := weights.SetWeights(&virtualService, primaryWeight-StepWeight, canaryWeight+StepWeight); err != nil {
+			return Outputs{}, "", nil, errors.Wrapf(err, "failed to set weights for virtual service for canary %v", canary.Name)
+		}
 	}
 
 	// we still want to be in evaluating phase while we are processing
 	return Outputs{VirtualServices: parameters.VirtualServices{
-			Items: []v1alpha3.VirtualService{virtualService},
-		}},
+		Items: []v1alpha3.VirtualService{virtualService},
+	}},
 		v1.CanaryDeploymentPhaseEvaluating, nil, nil
 }
 
