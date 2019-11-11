@@ -1,6 +1,0 @@
-apiVersion: autopilot.example.io/v1
-kind: Test
-metadata:
-  labels:
-    app.kubernetes.io/name: test-operator
-  name: example

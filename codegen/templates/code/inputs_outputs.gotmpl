@@ -4,8 +4,7 @@ import (
     parameters "{{ $.Project.ParametersImportPath }}"
 
 {{- if needs_metrics }}
-
-    "github.com/solo-io/autopilot/pkg/metrics"
+    {{$.Project.KindLower}}metrics "{{ $.Project.MetricsImportPath }}"
 {{- end }}
 )
 
@@ -16,7 +15,7 @@ type Inputs struct {
     {{- range $param := $.Inputs }}
 
         {{- if is_metrics $param }}
-    {{$param.PluralName}} metrics.{{$param.PluralName}}
+    {{$param.PluralName}} {{$.Project.KindLower}}metrics.{{$.Project.Kind}}Metrics
 
         {{- else}}
     {{$param.PluralName}} parameters.{{$param.PluralName}}

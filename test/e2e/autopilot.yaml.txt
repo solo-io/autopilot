@@ -8,10 +8,6 @@ phases:
     outputs:
       - deployments
       - services
-  - description: Test is waiting for metrics to begin appearing
-    inputs:
-      - metrics
-    name: Waiting
   - description: Test has begun processing
     inputs:
       - metrics

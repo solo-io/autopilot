@@ -29,6 +29,7 @@ type ProjectData struct {
 	SchedulerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
 	FinalizerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/finalizer"
 	ParametersImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/parameters"
+	MetricsImportPath    string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/metrics"
 
 	KindLowerCamel  string // e.g. "canaryResource"
 	KindLower       string // e.g. "canaryresource"
@@ -37,6 +38,11 @@ type ProjectData struct {
 
 func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator) (*ProjectData, error) {
 	projectGoPkg := util.GetGoPkg()
+
+	for _, q := range DefaultQueries {
+		q := q // Go!!
+		project.Queries = append(project.Queries, &q)
+	}
 
 	apiVersionParts := strings.Split(project.ApiVersion, "/")
 
@@ -53,6 +59,7 @@ func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator)
 	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
 	finalizerImportPath := filepath.Join(projectGoPkg, "pkg", "finalizer")
 	parametersImportPath := filepath.Join(projectGoPkg, "pkg", "parameters")
+	metricsImportPath := filepath.Join(projectGoPkg, "pkg", "metrics")
 
 	// register all custom types
 	for _, custom := range project.CustomParameters {
@@ -69,6 +76,7 @@ func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator)
 		SchedulerImportPath:  schedulerImportPath,
 		FinalizerImportPath:  finalizerImportPath,
 		ParametersImportPath: parametersImportPath,
+		MetricsImportPath:    metricsImportPath,
 		KindLowerCamel:       strcase.ToLowerCamel(project.Kind),
 		KindLower:            strings.ToLower(project.Kind),
 		KindLowerPlural:      pluralize.NewClient().Plural(strings.ToLower(project.Kind)),

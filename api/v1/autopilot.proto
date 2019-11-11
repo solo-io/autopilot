@@ -41,7 +41,7 @@ message AutoPilotProject {
     repeated Parameter customParameters = 6;
 
     // custom Queries which extend AutoPilot's metrics queries
-    repeated MetricsQuery customQueries = 7;
+    repeated MetricsQuery queries = 7;
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific
@@ -114,7 +114,7 @@ message Parameter {
 }
 
 // MetricsQueries extend the query options available to workers.
-// Mesh Queries are accessible to workers via generated client code
+// MetricsQueries are accessible to workers via generated client code
 // that lives in <project root>/pkg/metrics
 //
 //
@@ -149,9 +149,9 @@ message Parameter {
 // would produce the following `pkg/metrics/metrics.go`:
 //aaww
 
-message MeshQuery {
+message MetricsQuery {
     string name = 1;
     string queryTemplate = 2;
-    repeated string parameterNames = 3;
+    repeated string parameters = 3;
 }
 

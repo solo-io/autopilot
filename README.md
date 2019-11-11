@@ -80,11 +80,13 @@ AutoPilot is composed of 3 components:
 - label everything for easy deletion/listing
 - expose garbage collection func to workers
     - rollback the phase when something ensure fails? (option in config)
+- multiple crds
 
 ## punt
 - schema generation
 - interactive cli
-
+- automatic metrics for worker syncs
+- automatic traces for worker syncs
 
 
 

@@ -2,6 +2,8 @@ package processing
 
 import (
 	"context"
+	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
 	"strings"
 	"time"
 
@@ -21,19 +23,26 @@ type Worker struct {
 func (w *Worker) Sync(ctx context.Context, test *v1.Test, inputs Inputs) (v1.TestPhase, *v1.TestStatusInfo, error) {
 	w.Logger.Info("checking deployment metrics", "deployment", test.Name, "threshold", test.Spec.SuccessThreshold)
 
-	interval := strings.TrimSuffix(test.Spec.Duration.Duration.String(), "0")
+	interval := strings.TrimSuffix(test.Spec.Duration.Duration.String(), "0s")
 
-	val, err := inputs.Metrics.GetRequestSuccessRate(test.Name, test.Namespace, interval)
+	val, err := inputs.Metrics.GetIstioSuccessRate(ctx, test.Namespace, test.Name, interval)
 	if err != nil {
 		return "", nil, err
 	}
 
+	metricType, ok := val.Value.(*model.Scalar)
+	if !ok {
+		return "", nil, errors.Errorf("wrong value type %T: %v", val.Value, val.Value)
+	}
+
+	metricValue := float64(metricType.Value)
+
 	status := test.Status.TestStatusInfo
-	status.Results = append(status.Results, val)
+	status.Results = append(status.Results, metricValue)
 
 	phase := v1.TestPhaseProcessing
 	switch {
-	case val < test.Spec.SuccessThreshold:
+	case metricValue < test.Spec.SuccessThreshold:
 		phase = v1.TestPhaseFailed
 	case time.Now().Sub(test.Status.TimeStarted.Time) >= test.Spec.Duration.Duration:
 		phase = v1.TestPhasePassed

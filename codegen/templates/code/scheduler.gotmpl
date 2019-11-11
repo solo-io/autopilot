@@ -23,7 +23,9 @@ import (
     "github.com/solo-io/autopilot/pkg/scheduler"
     "github.com/solo-io/autopilot/pkg/utils"
 
-    {{.Version}} "{{.TypesImportPath}}"
+    {{$.Version}} "{{$.TypesImportPath}}"
+
+    {{$.KindLower}}metrics "{{$.MetricsImportPath}}"
 
 {{- if $.EnableFinalizer }}
     finalizer "{{.FinalizerImportPath}}"
@@ -88,16 +90,18 @@ type Scheduler struct {
     mgr manager.Manager
     namespace string
     logger logr.Logger
-    metrics metrics.Metrics
+    metrics {{$.KindLower}}metrics.{{$.Kind}}Metrics
     workInterval time.Duration
 }
 
 func NewScheduler(params scheduler.Params) (*Scheduler, error) {
 	cfg := config.ConfigFromContext(params.Ctx)
-    metricsFactory, err := metrics.NewFactory(cfg, time.Second * 30)
+    metricsServer := metrics.GetMetricsServerAddr(cfg.MeshProvider, cfg.ControlPlaneNs)
+    metricsBase, err := metrics.NewPrometheusClient(metricsServer)
     if err != nil {
     	return nil, err
     }
+    metricsClient := {{.KindLower}}metrics.NewMetricsClient(metricsBase)
 
     workInterval, err := ptypes.Duration(cfg.WorkInterval)
     if err != nil {
@@ -109,7 +113,7 @@ func NewScheduler(params scheduler.Params) (*Scheduler, error) {
     	mgr:       params.Manager,
         namespace: params.Namespace,
         logger:    params.Logger,
-        metrics:   metricsFactory.Observer(),
+        metrics:   metricsClient,
     	workInterval: workInterval,
     }, nil
 }

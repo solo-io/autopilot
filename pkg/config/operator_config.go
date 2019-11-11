@@ -24,7 +24,7 @@ var DefaultConfig = v1.AutoPilotOperator{
 
 	WorkInterval: ptypes.DurationProto(time.Second * 5),
 
-	MetricsAddr: ":9090",
+	MetricsAddr: ":9091",
 
 	EnableLeaderElection: true,
 

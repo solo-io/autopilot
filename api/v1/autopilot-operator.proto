@@ -32,7 +32,7 @@ message AutoPilotOperator {
     google.protobuf.Duration workInterval = 4;
 
     // Serve metrics on this address. Set to empty string to disable metrics
-    // defaults to ":9090"
+    // defaults to ":9091"
     string metricsAddr = 5;
 
     // Enable leader election. This will prevent more than one operator from running at a time

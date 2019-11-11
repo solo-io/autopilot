@@ -80,7 +80,7 @@ type AutoPilotOperator struct {
 	// Default is 5s
 	WorkInterval *duration.Duration `protobuf:"bytes,4,opt,name=workInterval,proto3" json:"workInterval,omitempty"`
 	// Serve metrics on this address. Set to empty string to disable metrics
-	// defaults to ":9090"
+	// defaults to ":9091"
 	MetricsAddr string `protobuf:"bytes,5,opt,name=metricsAddr,proto3" json:"metricsAddr,omitempty"`
 	// Enable leader election. This will prevent more than one operator from running at a time
 	// defaults to true

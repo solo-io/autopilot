@@ -7,22 +7,29 @@ import (
 )
 
 type {{$.Kind}}Metrics interface {
-	metrics.Metrics
+	metrics.Client
 {{- range $query := $.Queries }}
-	Get{{upper_camel $query.Name}}({{ range $param := $query.Parameters }}{{$param}}{{end}} string) (*metrics.QueryResult, error)
+	Get{{upper_camel $query.Name}}(ctx context.Context, {{ join $query.Parameters ", " }} string) (*metrics.QueryResult, error)
 {{- end }}
 }
 
 type metricsClient struct {
-	metrics.Metrics
+	metrics.Client
 }
 
-{{ range $query := $.Queries -}}
-func (c *metricsClient) Get{{upper_camel $query.Name}}({{ range $param := $query.Parameters }}{{$param}}{{end}} string) (*metrics.QueryResult, error) {
+func NewMetricsClient(client metrics.Client) *metricsClient {
+	return &metricsClient{Client: client}
+}
+
+{{- range $query := $.Queries }}
+
+func (c *metricsClient) Get{{upper_camel $query.Name}}(ctx context.Context, {{ join $query.Parameters ", " }} string) (*metrics.QueryResult, error) {
 	queryTemplate := `{{ $query.QueryTemplate }}`
-	queryParameters :=
-	{{ range $param := $query.Parameters }}
-	{{$param}}
-	{{end}}
+	queryParameters := map[string]string{
+	{{- range $param := $query.Parameters }}
+	"{{$param}}": {{$param}},
+	{{- end}}
+	}
+	return c.Client.RunQuery(ctx, queryTemplate, queryParameters)
 }
 {{- end }}

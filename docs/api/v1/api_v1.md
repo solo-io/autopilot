@@ -5,6 +5,7 @@
 
 - [autopilot.proto](#autopilot.proto)
     - [AutoPilotProject](#autopilot.AutoPilotProject)
+    - [MetricsQuery](#autopilot.MetricsQuery)
     - [Parameter](#autopilot.Parameter)
     - [Phase](#autopilot.Phase)
   
@@ -54,6 +55,24 @@ default location is 'autopilot.yaml'
 Each phase specifies a unique name and its own set of inputs and outputs. |
 | enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
 | customParameters | [Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend AutoPilot's builtin types |
+| queries | [MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend AutoPilot's metrics queries |
+
+
+
+
+
+
+<a name="autopilot.MetricsQuery"></a>
+
+### MetricsQuery
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| name | [string](#string) |  |  |
+| queryTemplate | [string](#string) |  |  |
+| parameters | [string](#string) | repeated |  |
 
 
 
@@ -147,7 +166,7 @@ Default name is 'autopilot-operator.yaml' and should be stored in the project ro
 | meshProvider | [MeshProvider](#autopilot.MeshProvider) |  | meshProvider determines how the operator will connect to a service mesh Default is "SMI" |
 | controlPlaneNs | [string](#string) |  | controlPlaneNs is the namespace the control plane lives in Default is "istio-system" |
 | workInterval | [google.protobuf.Duration](#google.protobuf.Duration) |  | workInterval to sets the interval at which CRD workers resync. Default is 5s |
-| metricsAddr | [string](#string) |  | Serve metrics on this address. Set to empty string to disable metrics defaults to ":9090" |
+| metricsAddr | [string](#string) |  | Serve metrics on this address. Set to empty string to disable metrics defaults to ":9091" |
 | enableLeaderElection | [bool](#bool) |  | Enable leader election. This will prevent more than one operator from running at a time defaults to true |
 | watchNamespace | [string](#string) |  | if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding) can also be set via the WATCH_NAMESPACE environment variable |
 | leaderElectionNamespace | [string](#string) |  | The namespace to use for Leader Election (requires read/write ConfigMap permissions) defaults to the watchNamespace |

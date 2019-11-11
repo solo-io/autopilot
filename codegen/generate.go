@@ -173,6 +173,11 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		})
 	}
 
+	if data.NeedsMetrics() {
+		files = append(files, GenFile{
+			OutPath: filepath.Join(data.MetricsImportPath, "metrics.go"), TemplatePath: "code/metrics.gotmpl"})
+	}
+
 	if data.NeedsPrometheus() {
 		files = append(files, GenFile{
 			OutPath: filepath.Join(data.ProjectPackage, "deploy", "prometheus.yaml"), TemplatePath: "deploy/prometheus.yamltmpl",
