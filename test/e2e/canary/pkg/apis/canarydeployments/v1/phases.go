@@ -1,0 +1,21 @@
+package v1
+
+type CanaryDeploymentPhase string
+
+const (
+
+	// Creating deployments for the canary
+	CanaryDeploymentPhaseInitializing CanaryDeploymentPhase = "Initializing"
+
+	// Waiting for the target deployment to be modified
+	CanaryDeploymentPhaseWaiting CanaryDeploymentPhase = "Waiting"
+
+	// Evaluating the canary
+	CanaryDeploymentPhaseEvaluating CanaryDeploymentPhase = "Evaluating"
+
+	// Promoting the canary
+	CanaryDeploymentPhasePromoting CanaryDeploymentPhase = "Promoting"
+
+	// Rolling back the canary
+	CanaryDeploymentPhaseRollBack CanaryDeploymentPhase = "RollBack"
+)

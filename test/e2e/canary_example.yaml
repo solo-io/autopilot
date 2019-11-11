@@ -9,7 +9,14 @@ spec:
     - 9898
   successThreshold: 100
   analysisPeriod: 2m
-
+  deployment: example
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example
+  namespace: e2etest
+spec:
   # deployment
   minReadySeconds: 5
   revisionHistoryLimit: 5
@@ -18,11 +25,18 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: example-canary
+      canary: example
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9797"
+      labels:
+        app: example-canary
+        canary: example
     spec:
       containers:
       - name: podinfod
@@ -72,3 +86,25 @@ spec:
           requests:
             cpu: 100m
             memory: 64Mi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hey
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hey
+  template:
+    metadata:
+      labels:
+        app: hey
+    spec:
+      containers:
+        - name: hey
+          image: rcmorano/docker-hey
+          command: ["hey", "http://example:9898/status/200"]
+          imagePullPolicy: IfNotPresent

@@ -6,15 +6,12 @@ phases:
   - description: Creating deployments for the canary
     initial: true
     name: Initializing
+    inputs:
+      - deployments
     outputs:
       - deployments
       - services
       - virtualservices
-
-  - description: Syncing the Canary with the Server
-    inputs:
-      - deployments
-    name: Syncing
 
   - description: Waiting for the target deployment to be modified
     name: Waiting

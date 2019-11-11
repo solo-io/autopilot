@@ -1,0 +1,6 @@
+apiVersion: autopilot.examples.io/v1
+kind: CanaryDeployment
+metadata:
+  labels:
+    app.kubernetes.io/name: canary-operator
+  name: example
