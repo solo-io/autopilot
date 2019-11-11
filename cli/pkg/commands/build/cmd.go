@@ -77,7 +77,6 @@ func buildFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	absProjectPath := util.MustGetwd()
-	projectName := filepath.Base(absProjectPath)
 
 	goArgs := []string{}
 
@@ -89,7 +88,7 @@ func buildFunc(cmd *cobra.Command, args []string) error {
 	data := codegen.MustLoad()
 
 	opts := util.GoCmdOptions{
-		BinName:     filepath.Join(absProjectPath, "build", "_output", "bin", projectName+"-operator"),
+		BinName:     filepath.Join(absProjectPath, "build", "_output", "bin", data.OperatorName),
 		PackagePath: filepath.Join(util.GetGoPkg(), "cmd", data.OperatorName),
 		Args:        goArgs,
 		Env:         goBuildEnv,
