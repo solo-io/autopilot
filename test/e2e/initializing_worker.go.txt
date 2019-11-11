@@ -33,7 +33,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment) (Outputs
 
 	canaryName := canary.Name + "-canary"
 	canaryDeployment := makeDeployment(canary.Name, canaryName, canary.Namespace, 0, canary.Spec.DeploymentSpec)
-	canaryService := makeService(primaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
+	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
 
 	// frontService is used to match requests; traffic will be split between the primary and canary
 	frontService := makeService(canary.Name, canary.Namespace, canary.Spec.Ports, map[string]string{"canary": canary.Name})
@@ -74,6 +74,10 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment) (Outputs
 	}
 
 	vs := v1alpha3.VirtualService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      canary.Name,
+			Namespace: canary.Namespace,
+		},
 		Spec: istiov1alpha3.VirtualService{
 			Hosts:    makeHosts(frontService.Name, frontService.Namespace),
 			Gateways: []string{}, // defaults to mesh
@@ -100,7 +104,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment) (Outputs
 				},
 			},
 		},
-		v1.CanaryDeploymentPhaseWaiting,
+		v1.CanaryDeploymentPhaseSyncing,
 		nil,
 		nil
 }

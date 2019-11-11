@@ -9,9 +9,36 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
+// Our manager returns a manager.Manager
+type Manager interface {
+	Manager() manager.Manager
+}
+
+// the reconcile func determines how to reconcile the old object with the new
+// when the Ensurer performs an automatic update.
+// The returned object will be applied to the cluster
+// Any errors returned will be returned by the Ensure call
+// If a nil, nil is returned, Ensure will skip the update
+type ReconcileFunc func(old Object, new Object) (*Object, error)
+
+// an Ensurer "ensures" that the given object will be created/applied to the cluster
+// the object is applied after a resource version conflict.
+// Warning: this can lead to race conditions if it is called asynchronously for the same resource.
+// The ensured resource will have its controller reference set to the parent resource
+type Ensurer interface {
+	// optional reconcile funcs can be passed which determine how
+	// a child object should be reconciled with the existing object
+	// when it already exists in the cluster
+	Ensure(ctx context.Context, parent Object, child Object, reconcileFuncs ...ReconcileFunc) error
+}
+
+
 // Client is an interface for interacting with the k8s rest api
 // It is functional with any kubernetes runtime.Object with k8s metadata
 type Client interface {
+	Manager
+	Ensurer
+
 	// the Object passed will be updated to match the server version.
 	// only key (namespace/name) is required
 	Get(ctx context.Context, obj Object) error
@@ -38,36 +65,11 @@ type Client interface {
 	Delete(ctx context.Context, obj Object) error
 }
 
-// Our manager returns a manager.Manager
-type Manager interface {
-	Manager() manager.Manager
-}
-
-// the reconcile func determines how to reconcile the old object with the new
-// when the Ensurer performs an automatic update.
-// The returned object will be applied to the cluster
-// Any errors returned will be returned by the Ensure call
-// If a nil, nil is returned, Ensure will skip the update
-type ReconcileFunc func(old Object, new Object) (*Object, error)
-
-// an Ensurer "ensures" that the given object will be created/applied to the cluster
-// the object is applied after a resource version conflict.
-// Warning: this can lead to race conditions if it is called asynchronously for the same resource.
-// The ensured resource will have its controller reference set to the parent resource
-type Ensurer interface {
-	// optional reconcile funcs can be passed which determine how
-	// a child object should be reconciled with the existing object
-	// when it already exists in the cluster
-	Ensure(ctx context.Context, parent Object, child Object, reconcileFuncs ...ReconcileFunc) error
-}
-
 type simpleClient struct {
 	mgr manager.Manager
 }
 
 var _ Client = &simpleClient{}
-var _ Manager = &simpleClient{}
-var _ Ensurer = &simpleClient{}
 
 // NewClient creates an implementation of a Ensurer/Client based on a manager
 func NewClient(mgr manager.Manager) *simpleClient {

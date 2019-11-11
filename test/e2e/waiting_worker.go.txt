@@ -34,23 +34,24 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("deployment %v not found for canary %v", canaryName, canary.Name)
 	}
 
-	if reflect.DeepEqual(canaryDeployment.Spec, canary.Spec.DeploymentSpec) {
+	if reflect.DeepEqual(canaryDeployment.Spec.Template.Spec, canary.Spec.Template.Spec) {
 		w.Logger.Info("canary has not changed")
 		return Outputs{}, v1.CanaryDeploymentPhaseWaiting, nil, nil
 	}
 
+	logger.Info("diff", "existing", canaryDeployment.Spec.Template, "desired", canary.Spec.Template)
 	logger.Info("updating canary deployment and scaling up", "replicas", 1)
 
 	canaryDeployment.Spec = canary.Spec.DeploymentSpec
 	canaryDeployment.Spec.Replicas = pointer.Int32Ptr(1) // scale up canary
 
 	return Outputs{
-			Deployments: parameters.Deployments{
-				Items: []appsv1.Deployment{
-					canaryDeployment,
-				},
+		Deployments: parameters.Deployments{
+			Items: []appsv1.Deployment{
+				canaryDeployment,
 			},
 		},
+	},
 		v1.CanaryDeploymentPhaseEvaluating,
 		&v1.CanaryDeploymentStatusInfo{TimeStarted: metav1.Now()},
 		nil

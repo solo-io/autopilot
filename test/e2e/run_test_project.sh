@@ -21,6 +21,10 @@ echo "Writing initializing worker..."
 
 cp ../initializing_worker.go.txt pkg/workers/initializing/worker.go
 
+echo "Writing syncing worker..."
+
+cp ../syncing_worker.go.txt pkg/workers/syncing/worker.go
+
 echo "Writing Waiting worker..."
 
 cp ../waiting_worker.go.txt pkg/workers/waiting/worker.go

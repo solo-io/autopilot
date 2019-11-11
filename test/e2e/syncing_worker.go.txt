@@ -1,0 +1,38 @@
+package syncing
+
+import (
+	"context"
+	"github.com/pkg/errors"
+
+	"github.com/go-logr/logr"
+	"github.com/solo-io/autopilot/pkg/ezkube"
+
+	v1 "github.com/solo-io/autopilot/test/e2e/canary/pkg/apis/canarydeployments/v1"
+)
+
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+
+type Worker struct {
+	Client ezkube.Client
+	Logger logr.Logger
+}
+
+func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs Inputs) (v1.CanaryDeploymentPhase, *v1.CanaryDeploymentStatusInfo, error) {
+	w.Logger.Info("resyncing the pod spec from the deployed primary")
+
+	primaryName := canary.Name + "-primary"
+
+	primaryDeployment, ok := inputs.FindDeployment(primaryName, canary.Namespace)
+	if !ok {
+		return "", nil, errors.Errorf("primary deployment not found for canary %v", canary.Name)
+	}
+
+	canary.Spec.Template = primaryDeployment.Spec.Template
+
+	if err := w.Client.Ensure(ctx, nil, canary); err != nil {
+		return "", nil, errors.Wrapf(err, "updating canary %v with server-set defaults", canary.Name)
+	}
+
+	return v1.CanaryDeploymentPhaseWaiting, nil, nil
+
+}

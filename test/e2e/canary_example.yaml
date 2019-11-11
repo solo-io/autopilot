@@ -1,4 +1,4 @@
-apiVersion: test.autopilot.io/v1
+apiVersion: autopilot.examples.io/v1
 kind: CanaryDeployment
 metadata:
   name: example
@@ -18,16 +18,11 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
     type: RollingUpdate
-  selector:
-    matchLabels:
-      app: podinfo
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9797"
-      labels:
-        app: podinfo
     spec:
       containers:
       - name: podinfod

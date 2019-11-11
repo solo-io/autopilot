@@ -17,5 +17,5 @@
 # vendor/
 
 test/e2e/test
-test/e2e/canary
+#test/e2e/canary
 
