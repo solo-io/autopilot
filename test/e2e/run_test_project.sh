@@ -8,7 +8,7 @@ echo "Initializing canary operator"
 ap init canary && pushd canary
 
 echo "Cleaning up previous CanaryDeployment"
-kubectl delete -f ../canary_example.yaml --ignore-not-found
+kubectl delete -f ../canary_example.yaml --ignore-not-found || echo cleanup failed, skipping
 
 cp ../autopilot.yaml.txt autopilot.yaml
 

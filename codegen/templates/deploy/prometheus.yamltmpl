@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   name: {{ .OperatorName }}-prometheus
   labels:
+    app: {{ .OperatorName }}
     app.kubernetes.io/name: {{ .OperatorName }}
 rules:
   - apiGroups: [""]
@@ -25,6 +26,7 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ .OperatorName }}-prometheus
   labels:
+    app: {{ .OperatorName }}
     app.kubernetes.io/name: {{ .OperatorName }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -270,6 +272,7 @@ kind: Service
 metadata:
   name: {{ .OperatorName }}-prometheus
   labels:
+    app: {{ .OperatorName }}
     app.kubernetes.io/name: {{ .OperatorName }}
 spec:
   selector:

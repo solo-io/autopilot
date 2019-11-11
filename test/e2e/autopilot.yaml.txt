@@ -1,6 +1,6 @@
 apiVersion: autopilot.examples.io/v1
 kind: CanaryDeployment
-operatorName: canary-deployment-operator
+operatorName: canary-operator
 phases:
 
   - description: Creating deployments for the canary
@@ -28,6 +28,18 @@ phases:
 
   - description: Promoting the canary
     name: Promoting
+    inputs:
+      - deployments
+      - virtualservices
+    outputs:
+      - deployments
+      - virtualservices
 
   - description: Rolling back the canary
     name: RollBack
+    inputs:
+      - deployments
+      - virtualservices
+    outputs:
+      - deployments
+      - virtualservices
