@@ -23,6 +23,23 @@ type Inputs struct {
         {{- end}}
     {{- end}}
 }
+
+{{- range $param := $.Inputs }}
+    {{- if not (is_metrics $param) }}
+
+// Find{{$param.SingleName}} returns <{{$param.SingleName}}, true> if the item is found. else {empty}, false
+func (i Inputs) Find{{$param.SingleName}}(name, namespace string) (parameters.{{$param.SingleName}}, bool) {
+    for _, 	item := range i.{{$param.PluralName}}.Items {
+        if item.Name == name && item.Namespace == namespace {
+        	return item, true
+        }
+    }
+    return parameters.{{$param.SingleName}}{}, false
+}
+    {{- end}}
+{{- end }}
+
+
 {{- end}}
 
 {{- if has_outputs $}}

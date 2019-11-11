@@ -1,20 +1,33 @@
-apiVersion: test.autopilot.io/v1
-kind: Test
-operatorName: test-operator
+apiVersion: autopilot.examples.io/v1
+kind: CanaryDeployment
+operatorName: canary-deployment-operator
 phases:
-  - description: Test has begun initializing
+
+  - description: Creating deployments for the canary
     initial: true
     name: Initializing
     outputs:
       - deployments
       - services
-  - description: Test has begun processing
+      - virtualservices
+
+  - description: Waiting for the target deployment to be modified
+    name: Waiting
+    inputs:
+      - deployments
+    outputs:
+      - deployments
+
+  - description: Evaluating the canary
     inputs:
       - metrics
-    name: Processing
-  - description: Test has passed
-    name: Passed
-    final: true
-  - description: Test has failed
-    name: Failed
-    final: true
+      - virtualservices
+    name: Evaluating
+    outputs:
+      - virtualservices
+
+  - description: Promoting the canary
+    name: Promoting
+
+  - description: Rolling back the canary
+    name: RollBack

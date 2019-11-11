@@ -187,7 +187,10 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 
         worker := &{{worker_import_prefix $phase}}.Worker{
         	Client: client,
-        	Logger: s.logger,
+        	Logger: s.logger.WithValues(
+        		"{{$.KindLowerCamel}}", {{$.KindLowerCamel}}.Namespace+"."+{{$.KindLowerCamel}}.Name,
+        		"phase", {{$.KindLowerCamel}}.Status.Phase,
+            ),
         }
 
     {{- if has_inputs $phase }}

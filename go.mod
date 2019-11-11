@@ -34,6 +34,7 @@ require (
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
 	k8s.io/kubernetes v1.15.4
 	k8s.io/utils v0.0.0-20190506122338-8fab8cb257d5
+	knative.dev/pkg v0.0.0-20191111150521-6d806b998379
 	sigs.k8s.io/controller-runtime v0.3.0
 	sigs.k8s.io/yaml v1.1.0
 )

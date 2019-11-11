@@ -5,23 +5,19 @@ IMAGE_REPO="docker.io/ilackarms"
 set -e
 
 echo "Initializing test operator"
-ap init --group test --version v1 Test
+ap init canary && pushd canary
 
-pushd test
-
-
-echo "Cleaning up previous Test"
+echo "Cleaning up previous CanaryDeployment"
 kubectl delete -f ../test_custom_resource.yaml --ignore-not-found
-
 
 cp ../autopilot.yaml.txt autopilot.yaml
 
 ap generate
 
-echo "Writing spec.go"
-cp ../spec.go.txt pkg/apis/tests/v1/spec.go
+exit 0
 
-ap generate
+echo "Writing spec.go"
+cp ../spec.go.txt pkg/apis/tests/v1/spec.go && ap generate
 
 echo "Writing initializing worker..."
 
