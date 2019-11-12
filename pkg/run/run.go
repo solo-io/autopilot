@@ -217,7 +217,7 @@ func runOperatorOnConfigChange(
 			cancel()
 
 			// initialize a new context for the operator
-			operatorCtx, cancel = operatorContext(ctx, operator)
+			operatorCtx, cancel = operatorContext(ctx, operator, logger)
 
 			instance := operatorInstance{
 				ctx:          operatorCtx,
@@ -292,8 +292,9 @@ func (r *operatorInstance) Start() error {
 	return mgr.Start(r.ctx.Done())
 }
 
-func operatorContext(ctx context.Context, operator *v1.AutoPilotOperator) (context.Context, context.CancelFunc) {
+func operatorContext(ctx context.Context, operator *v1.AutoPilotOperator, logger logr.Logger) (context.Context, context.CancelFunc) {
 	ctx = config.ContextWithConfig(ctx, operator)
+	ctx = utils.ContextWithLogger(ctx, logger)
 	return context.WithCancel(ctx)
 }
 
