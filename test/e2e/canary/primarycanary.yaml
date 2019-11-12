@@ -1,0 +1,72 @@
+apiVersion: v1
+items:
+- apiVersion: networking.istio.io/v1alpha3
+  kind: VirtualService
+  metadata:
+    name: example-canary
+    namespace: e2etest
+    ownerReferences:
+    - apiVersion: autopilot.examples.io/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: CanaryDeployment
+      name: example
+      uid: c3dabaa6-058b-11ea-a976-42010a8e00a9
+  spec:
+    gateways:
+    - mesh
+    hosts:
+    - example-canary
+    - example-canary.e2etest
+    - example-canary.e2etest.svc
+    - example-canary.e2etest.svc.cluster.local
+    http:
+    - match:
+      - port: 9898
+        uri:
+          prefix: /
+      name: split-9898
+      route:
+      - destination:
+          host: example-canary.e2etest.svc.cluster.local
+          port:
+            number: 9898
+        weight: 100
+
+- apiVersion: networking.istio.io/v1alpha3
+  kind: VirtualService
+  metadata:
+    name: example-primary
+    namespace: e2etest
+    ownerReferences:
+    - apiVersion: autopilot.examples.io/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: CanaryDeployment
+      name: example
+      uid: c3dabaa6-058b-11ea-a976-42010a8e00a9
+  spec:
+    gateways:
+    - mesh
+    hosts:
+    - example-primary
+    - example-primary.e2etest
+    - example-primary.e2etest.svc
+    - example-primary.e2etest.svc.cluster.local
+    http:
+    - match:
+      - port: 9898
+        uri:
+          prefix: /
+      name: split-9898
+      route:
+      - destination:
+          host: example-primary.e2etest.svc.cluster.local
+          port:
+            number: 9898
+        weight: 100
+
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

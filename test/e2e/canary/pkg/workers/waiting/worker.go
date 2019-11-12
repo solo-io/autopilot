@@ -2,6 +2,8 @@ package waiting
 
 import (
 	"context"
+	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -51,10 +53,25 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 	canaryDeployment.Spec = targetDeployment.Spec
 	canaryDeployment.Spec.Replicas = pointer.Int32Ptr(1) // scale up canary
 
+	virtualService, ok := inputs.FindVirtualService(canary.Name, canary.Namespace)
+	if !ok {
+		return Outputs{}, "", nil, errors.Errorf("virtual service not found for canary %v", canary.Name)
+	}
+
+	// kick off the split
+	if err := weights.StepWeights(&virtualService, 5); err != nil {
+		return Outputs{}, "", nil, errors.Wrapf(err, "failed to step virtual service weights for canary %v", canary.Name)
+	}
+
 	return Outputs{
 		Deployments: parameters.Deployments{
 			Items: []appsv1.Deployment{
 				canaryDeployment,
+			},
+		},
+		VirtualServices: parameters.VirtualServices{
+			Items: []v1alpha3.VirtualService{
+				virtualService,
 			},
 		},
 	},

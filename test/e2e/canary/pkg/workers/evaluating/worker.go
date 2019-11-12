@@ -66,16 +66,8 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("virtual service not found for canary %v", canary.Name)
 	}
 
-	primaryWeight, canaryWeight, err := weights.GetWeights(virtualService)
-	if err != nil {
-		return Outputs{}, "", nil, errors.Wrapf(err, "failed to get virtual service weights for canary %v", canary.Name)
-	}
-
-	// once primary weight is below 0, we just monitor all the traffic going to canary
-	if primaryWeight > 0 {
-		if err := weights.SetWeights(&virtualService, primaryWeight-StepWeight, canaryWeight+StepWeight); err != nil {
-			return Outputs{}, "", nil, errors.Wrapf(err, "failed to set weights for virtual service for canary %v", canary.Name)
-		}
+	if err := weights.StepWeights(&virtualService, StepWeight); err != nil {
+		return Outputs{}, "", nil, errors.Wrapf(err, "failed to step virtual service weights for canary %v", canary.Name)
 	}
 
 	// we still want to be in evaluating phase while we are processing
@@ -83,29 +75,4 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		Items: []v1alpha3.VirtualService{virtualService},
 	}},
 		v1.CanaryDeploymentPhaseEvaluating, nil, nil
-}
-
-// increments the weight to the canary destination, decrements the weight to the primary destination
-func stepWeights(virtualService *v1alpha3.VirtualService) error {
-	// for shift weights on each per-port route
-	for _, httpPort := range virtualService.Spec.Http {
-		if len(httpPort.Route) != 2 {
-			return errors.Errorf("expected 2 routes on http rule %v, found %v", httpPort.Name, len(virtualService.Spec.Http))
-		}
-		primaryRoute, canaryRoute := httpPort.Route[0], httpPort.Route[1]
-
-		// decrement primary
-		primaryRoute.Weight -= StepWeight
-		if primaryRoute.Weight < 0 {
-			primaryRoute.Weight = 0
-		}
-
-		// increment canary
-		canaryRoute.Weight += StepWeight
-		if primaryRoute.Weight > 100 {
-			primaryRoute.Weight = 100
-		}
-	}
-
-	return nil
 }
