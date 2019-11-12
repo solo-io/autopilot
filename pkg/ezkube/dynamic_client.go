@@ -136,11 +136,10 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 
 	// retry on resource version conflict
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		if err := c.Update(ctx, child); err != nil {
-			if errors.IsConflict(err) {
-				utils.LoggerFromContext(ctx).Info("retrying on resource conflict")
-			}
+		err := c.Update(ctx, child)
+		if errors.IsConflict(err) {
+			utils.LoggerFromContext(ctx).Info("retrying on resource conflict")
 		}
-		return nil
+		return err
 	})
 }
