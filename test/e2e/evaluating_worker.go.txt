@@ -3,6 +3,7 @@ package evaluating
 import (
 	"context"
 	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -30,7 +31,11 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 
 	canaryName := canary.Name + "-canary"
 
-	val, err := inputs.Metrics.GetIstioSuccessRate(ctx, canary.Namespace, canaryName, "1m")
+	// format interval string to avoid error
+	interval := strings.TrimSuffix(canary.Spec.MeasurementInterval.String(), "0s")
+	interval = strings.TrimSuffix(interval, "0m")
+
+	val, err := inputs.Metrics.GetIstioSuccessRate(ctx, canary.Namespace, canaryName, interval)
 	if err != nil {
 		return Outputs{}, "", nil, errors.Errorf("failed to get metrics for canary deployment %v", canaryName)
 	}

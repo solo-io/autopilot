@@ -8,7 +8,8 @@ spec:
   ports:
     - 9898
   successThreshold: 100
-  analysisPeriod: 2m
+  measurementInterval: 1m #larger than the analysis period to make sure we have results
+  analysisPeriod: 10s
   deployment: example
 ---
 apiVersion: apps/v1

@@ -25,7 +25,10 @@ type CanaryDeploymentSpec struct {
 	// ports for which traffic should be split (between primary and canary)
 	Ports []int32 `json:"ports,omitempty"`
 
-	// Canary must maintain this success rate or for the given analysisPeriod
+	// Over what interval should we measure the success rate?
+	MeasurementInterval metav1.Duration `json:"measurementInterval"`
+
+	// Canary must maintain [a success rate metric]() or for the given analysisPeriod
 	SuccessThreshold float64 `json:"successThreshold,omitempty"`
 
 	// How long should we process the canary for before promoting?

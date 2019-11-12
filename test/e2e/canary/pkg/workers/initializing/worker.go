@@ -35,12 +35,29 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 	}
 	targetDeployment.Spec.Replicas = pointer.Int32Ptr(0)
 
+	if targetDeployment.Spec.Template.Labels == nil {
+		return Outputs{}, "", nil, errors.Errorf("invalid target deployment %v missing labels", canary.Name)
+	}
+
 	primaryName := canary.Name + "-primary"
-	primaryDeployment := makeDeployment(canary.Name, primaryName, canary.Namespace, 1, targetDeployment.Spec)
-	primaryService := makeService(primaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
+	primaryLabels := map[string]string{
+		"canary": "true",
+	}
 
 	canaryName := canary.Name + "-canary"
-	canaryDeployment := makeDeployment(canary.Name, canaryName, canary.Namespace, 0, targetDeployment.Spec)
+	canaryLabels := map[string]string{
+		"canary": "true",
+	}
+
+	for k, v := range targetDeployment.Spec.Template.Labels {
+		primaryLabels[k] = v
+		canaryLabels[k] = v
+	}
+
+	primaryDeployment := makeDeployment(primaryName, canary.Namespace, 1, targetDeployment.Spec, primaryLabels)
+	primaryService := makeService(primaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
+
+	canaryDeployment := makeDeployment(canaryName, canary.Namespace, 0, targetDeployment.Spec, canaryLabels)
 	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, canaryDeployment.Spec.Selector.MatchLabels)
 
 	// frontService is used to match requests; traffic will be split between the primary and canary
@@ -118,12 +135,8 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		nil
 }
 
-func makeDeployment(parent, name, namespace string, replicas int32, fromSpec appsv1.DeploymentSpec) appsv1.Deployment {
+func makeDeployment(name, namespace string, replicas int32, fromSpec appsv1.DeploymentSpec, labels map[string]string) appsv1.Deployment {
 	fromSpec.Replicas = pointer.Int32Ptr(replicas)
-	labels := map[string]string{
-		"app":    name,
-		"canary": parent,
-	}
 	fromSpec.Template.Labels = labels
 	fromSpec.Selector = &metav1.LabelSelector{
 		MatchLabels: labels,
