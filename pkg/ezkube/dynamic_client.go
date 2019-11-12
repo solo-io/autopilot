@@ -114,12 +114,6 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 	}
 
 	orig := child.DeepCopyObject().(Object)
-	if err := c.Get(ctx, orig); err != nil {
-		if errors.IsNotFound(err) {
-			return c.Create(ctx, child)
-		}
-		return err
-	}
 
 	for _, reconcile := range reconcileFuncs {
 		reconciledObj, err := reconcile(orig, child)
@@ -132,6 +126,13 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 		child = *reconciledObj
 	}
 
+	if err := c.Get(ctx, orig); err != nil {
+		if errors.IsNotFound(err) {
+			return c.Create(ctx, child)
+		}
+		return err
+	}
+
 	child.SetResourceVersion(orig.GetResourceVersion())
 
 	// retry on resource version conflict
@@ -139,7 +140,22 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 		err := c.Update(ctx, child)
 		if errors.IsConflict(err) {
 			utils.LoggerFromContext(ctx).Info("retrying on resource conflict")
+			if err := c.UpdateResourceVersion(ctx, child); err != nil {
+				return err
+			}
 		}
 		return err
 	})
+}
+
+func (c *simpleClient) UpdateResourceVersion(ctx context.Context, obj Object) error {
+
+	clone := obj.DeepCopyObject().(Object)
+
+	if err := c.Get(ctx, clone); err != nil {
+		return err
+	}
+
+	obj.SetResourceVersion(clone.GetResourceVersion())
+	return nil
 }
