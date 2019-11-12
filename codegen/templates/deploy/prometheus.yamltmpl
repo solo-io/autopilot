@@ -1,3 +1,4 @@
+// this can remove deleted for now
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -35,6 +36,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ .OperatorName }}-prometheus
+    // can this be automated
     namespace: REPLACE_NAMESPACE
 ---
 apiVersion: v1

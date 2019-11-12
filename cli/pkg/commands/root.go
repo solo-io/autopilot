@@ -1,6 +1,7 @@
 package commands
 
 import (
+	// why sirupsen and not zap?
 	log "github.com/sirupsen/logrus"
 	"github.com/solo-io/autopilot/cli/pkg/commands/build"
 	"github.com/solo-io/autopilot/cli/pkg/commands/deploy"

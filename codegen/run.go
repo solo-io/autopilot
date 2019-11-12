@@ -32,6 +32,7 @@ func Run(dir string, forceOverwrite bool) error {
 	}
 
 	for _, file := range files {
+		// TODO: remove this once they are embedded to the binary
 		name := filepath.Join(os.Getenv("GOPATH"), "src", file.OutPath)
 		content := file.Content
 

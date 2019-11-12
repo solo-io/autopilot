@@ -14,6 +14,8 @@ func NamespaceScopedDeployment(data *model.ProjectData) runtime.Object {
 	return deployment(data, false)
 }
 
+// this name can be better - it sounds like you are creating a deployment that's a cluster object
+// while i think this create an operator deployment that watches all namespaces.
 func ClusterScopedDeployment(data *model.ProjectData) runtime.Object {
 	return deployment(data, true)
 }

@@ -96,3 +96,10 @@ AutoPilot is composed of 3 components:
 
 # done 
 * works across namespaces..
+
+
+# code guide:
+
+explain where all the existing things are - the templated queries and clients
+
+folder -> what does it do

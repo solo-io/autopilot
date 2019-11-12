@@ -26,7 +26,7 @@ type Inputs struct {
 
 {{- range $param := $.Inputs }}
     {{- if not (is_metrics $param) }}
-
+// what's {empty} ? did you mean parameters.{{$param.SingleName}}{}
 // Find{{$param.SingleName}} returns <{{$param.SingleName}}, true> if the item is found. else {empty}, false
 func (i Inputs) Find{{$param.SingleName}}(name, namespace string) (parameters.{{$param.SingleName}}, bool) {
     for _, 	item := range i.{{$param.PluralName}}.Items {

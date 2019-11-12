@@ -43,7 +43,8 @@ import (
     {{- end}}
 {{- end}}
 )
-
+// TODO: Lets see if we can move this code to be a library function so it can be better tested,
+// and only generate the type specific shims
 func AddToManager(params scheduler.Params) error {
     scheduler, err := NewScheduler(params)
     if err != nil {
@@ -65,6 +66,7 @@ func AddToManager(params scheduler.Params) error {
 {{- range $param := unique_outputs }}
 
     // Watch for changes to secondary resource {{$param.PluralName }} and requeue the owner {{$.Kind}}
+    // what makes this resource secondary? perhaps output resource is better terminology?
     params.Logger.Info("Registering watch for secondary resource {{$param.PluralName }}")
     err = c.Watch(&source.Kind{Type: &{{$param.ImportPrefix }}.{{$param.SingleName }}{}}, &handler.EnqueueRequestForOwner{
         IsController: true,
@@ -115,7 +117,7 @@ func NewScheduler(params scheduler.Params) (*Scheduler, error) {
     	workInterval: workInterval,
     }, nil
 }
-
+// lets discuss if we can make this less template and more real code
 func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
     result := reconcile.Result{RequeueAfter: s.workInterval}
 

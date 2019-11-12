@@ -55,6 +55,7 @@ func (p permission) verbs() []string {
 	}
 	if p.write {
 		// writing currently requires reading as we use the EzKube.Ensure method
+		// can we be explicit here. i.e. not include delete?
 		verbs = []string{"*"}
 	}
 	return verbs
@@ -121,7 +122,7 @@ func rules(data *model.ProjectData) []v1.PolicyRule {
 	})
 
 	rules = append(rules, v1.PolicyRule{
-		Verbs:     []string{"*"},
+		Verbs:     []string{"*"}, // be explicit. maybe read only for object, and read\write for status?
 		APIGroups: []string{data.Group},
 		Resources: []string{
 			data.KindLowerPlural,
