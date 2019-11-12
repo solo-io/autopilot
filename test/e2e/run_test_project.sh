@@ -40,40 +40,40 @@ echo "######### Cleaning up previous CanaryDeployment"
 k create ns e2etest || echo Namespace exists
 k delete -f ../canary_example.yaml --ignore-not-found || echo cleanup failed, skipping
 
-#echo "########## Building canary project"
-#cp ../autopilot.yaml.txt autopilot.yaml
-#
-#ap generate
-#
-#echo "########## Writing spec.go && generating zz_deepcopy..."
-#cp ../spec.go.txt pkg/apis/canarydeployments/v1/spec.go && ap generate
-#
-#echo "########## Writing initializing worker..."
-#
-#cp ../initializing_worker.go.txt pkg/workers/initializing/worker.go
-#
-#echo "########## Writing Waiting worker..."
-#
-#cp ../waiting_worker.go.txt pkg/workers/waiting/worker.go
-#
-#echo "########## Writing Evaluating worker..."
-#
-#cp ../evaluating_worker.go.txt pkg/workers/evaluating/worker.go
-#
-#echo "########## Writing Promoting worker..."
-#
-#cp ../promoting_worker.go.txt pkg/workers/promoting/worker.go
-#
-#echo "########## Writing Rollback worker..."
-#
-#cp ../rollback_worker.go.txt pkg/workers/rollback/worker.go
-#
-#echo "########## Writing shared code..."
-#mkdir -p pkg/weights
-#cp ../virtual_service_weights.go.txt pkg/weights/virtual_service_weights.go
-#
-#ap build ${IMAGE_REPO}/canary
-#ap deploy ${IMAGE_REPO}/canary -d
+echo "########## Building canary project"
+cp ../autopilot.yaml.txt autopilot.yaml
+
+ap generate
+
+echo "########## Writing spec.go && generating zz_deepcopy..."
+cp ../spec.go.txt pkg/apis/canarydeployments/v1/spec.go && ap generate
+
+echo "########## Writing initializing worker..."
+
+cp ../initializing_worker.go.txt pkg/workers/initializing/worker.go
+
+echo "########## Writing Waiting worker..."
+
+cp ../waiting_worker.go.txt pkg/workers/waiting/worker.go
+
+echo "########## Writing Evaluating worker..."
+
+cp ../evaluating_worker.go.txt pkg/workers/evaluating/worker.go
+
+echo "########## Writing Promoting worker..."
+
+cp ../promoting_worker.go.txt pkg/workers/promoting/worker.go
+
+echo "########## Writing Rollback worker..."
+
+cp ../rollback_worker.go.txt pkg/workers/rollback/worker.go
+
+echo "########## Writing shared code..."
+mkdir -p pkg/weights
+cp ../virtual_service_weights.go.txt pkg/weights/virtual_service_weights.go
+
+ap build ${IMAGE_REPO}/canary
+ap deploy ${IMAGE_REPO}/canary -d
 
 if [[ -n ${LOCAL} ]]; then
     kubectl -n canary-operator scale deployment canary-operator --replicas=0
@@ -90,7 +90,7 @@ echo "########## Expect Waiting state"
 eventually assert_eq phase Waiting
 
 echo "########## Modifying the target deployment"
-k apply -f ../deployment-change-ok.yaml
+k set image deployment/example podinfod=stefanprodan/podinfo:3.1.1
 
 sleep 1
 echo "########## Expect Evaluating state"

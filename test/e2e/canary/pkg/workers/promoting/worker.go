@@ -43,7 +43,14 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("canary deployment not found for canary %v", canary.Name)
 	}
 
+	// preserve labels, but upgrade spec
+	primaryLabels := primaryDeployment.Spec.Template.Labels
+	primarySelector := primaryDeployment.Spec.Selector
+
 	primaryDeployment.Spec = canaryDeployment.Spec
+	primaryDeployment.Spec.Template.Labels = primaryLabels
+	primaryDeployment.Spec.Selector = primarySelector
+
 	canaryDeployment.Spec.Replicas = pointer.Int32Ptr(0)
 
 	if err := weights.SetWeights(&virtualService, 100, 0); err != nil {

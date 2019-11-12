@@ -48,7 +48,10 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 
 	logger.Info("diff", "canary", canaryDeployment.Spec.Template, "target", targetDeployment.Spec.Template)
 
-	logger.Info("updating canary deployment and scaling up", "replicas", 1)
+	logger.Info("updating traffic split, updating and scaling up canary", "replicas", 1)
+
+	targetDeployment.Spec.Template.Labels = canaryDeployment.Spec.Template.Labels
+	targetDeployment.Spec.Selector = canaryDeployment.Spec.Selector
 
 	canaryDeployment.Spec = targetDeployment.Spec
 	canaryDeployment.Spec.Replicas = pointer.Int32Ptr(1) // scale up canary
@@ -58,8 +61,8 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("virtual service not found for canary %v", canary.Name)
 	}
 
-	// kick off the split
-	if err := weights.StepWeights(&virtualService, 5); err != nil {
+	// kick off the analysis with 10% split
+	if err := weights.StepWeights(&virtualService, 10); err != nil {
 		return Outputs{}, "", nil, errors.Wrapf(err, "failed to step virtual service weights for canary %v", canary.Name)
 	}
 

@@ -67,7 +67,6 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 	var routes []*istiov1alpha3.HTTPRoute
 
 	for _, port := range canary.Spec.Ports {
-
 		routes = append(routes, &istiov1alpha3.HTTPRoute{
 			Name: fmt.Sprintf("split-%v", port),
 			Match: []*istiov1alpha3.HTTPMatchRequest{{

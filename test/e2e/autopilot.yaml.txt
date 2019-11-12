@@ -17,8 +17,10 @@ phases:
     name: Waiting
     inputs:
       - deployments
+      - virtualservices
     outputs:
       - deployments
+      - virtualservices
 
   - description: Evaluating the canary
     inputs:

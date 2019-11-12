@@ -40,12 +40,19 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("failed to get metrics for canary deployment %v", canaryName)
 	}
 
-	successRateScalar, ok := val.Value.(*model.Scalar)
-	if !ok {
-		return Outputs{}, "", nil, errors.Errorf("wrong metrics value, type %T (expected *model.Scalar): %v", val.Value, val.Value)
+	var successRate float64
+	switch val := val.Value.(type) {
+	case *model.Scalar:
+		successRate = float64(val.Value)
+	case model.Vector:
+		if len(val) < 1 {
+			return Outputs{}, "", nil, errors.Errorf("invalid metrics value, expected at least 1 result: %v", val)
+		}
+		successRate = float64(val[0].Value)
+	default:
+		return Outputs{}, "", nil, errors.Errorf("wrong metrics value, type %T (expected *model.Scalar or model.Vector): %v", val, val)
 	}
 
-	successRate := float64(successRateScalar.Value)
 	w.Logger.Info("observed success rate", "successRate", successRate)
 
 	if successRate < canary.Spec.SuccessThreshold {
