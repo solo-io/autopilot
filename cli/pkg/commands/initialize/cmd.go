@@ -59,14 +59,14 @@ func initAutopilotProject(name string) error {
 			{
 				Name:        "Initializing",
 				Description: kind + " has begun initializing",
-				Outputs:     []string{model.TrafficSplits.LowerName},
+				Outputs:     []string{model.VirtualServices.LowerName},
 				Initial:     true,
 			},
 			{
 				Name:        "Processing",
 				Description: kind + " has begun processing",
 				Inputs:      []string{model.Metrics.LowerName},
-				Outputs:     []string{model.TrafficSplits.LowerName},
+				Outputs:     []string{model.VirtualServices.LowerName},
 			},
 			{
 				Name:        "Finished",
