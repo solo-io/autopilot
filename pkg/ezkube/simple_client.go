@@ -2,6 +2,8 @@ package ezkube
 
 import (
 	"context"
+	"github.com/solo-io/autopilot/pkg/utils"
+	"k8s.io/client-go/util/retry"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -31,7 +33,6 @@ type Ensurer interface {
 	// when it already exists in the cluster
 	Ensure(ctx context.Context, parent Object, child Object, reconcileFuncs ...ReconcileFunc) error
 }
-
 
 // Client is an interface for interacting with the k8s rest api
 // It is functional with any kubernetes runtime.Object with k8s metadata
@@ -133,5 +134,12 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 
 	child.SetResourceVersion(orig.GetResourceVersion())
 
-	return c.Update(ctx, child)
+	// retry on resource version conflict
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		if err := c.Update(ctx, child); err != nil {
+			if errors.IsConflict(err) {
+				utils.LoggerFromContext(ctx).Info("retrying on resource conflict")
+			}
+		}
+	})
 }
