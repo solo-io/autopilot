@@ -127,8 +127,10 @@ func (d *ProjectData) NeedsMetrics() bool {
 	return false
 }
 
+// operator-local prometheus is currently disabled.
+// use prometheus.istio-system instead.
 func (d *ProjectData) NeedsPrometheus() bool {
-	return d.NeedsMetrics() && d.MeshProvider == v1.MeshProvider_Custom
+	return false
 }
 
 func (d *ProjectData) UniqueOutputs() []Parameter {

@@ -10,11 +10,11 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-func NamespaceScopedDeployment(data *model.ProjectData) runtime.Object {
+func SingleNamespaceOperator(data *model.ProjectData) runtime.Object {
 	return deployment(data, false)
 }
 
-func ClusterScopedDeployment(data *model.ProjectData) runtime.Object {
+func AllNamespacesOperator(data *model.ProjectData) runtime.Object {
 	return deployment(data, true)
 }
 

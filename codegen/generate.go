@@ -92,7 +92,7 @@ func (gf GenFile) genTemplateFunc(data *model.ProjectData) (string, error) {
 		labels = map[string]string{}
 	}
 
-	labels["app.kubernetes.io/name"] = data.OperatorName
+	labels["app"] = data.OperatorName
 	labels["app.kubernetes.io/name"] = data.OperatorName
 
 	obj.SetLabels(labels)
@@ -153,8 +153,8 @@ func projectFiles(data *model.ProjectData) []GenFile {
 
 		// deploy
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-namespace-scoped.yaml"), TemplateFunc: deploy.NamespaceScopedDeployment},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-cluster-scoped.yaml"), TemplateFunc: deploy.ClusterScopedDeployment},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-single-namespace.yaml"), TemplateFunc: deploy.SingleNamespaceOperator},
+		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-all-namespaces.yaml"), TemplateFunc: deploy.AllNamespacesOperator},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "configmap.yaml"), TemplateFunc: deploy.ConfigMap},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "role.yaml"), TemplateFunc: deploy.Role},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
