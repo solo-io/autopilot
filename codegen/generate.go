@@ -165,6 +165,9 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		// hack
 		{OutPath: filepath.Join(data.ProjectPackage, "hack/create_cr_yaml.go"), TemplatePath: "hack/create_cr_yaml.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
+
+		// repo
+		{OutPath: ".gitignore", TemplatePath: ".gitignore.tmpl"},
 	}
 
 	if data.EnableFinalizer {
