@@ -61,6 +61,7 @@ AutoPilot is composed of 3 components:
 - add many more aliases/parameter types
 - clean up CLI messages
 - generate CLI docs
+- idempotent generation of rbac yaml (rule ordering not idempotent)
 
 ## test
 - e2e metrics test with istio
