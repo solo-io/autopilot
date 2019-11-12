@@ -8,7 +8,7 @@ type Inputs struct {
 	Deployments parameters.Deployments
 }
 
-// FindDeployment returns <Deployment, true> if the item is found. else {empty}, false
+// FindDeployment returns <Deployment, true> if the item is found. else parameters.Deployment{}, false
 func (i Inputs) FindDeployment(name, namespace string) (parameters.Deployment, bool) {
 	for _, item := range i.Deployments.Items {
 		if item.Name == name && item.Namespace == namespace {

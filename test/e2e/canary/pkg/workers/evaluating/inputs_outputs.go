@@ -10,7 +10,7 @@ type Inputs struct {
 	VirtualServices parameters.VirtualServices
 }
 
-// FindVirtualService returns <VirtualService, true> if the item is found. else {empty}, false
+// FindVirtualService returns <VirtualService, true> if the item is found. else parameters.VirtualService{}, false
 func (i Inputs) FindVirtualService(name, namespace string) (parameters.VirtualService, bool) {
 	for _, item := range i.VirtualServices.Items {
 		if item.Name == name && item.Namespace == namespace {
