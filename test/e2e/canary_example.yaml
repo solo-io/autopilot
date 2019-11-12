@@ -106,5 +106,6 @@ spec:
       containers:
         - name: hey
           image: rcmorano/docker-hey
-          command: ["hey", "http://example:9898/status/200"]
+          command: ["sleep", "360000"]
+#          command: ["hey", "http://example:9898/status/200"]
           imagePullPolicy: IfNotPresent

@@ -8,6 +8,7 @@ echo "Initializing canary operator"
 ap init canary && pushd canary
 
 echo "Cleaning up previous CanaryDeployment"
+kubectl create ns e2etest || echo Namespace exists
 kubectl delete -f ../canary_example.yaml --ignore-not-found || echo cleanup failed, skipping
 
 cp ../autopilot.yaml.txt autopilot.yaml
@@ -20,10 +21,6 @@ cp ../spec.go.txt pkg/apis/canarydeployments/v1/spec.go && ap generate
 echo "Writing initializing worker..."
 
 cp ../initializing_worker.go.txt pkg/workers/initializing/worker.go
-
-echo "Writing syncing worker..."
-
-cp ../syncing_worker.go.txt pkg/workers/syncing/worker.go
 
 echo "Writing Waiting worker..."
 
@@ -48,7 +45,8 @@ cp ../virtual_service_weights.go.txt pkg/weights/virtual_service_weights.go
 ap build ${IMAGE_REPO}/canary
 ap deploy ${IMAGE_REPO}/canary -d
 
-kubectl delete ns canary-operator
+echo "uncomment the following to run locally"
+echo "kubectl delete ns canary-operator"
 
 kubectl label namespace e2etest istio-injection=enabled --overwrite
 kubectl apply -f ../canary_example.yaml

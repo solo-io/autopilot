@@ -1,6 +1,7 @@
 package v1
 
 import (
+	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -19,7 +20,7 @@ type CanaryDeploymentSpec struct {
 	// if the promotion succeeds, the spec is applied to the primary deployment
 	// if the promotion fails, the spec is not applied to the primary deployment
 	// the canary is then scaled down to 0
-	Deployment string `json:"deployment"`
+	v1.DeploymentSpec
 
 	// ports for which traffic should be split (between primary and canary)
 	Ports []int32 `json:"ports,omitempty"`

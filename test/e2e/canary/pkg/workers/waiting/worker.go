@@ -44,7 +44,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, v1.CanaryDeploymentPhaseWaiting, nil, nil
 	}
 
-	logger.Info("", "a", canaryDeployment.Spec.Template, "b", targetDeployment.Spec.Template)
+	logger.Info("diff", "canary", canaryDeployment.Spec.Template, "target", targetDeployment.Spec.Template)
 
 	logger.Info("updating canary deployment and scaling up", "replicas", 1)
 

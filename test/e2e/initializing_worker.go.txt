@@ -93,26 +93,26 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		},
 	}
 	return Outputs{
-			Deployments: parameters.Deployments{
-				Items: []appsv1.Deployment{
-					targetDeployment,
-					primaryDeployment,
-					canaryDeployment,
-				},
-			},
-			Services: parameters.Services{
-				Items: []corev1.Service{
-					primaryService,
-					canaryService,
-					frontService,
-				},
-			},
-			VirtualServices: parameters.VirtualServices{
-				Items: []v1alpha3.VirtualService{
-					vs,
-				},
+		Deployments: parameters.Deployments{
+			Items: []appsv1.Deployment{
+				targetDeployment,
+				primaryDeployment,
+				canaryDeployment,
 			},
 		},
+		Services: parameters.Services{
+			Items: []corev1.Service{
+				primaryService,
+				canaryService,
+				frontService,
+			},
+		},
+		VirtualServices: parameters.VirtualServices{
+			Items: []v1alpha3.VirtualService{
+				vs,
+			},
+		},
+	},
 		v1.CanaryDeploymentPhaseWaiting,
 		nil,
 		nil
