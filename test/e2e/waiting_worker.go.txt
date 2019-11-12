@@ -39,7 +39,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		return Outputs{}, "", nil, errors.Errorf("primary deployment not found for canary %v", canary.Name)
 	}
 
-	if reflect.DeepEqual(canaryDeployment.Spec.Template, targetDeployment.Spec.Template) {
+	if deploymentsEqual(targetDeployment.Spec, canaryDeployment.Spec) {
 		w.Logger.Info("canary has not changed")
 		return Outputs{}, v1.CanaryDeploymentPhaseWaiting, nil, nil
 	}
@@ -61,4 +61,12 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		v1.CanaryDeploymentPhaseEvaluating,
 		&v1.CanaryDeploymentStatusInfo{TimeStarted: metav1.Now()},
 		nil
+}
+
+func deploymentsEqual(target, canary appsv1.DeploymentSpec) bool {
+	// ignore labels as these are overridden by our controller
+	target.Selector = canary.Selector
+	target.Template.Labels = canary.Template.Labels
+
+	return reflect.DeepEqual(target, canary)
 }
