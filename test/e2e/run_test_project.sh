@@ -36,6 +36,15 @@ function eventually {
     return 1
 }
 
+function generate_traffic {
+    echo "########## Generating Traffic with status code $1"
+    while true;  do
+        k get canarydeployment -o yaml
+        k exec -ti $(k get pod | grep Running | grep hey | awk '{print $1}') -c hey -- hey -z 1s -c 1 http://example:9898/status/$1 || \
+            echo container not ready
+        sleep 1
+    done
+}
 echo "######### Cleaning up previous CanaryDeployment"
 k create ns e2etest || echo Namespace exists
 k delete -f ../canary_example.yaml --ignore-not-found || echo cleanup failed, skipping
@@ -96,12 +105,30 @@ sleep 1
 echo "########## Expect Evaluating state"
 eventually assert_eq phase Evaluating
 
+generate_traffic 200 &
 
-echo "########## Generating Traffic"
-set -ex
-while true;  do
-    k get canarydeployment -o yaml
-    k exec -ti $(k get pod | grep Running | grep hey | awk '{print $1}') -c hey -- hey -z 1s -c 1 http://example:9898/status/200 || \
-        echo container not ready
-    sleep 1
-done
+sleep 10
+echo "########## Expect Waiting state"
+eventually assert_eq phase Waiting
+eventually assert_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[0].promotionSucceeded") "true"
+
+kill %1
+
+
+
+echo "########## Modifying the target deployment"
+k set image deployment/example podinfod=stefanprodan/podinfo:3.1.0
+
+sleep 1
+echo "########## Expect Evaluating state"
+eventually assert_eq phase Evaluating
+
+generate_traffic 500 &
+
+sleep 10
+echo "########## Expect Waiting state"
+eventually assert_eq phase Waiting
+eventually assert_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[1].promotionSucceeded") "false"
+
+kill %1
+
