@@ -15,16 +15,14 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: example-canary
-      canary: example
+      app: example
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9797"
       labels:
-        app: example-canary
-        canary: example
+        app: example
     spec:
       containers:
         - name: podinfod

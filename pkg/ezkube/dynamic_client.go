@@ -141,5 +141,6 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 				utils.LoggerFromContext(ctx).Info("retrying on resource conflict")
 			}
 		}
+		return nil
 	})
 }

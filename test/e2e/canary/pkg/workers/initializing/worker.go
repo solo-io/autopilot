@@ -41,7 +41,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 
 	primaryName := canary.Name + "-primary"
 	primaryLabels := map[string]string{
-		"canary": "true",
+		"canary": "false",
 	}
 
 	canaryName := canary.Name + "-canary"
@@ -57,7 +57,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 	primaryDeployment := makeDeployment(primaryName, canary.Namespace, 1, targetDeployment.Spec, primaryLabels)
 	primaryService := makeService(primaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
 
-	canaryDeployment := makeDeployment(canaryName, canary.Namespace, 0, targetDeployment.Spec, canaryLabels)
+	canaryDeployment := makeDeployment(canaryName, canary.Namespace, 0, targetDeployment.Spec,  canaryLabels)
 	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, canaryDeployment.Spec.Selector.MatchLabels)
 
 	// frontService is used to match requests; traffic will be split between the primary and canary
@@ -145,7 +145,6 @@ func makeDeployment(name, namespace string, replicas int32, fromSpec appsv1.Depl
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Labels:    labels,
 		},
 		Spec: fromSpec,
 	}
