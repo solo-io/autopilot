@@ -12,12 +12,6 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - '*'
-- apiGroups:
   - ""
   resources:
   - pods
@@ -29,6 +23,12 @@ rules:
   - ""
   resources:
   - services
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
   verbs:
   - '*'
 - apiGroups:

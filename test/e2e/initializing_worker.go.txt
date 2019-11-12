@@ -41,7 +41,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 
 	canaryName := canary.Name + "-canary"
 	canaryDeployment := makeDeployment(canary.Name, canaryName, canary.Namespace, 0, targetDeployment.Spec)
-	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
+	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, canaryDeployment.Spec.Selector.MatchLabels)
 
 	// frontService is used to match requests; traffic will be split between the primary and canary
 	frontService := makeService(canary.Name, canary.Namespace, canary.Spec.Ports, map[string]string{"canary": canary.Name})
