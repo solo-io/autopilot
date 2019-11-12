@@ -79,7 +79,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		},
 	},
 		v1.CanaryDeploymentPhaseEvaluating,
-		&v1.CanaryDeploymentStatusInfo{TimeStarted: metav1.Now()},
+		&v1.CanaryDeploymentStatusInfo{TimeStarted: metav1.Now(), History: canary.Status.History},
 		nil
 }
 
