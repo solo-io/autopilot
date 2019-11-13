@@ -10,7 +10,7 @@ trap 'kill $(jobs -p)' EXIT
 source ./assert.sh
 
 echo "########## Init Canary project"
-ap init canary && pushd canary
+ap init canary --skip-gomod && pushd canary
 echo "########## note: set \$LOCAL to scale operator pods to 0"
 
 function k {

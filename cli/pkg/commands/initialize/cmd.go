@@ -19,8 +19,9 @@ import (
 )
 
 var (
-	group   string
-	version string
+	group     string
+	version   string
+	skipGomod bool
 )
 
 func NewCmd() *cobra.Command {
@@ -33,6 +34,7 @@ func NewCmd() *cobra.Command {
 	}
 	genCmd.PersistentFlags().StringVar(&group, "group", "example.io", "API Group for the Top-Level CRD")
 	genCmd.PersistentFlags().StringVar(&version, "version", "v1", "API Version for the Top-Level CRD")
+	genCmd.PersistentFlags().BoolVarP(&skipGomod, "skip-gomod", "s", false, "skip generating go.mod for project")
 
 	return genCmd
 }
@@ -93,8 +95,10 @@ func initAutopilotProject(name string) error {
 		return err
 	}
 
-	if err := initGoMod(); err != nil {
-		return err
+	if !skipGomod {
+		if err := initGoMod(); err != nil {
+			return err
+		}
 	}
 
 	logrus.Printf("Created new project %v", lowerName)
