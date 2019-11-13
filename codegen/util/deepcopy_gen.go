@@ -25,6 +25,8 @@ import (
 	"k8s.io/gengo/examples/deepcopy-gen/generators"
 )
 
+var BoilerPlateRelativePath = "hack/boilerplate/boilerplate.go.txt"
+
 func DeepcopyGen(api string) error {
 	_ = flag.Set("logtostderr", "true")
 	api = filepath.FromSlash(api)
@@ -34,6 +36,7 @@ func DeepcopyGen(api string) error {
 	args.InputDirs = []string{apiPath}
 	args.OutputPackagePath = apiPath
 	args.OutputFileBaseName = "zz_generated.deepcopy"
+	args.GoHeaderFilePath = BoilerPlateRelativePath
 	cargs.BoundingDirs = []string{apiPath}
 
 	if err := generatorargs.Validate(args); err != nil {

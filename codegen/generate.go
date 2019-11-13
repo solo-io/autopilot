@@ -182,6 +182,7 @@ func projectFiles(data *model.ProjectData) []*GenFile {
 		// hack
 		{OutPath: filepath.Join("hack/create_cr_yaml.go"), TemplatePath: "hack/create_cr_yaml.gotmpl", SkipOverwrite: true},
 		{OutPath: filepath.Join("deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
+		{OutPath: filepath.Join("hack/boilerplate/boilerplate.go.txt"), TemplatePath: "hack/boilerplate.go.txt.tmpl", SkipOverwrite: true},
 
 		// repo
 		{OutPath: ".gitignore", TemplatePath: "repo/.gitignore.tmpl"},
