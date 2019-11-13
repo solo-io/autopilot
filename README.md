@@ -21,7 +21,7 @@ The [Operator Framework](https://github.com/operator-framework) and [kubebuilder
 **AutoPilot** provides a more opinionated control loop via a generated *scheduler* that implements the [Controller-Runtime Reconciler interface](https://github.com/kubernetes-sigs/controller-runtime/blob/master/pkg/reconcile/reconcile.go#L80), for which users write stateless Work functions for various states of their top-level CRD. State information is stored
  on the *status* of the CRD, promoting a stateless design for AutoPilot operators.
  
-**AutoPilot** additionally provides primitives, generated code, and helper functions for interacting with a variery of service meshes. While AutoPilot can be used to build operators that do not configure or monitor a mesh, much of *AutoPilot*'s design has been oriented to facilitate easy integration with popular service meshes, as well as the Service Mesh Interface (SMI).
+**AutoPilot** additionally provides primitives, generated code, and helper functions for interacting with a variery of service meshes. While AutoPilot can be used to build operators that do not configure or monitor a mesh, much of *AutoPilot*'s design has been oriented to facilitate easy integration with popular service meshes.
 
 Finally, **AutoPilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
 
@@ -97,3 +97,10 @@ AutoPilot is composed of 3 components:
 
 # done 
 * works across namespaces..
+
+
+# code guide:
+
+explain where all the existing things are - the templated queries and clients
+
+folder -> what does it do

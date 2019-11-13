@@ -5,6 +5,22 @@ import (
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
+func StepWeights(virtualService *v1alpha3.VirtualService, stepWeight int32) error {
+	primaryWeight, canaryWeight, err := GetWeights(*virtualService)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get virtual service weights for virtualService %v", virtualService.Name)
+	}
+
+	// once primary weight is below 0, we just monitor all the traffic going to canary
+	if primaryWeight > 0 {
+		if err := SetWeights(virtualService, primaryWeight-stepWeight, canaryWeight+stepWeight); err != nil {
+			return errors.Wrapf(err, "failed to set weights for virtual service %v", virtualService.Name)
+		}
+	}
+
+	return nil
+}
+
 // gets the weights for the canary and primary destinations
 // only checks the first per-port route, assuming all routes have the same weights
 func GetWeights(virtualService v1alpha3.VirtualService) (int32, int32, error) {

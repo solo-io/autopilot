@@ -64,8 +64,8 @@ func AddToManager(params scheduler.Params) error {
 
 {{- range $param := unique_outputs }}
 
-    // Watch for changes to secondary resource {{$param.PluralName }} and requeue the owner {{$.Kind}}
-    params.Logger.Info("Registering watch for secondary resource {{$param.PluralName }}")
+    // Watch for changes to output resource {{$param.PluralName }} and requeue the owner {{$.Kind}}
+    params.Logger.Info("Registering watch for output resource {{$param.PluralName }}")
     err = c.Watch(&source.Kind{Type: &{{$param.ImportPrefix }}.{{$param.SingleName }}{}}, &handler.EnqueueRequestForOwner{
         IsController: true,
         OwnerType:    &{{$.Version}}.{{$.Kind}}{},

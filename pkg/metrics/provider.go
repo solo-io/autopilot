@@ -14,8 +14,6 @@ func GetMetricsServerAddr(meshProvider v1.MeshProvider, controlPlaneNs string) s
 	switch meshProvider {
 	case v1.MeshProvider_Istio:
 		return fmt.Sprintf("http://prometheus.%v:9090", controlPlaneNs)
-	case v1.MeshProvider_SMI:
-		return fmt.Sprintf("http://prometheus.%v:9090", controlPlaneNs)
 	}
 	panic("currently unsupported: " + meshProvider.String())
 }

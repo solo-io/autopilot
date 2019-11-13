@@ -6,6 +6,7 @@ metadata:
   namespace: default
 spec:
   analysisPeriod: 0s
+  measurementInterval: 0s
   selector: null
   strategy: {}
   template:

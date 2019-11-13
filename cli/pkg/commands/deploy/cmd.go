@@ -60,7 +60,7 @@ func readAndReplaceManifest(file string) ([]byte, error) {
 	return replaceNamespace(replaceImage(ioutil.ReadFile(file)))
 }
 
-func getManifestsToApply(needsMetrics bool) []string {
+func getManifestsToApply(needsPrometheus bool) []string {
 	manifestsToApply := []string{
 		"crd.yaml",
 		"configmap.yaml",
@@ -70,17 +70,17 @@ func getManifestsToApply(needsMetrics bool) []string {
 		manifestsToApply = append(manifestsToApply,
 			"clusterrole.yaml",
 			"clusterrolebinding.yaml",
-			"deployment-cluster-scoped.yaml",
+			"deployment-all-namespaces.yaml",
 		)
 	} else {
 		manifestsToApply = append(manifestsToApply,
 			"role.yaml",
 			"rolebinding.yaml",
-			"deployment-namespace-scoped.yaml",
+			"deployment-single-namespace.yaml",
 		)
 	}
 
-	if needsMetrics {
+	if needsPrometheus {
 		manifestsToApply = append(manifestsToApply,
 			"prometheus.yaml",
 		)

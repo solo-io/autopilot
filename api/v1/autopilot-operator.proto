@@ -57,13 +57,10 @@ message AutoPilotOperator {
 // abstract operational concerns such as discovering control plane configuration
 // and monitoring metrics.
 enum MeshProvider {
-    // the Operator will utilize the Service Mesh Interface (SMI) for metrics and configuration.
-    // Compatible with multiple meshes (may require installation of an SMI Adapter).
-    SMI = 0;
-
     // the Operator will utilize Istio mesh for metrics and configuration
-    Istio = 1;
+    Istio = 0;
 
     // the Operator will utilize a locally deployed Prometheus instance for metrics
-    Custom = 2;
+    // (Currently unimplemented)
+    Custom = 1;
 }

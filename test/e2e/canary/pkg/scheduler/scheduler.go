@@ -54,8 +54,8 @@ func AddToManager(params scheduler.Params) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Deployments and requeue the owner CanaryDeployment
-	params.Logger.Info("Registering watch for secondary resource Deployments")
+	// Watch for changes to output resource Deployments and requeue the owner CanaryDeployment
+	params.Logger.Info("Registering watch for output resource Deployments")
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.CanaryDeployment{},
@@ -64,8 +64,8 @@ func AddToManager(params scheduler.Params) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Services and requeue the owner CanaryDeployment
-	params.Logger.Info("Registering watch for secondary resource Services")
+	// Watch for changes to output resource Services and requeue the owner CanaryDeployment
+	params.Logger.Info("Registering watch for output resource Services")
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.CanaryDeployment{},
@@ -74,8 +74,8 @@ func AddToManager(params scheduler.Params) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource VirtualServices and requeue the owner CanaryDeployment
-	params.Logger.Info("Registering watch for secondary resource VirtualServices")
+	// Watch for changes to output resource VirtualServices and requeue the owner CanaryDeployment
+	params.Logger.Info("Registering watch for output resource VirtualServices")
 	err = c.Watch(&source.Kind{Type: &istiov1alpha3.VirtualService{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1.CanaryDeployment{},
@@ -202,6 +202,11 @@ func (s *Scheduler) Reconcile(request reconcile.Request) (reconcile.Result, erro
 		for _, out := range outputs.Deployments.Items {
 			if err := client.Ensure(s.ctx, canaryDeployment, &out); err != nil {
 				return result, fmt.Errorf("failed to write output Deployment<%v.%v> for phase Waiting: %v", out.GetNamespace(), out.GetName(), err)
+			}
+		}
+		for _, out := range outputs.VirtualServices.Items {
+			if err := client.Ensure(s.ctx, canaryDeployment, &out); err != nil {
+				return result, fmt.Errorf("failed to write output VirtualService<%v.%v> for phase Waiting: %v", out.GetNamespace(), out.GetName(), err)
 			}
 		}
 
@@ -337,6 +342,10 @@ func (s *Scheduler) makeWaitingInputs(client ezkube.Client) (waiting.Inputs, err
 		err    error
 	)
 	err = client.List(s.ctx, &inputs.Deployments, ctl.InNamespace(s.namespace))
+	if err != nil {
+		return inputs, err
+	}
+	err = client.List(s.ctx, &inputs.VirtualServices, ctl.InNamespace(s.namespace))
 	if err != nil {
 		return inputs, err
 	}

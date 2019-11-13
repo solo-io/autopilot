@@ -26,7 +26,7 @@ func NewCmd() *cobra.Command {
 	genCmd := &cobra.Command{
 		Use:   "init <name>",
 		Short: "Initialize a new project",
-		Long: `The autopilot init command creates a new project for the given name.
+		Long: `The autopilot init command creates a project directory for the given name.
 `,
 		RunE: initFunc,
 	}

@@ -190,9 +190,8 @@ and monitoring metrics.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| SMI | 0 | the Operator will utilize the Service Mesh Interface (SMI) for metrics and configuration. Compatible with multiple meshes (may require installation of an SMI Adapter). |
-| Istio | 1 | the Operator will utilize Istio mesh for metrics and configuration |
-| Custom | 2 | the Operator will utilize a locally deployed Prometheus instance for metrics |
+| Istio | 0 | the Operator will utilize Istio mesh for metrics and configuration |
+| Custom | 1 | the Operator will utilize a locally deployed Prometheus instance for metrics (Currently unimplemented) |
 
 
  <!-- end enums -->

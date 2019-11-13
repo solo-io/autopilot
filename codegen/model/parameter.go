@@ -85,15 +85,6 @@ var (
 		Package:      "k8s.io/api/apps/v1",
 		ApiGroup:     "apps",
 	})
-	TrafficSplits = RegisterModel(Parameter{
-		LowerName:    "trafficsplits",
-		PluralName:   "TrafficSplits",
-		SingleName:   "TrafficSplit",
-		ImportPrefix: "trafficsplitv1alpha2",
-		Package:      "github.com/deislabs/smi-sdk-go/pkg/apis/split/v1alpha2",
-		ApiGroup:     "split.smi-spec.io",
-		IsCrd:        true,
-	})
 	VirtualServices = RegisterModel(Parameter{
 		LowerName:    "virtualservices",
 		PluralName:   "VirtualServices",

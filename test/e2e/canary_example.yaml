@@ -8,7 +8,8 @@ spec:
   ports:
     - 9898
   successThreshold: 100
-  analysisPeriod: 2m
+  measurementInterval: 1m #larger than the analysis period to make sure we have results
+  analysisPeriod: 10s
   deployment: example
 ---
 apiVersion: apps/v1
@@ -27,16 +28,15 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: example-canary
-      canary: example
+      app: example
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9797"
+        sidecar.istio.io/statsInclusionPrefixes: 'a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z'
       labels:
-        app: example-canary
-        canary: example
+        app: example
     spec:
       containers:
       - name: podinfod
@@ -102,6 +102,8 @@ spec:
     metadata:
       labels:
         app: hey
+      annotations:
+        sidecar.istio.io/statsInclusionPrefixes: 'a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z'
     spec:
       containers:
         - name: hey

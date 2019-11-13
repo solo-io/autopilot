@@ -2,6 +2,8 @@ package ezkube
 
 import (
 	"context"
+	"github.com/solo-io/autopilot/pkg/utils"
+	"k8s.io/client-go/util/retry"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -31,7 +33,6 @@ type Ensurer interface {
 	// when it already exists in the cluster
 	Ensure(ctx context.Context, parent Object, child Object, reconcileFuncs ...ReconcileFunc) error
 }
-
 
 // Client is an interface for interacting with the k8s rest api
 // It is functional with any kubernetes runtime.Object with k8s metadata
@@ -113,12 +114,6 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 	}
 
 	orig := child.DeepCopyObject().(Object)
-	if err := c.Get(ctx, orig); err != nil {
-		if errors.IsNotFound(err) {
-			return c.Create(ctx, child)
-		}
-		return err
-	}
 
 	for _, reconcile := range reconcileFuncs {
 		reconciledObj, err := reconcile(orig, child)
@@ -131,7 +126,36 @@ func (c *simpleClient) Ensure(ctx context.Context, parent Object, child Object, 
 		child = *reconciledObj
 	}
 
+	if err := c.Get(ctx, orig); err != nil {
+		if errors.IsNotFound(err) {
+			return c.Create(ctx, child)
+		}
+		return err
+	}
+
 	child.SetResourceVersion(orig.GetResourceVersion())
 
-	return c.Update(ctx, child)
+	// retry on resource version conflict
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		err := c.Update(ctx, child)
+		if errors.IsConflict(err) {
+			utils.LoggerFromContext(ctx).Info("retrying on resource conflict")
+			if err := c.UpdateResourceVersion(ctx, child); err != nil {
+				return err
+			}
+		}
+		return err
+	})
+}
+
+func (c *simpleClient) UpdateResourceVersion(ctx context.Context, obj Object) error {
+
+	clone := obj.DeepCopyObject().(Object)
+
+	if err := c.Get(ctx, clone); err != nil {
+		return err
+	}
+
+	obj.SetResourceVersion(clone.GetResourceVersion())
+	return nil
 }

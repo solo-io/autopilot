@@ -78,6 +78,7 @@ func (in *CanaryDeploymentSpec) DeepCopyInto(out *CanaryDeploymentSpec) {
 		*out = make([]int32, len(*in))
 		copy(*out, *in)
 	}
+	out.MeasurementInterval = in.MeasurementInterval
 	out.AnalysisPeriod = in.AnalysisPeriod
 	return
 }

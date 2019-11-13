@@ -24,7 +24,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3
 	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
-	istio.io/api v0.0.0-20191101221011-3fcb499e2a05
+	istio.io/api v0.0.0-20191109011807-2629c6ac1513
 	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0

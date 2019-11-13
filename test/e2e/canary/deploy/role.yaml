@@ -2,6 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
+    app: canary-operator
     app.kubernetes.io/name: canary-operator
   name: canary-operator
 rules:
@@ -9,12 +10,6 @@ rules:
   - ""
   resources:
   - configmaps
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
   verbs:
   - '*'
 - apiGroups:
@@ -29,6 +24,12 @@ rules:
   - ""
   resources:
   - services
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
   verbs:
   - '*'
 - apiGroups:
