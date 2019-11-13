@@ -16,7 +16,6 @@ package util
 
 import (
 	"flag"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -27,22 +26,26 @@ import (
 )
 
 func DeepcopyGen(api string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
 	_ = flag.Set("logtostderr", "true")
 	api = filepath.FromSlash(api)
 	// Use relative API path so the generator writes to the correct path.
 	apiPath := "." + string(filepath.Separator) + api[strings.Index(api, "pkg/apis"):]
 	args, cargs := generatorargs.NewDefaults()
 	args.InputDirs = []string{apiPath}
-	args.OutputPackagePath = filepath.Join(wd, apiPath)
+	args.OutputPackagePath = apiPath
 	args.OutputFileBaseName = "zz_generated.deepcopy"
 	cargs.BoundingDirs = []string{apiPath}
 
 	if err := generatorargs.Validate(args); err != nil {
 		return errors.Wrap(err, "deepcopy-gen argument validation error")
+	}
+
+	inGopathSrc, err := WdInGoPathSrc()
+	if err != nil {
+		return err
+	}
+	if !inGopathSrc {
+		args.OutputBase = ""
 	}
 
 	log.Printf("Generating Deepcopy code for API: %#v", args)

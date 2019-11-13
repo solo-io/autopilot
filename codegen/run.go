@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"github.com/solo-io/autopilot/codegen/model"
 	"io/ioutil"
 
 	log "github.com/sirupsen/logrus"
@@ -32,7 +33,7 @@ func Run(dir string, forceOverwrite bool) error {
 	}
 
 	for _, file := range files {
-		name := filepath.Join(dir, file.OutPath)
+		name := file.OutPath
 		content := file.Content
 
 		if !forceOverwrite && file.SkipOverwrite {
@@ -72,7 +73,7 @@ func Run(dir string, forceOverwrite bool) error {
 	}
 
 	log.Printf("Generating Deepcopy types for %v", data.TypesImportPath)
-	if err := util.DeepcopyGen(data.TypesImportPath); err != nil {
+	if err := util.DeepcopyGen(model.TypesRelativePath(data.Kind, data.Version)); err != nil {
 		return err
 	}
 

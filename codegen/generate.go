@@ -55,12 +55,12 @@ func Load(autoPilotYaml, operatorYaml string) (*model.ProjectData, error) {
 		return nil, err
 	}
 
+	// load templates from packr-boxed local directory
+	templates := packr.NewBox("./templates")
+
 	if err := os.Chdir(filepath.Dir(autoPilotYaml)); err != nil {
 		return nil, err
 	}
-
-	// load templates from packr-boxed local directory
-	templates := packr.NewBox("./templates")
 
 	return model.NewTemplateData(project, operator, templates)
 }
@@ -141,12 +141,12 @@ func (gf GenFile) genTemplateFunc(data *model.ProjectData) (string, error) {
 	return string(yam), nil
 }
 
-func projectFiles(data *model.ProjectData) []GenFile {
+func projectFiles(data *model.ProjectData) []*GenFile {
 	typesRelativePath := model.TypesRelativePath(data.Kind, data.Version)
 
-	files := []GenFile{
+	files := []*GenFile{
 		// main
-		{OutPath: filepath.Join("cmd/"+data.OperatorName+"/doc.go"), TemplatePath: "code/main.gotmpl"},
+		{OutPath: filepath.Join("cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl", SkipOverwrite: true},
 
 		// scheduler
 		// user should regenerate after changing autopilot.yaml
@@ -164,43 +164,43 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		{OutPath: filepath.Join(typesRelativePath, "types.go"), TemplatePath: "code/types.gotmpl"},
 
 		// build
-		{OutPath: filepath.Join(data.ProjectPackage, "build", "Dockerfile"), TemplatePath: "build/Dockerfile.tmpl"},
-		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "user_setup"), TemplatePath: "build/user_setup.tmpl", Permission: 0777},
-		{OutPath: filepath.Join(data.ProjectPackage, "build", "bin", "entrypoint"), TemplatePath: "build/entrypoint.tmpl", Permission: 0777},
+		{OutPath: filepath.Join("build", "Dockerfile"), TemplatePath: "build/Dockerfile.tmpl"},
+		{OutPath: filepath.Join("build", "bin", "user_setup"), TemplatePath: "build/user_setup.tmpl", Permission: 0777},
+		{OutPath: filepath.Join("build", "bin", "entrypoint"), TemplatePath: "build/entrypoint.tmpl", Permission: 0777},
 
 		// deploy
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-single-namespace.yaml"), TemplateFunc: deploy.SingleNamespaceOperator},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "deployment-all-namespaces.yaml"), TemplateFunc: deploy.AllNamespacesOperator},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "configmap.yaml"), TemplateFunc: deploy.ConfigMap},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "role.yaml"), TemplateFunc: deploy.Role},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "clusterrole.yaml"), TemplateFunc: deploy.ClusterRole},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "clusterrolebinding.yaml"), TemplateFunc: deploy.ClusterRoleBinding},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", "service_account.yaml"), TemplateFunc: deploy.ServiceAccount},
+		{OutPath: filepath.Join("deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
+		{OutPath: filepath.Join("deploy", "deployment-single-namespace.yaml"), TemplateFunc: deploy.SingleNamespaceOperator},
+		{OutPath: filepath.Join("deploy", "deployment-all-namespaces.yaml"), TemplateFunc: deploy.AllNamespacesOperator},
+		{OutPath: filepath.Join("deploy", "configmap.yaml"), TemplateFunc: deploy.ConfigMap},
+		{OutPath: filepath.Join("deploy", "role.yaml"), TemplateFunc: deploy.Role},
+		{OutPath: filepath.Join("deploy", "rolebinding.yaml"), TemplateFunc: deploy.RoleBinding},
+		{OutPath: filepath.Join("deploy", "clusterrole.yaml"), TemplateFunc: deploy.ClusterRole},
+		{OutPath: filepath.Join("deploy", "clusterrolebinding.yaml"), TemplateFunc: deploy.ClusterRoleBinding},
+		{OutPath: filepath.Join("deploy", "service_account.yaml"), TemplateFunc: deploy.ServiceAccount},
 
 		// hack
-		{OutPath: filepath.Join(data.ProjectPackage, "hack/create_cr_yaml.go"), TemplatePath: "hack/create_cr_yaml.gotmpl", SkipOverwrite: true},
-		{OutPath: filepath.Join(data.ProjectPackage, "deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
+		{OutPath: filepath.Join("hack/create_cr_yaml.go"), TemplatePath: "hack/create_cr_yaml.gotmpl", SkipOverwrite: true},
+		{OutPath: filepath.Join("deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
 
 		// repo
 		{OutPath: ".gitignore", TemplatePath: "repo/.gitignore.tmpl"},
 	}
 
 	if data.EnableFinalizer {
-		files = append(files, GenFile{
-			OutPath: filepath.Join(data.FinalizerImportPath, "finalizer.go"), TemplatePath: "code/finalizer.gotmpl", SkipOverwrite: true,
+		files = append(files, &GenFile{
+			OutPath: filepath.Join(model.FinalizerRelativePath, "finalizer.go"), TemplatePath: "code/finalizer.gotmpl", SkipOverwrite: true,
 		})
 	}
 
 	if data.NeedsMetrics() {
-		files = append(files, GenFile{
-			OutPath: filepath.Join(data.MetricsImportPath, "metrics.go"), TemplatePath: "code/metrics.gotmpl"})
+		files = append(files, &GenFile{
+			OutPath: filepath.Join(model.MetricsRelativePath, "metrics.go"), TemplatePath: "code/metrics.gotmpl"})
 	}
 
 	if data.NeedsPrometheus() {
-		files = append(files, GenFile{
-			OutPath: filepath.Join(data.ProjectPackage, "deploy", "prometheus.yaml"), TemplatePath: "deploy/prometheus.yamltmpl",
+		files = append(files, &GenFile{
+			OutPath: filepath.Join("deploy", "prometheus.yaml"), TemplatePath: "deploy/prometheus.yamltmpl",
 		})
 	}
 
@@ -208,8 +208,8 @@ func projectFiles(data *model.ProjectData) []GenFile {
 }
 
 // phaseFiles returns files for each worker
-func phaseFiles(phase model.Phase) []GenFile {
-	return []GenFile{
+func phaseFiles(phase model.Phase) []*GenFile {
+	return []*GenFile{
 		// worker io file
 		// user should regenerate after changing autopilot.yaml
 		{OutPath: filepath.Join("pkg", "workers", model.WorkerDirName(phase), "inputs_outputs.go"), TemplatePath: "code/inputs_outputs.gotmpl"},
@@ -232,7 +232,7 @@ func Generate(data *model.ProjectData) ([]*GenFile, error) {
 		}
 
 		projectFile.Content = contents
-		files = append(files, &projectFile)
+		files = append(files, projectFile)
 	}
 
 	for _, phase := range data.AutoPilotProject.Phases {
@@ -247,7 +247,7 @@ func Generate(data *model.ProjectData) ([]*GenFile, error) {
 				return nil, err
 			}
 			phaseFile.Content = contents
-			files = append(files, &phaseFile)
+			files = append(files, phaseFile)
 		}
 	}
 

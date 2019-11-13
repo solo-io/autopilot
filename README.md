@@ -27,6 +27,11 @@ The [Operator Framework](https://github.com/operator-framework) and [kubebuilder
 
 Finally, **AutoPilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
 
+# Requirements
+
+- in $GOPATH
+    - k8s.io/gengo/boilerplate/boilerplate.go.txt
+
 # Hello World
 
 
@@ -96,12 +101,12 @@ AutoPilot is composed of 3 components:
 
 # docs todos:
 - architecture description. how does my AutoPilot operator work?
+    - user-project directory structure 
 - how does autopilot generate code? when do i regenerate? when do i redeploy?
-- user-project directory structure 
 - autopilot libraries/pkg directory structure
 - e2e hello world guide
     - tour-through-your-hello-world package-by-package
-
+- tutorial through e2e
 
 
 
