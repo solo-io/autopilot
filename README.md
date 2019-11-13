@@ -54,13 +54,12 @@ AutoPilot is composed of 3 components:
 # cleanup
 - example
 - docs 
-- refactor metrics. make a factory for it
 - code generated headers in the right places
 - improve docs generation template
 - bake templates into cli
-- add many more aliases/parameter types
 - clean up CLI messages
 - generate CLI docs
+
 - idempotent generation of rbac yaml (rule ordering not idempotent)
 
 ## test

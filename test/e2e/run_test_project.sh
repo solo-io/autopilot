@@ -5,7 +5,8 @@ IMAGE_REPO="docker.io/ilackarms"
 set -e
 
 echo "########## Initializing test"
-# source: https://github.com/torokmark/assert.sh/blob/master/assert.sh
+trap 'kill $(jobs -p)' EXIT
+
 source ./assert.sh
 
 echo "########## Init Canary project"
@@ -21,7 +22,7 @@ function phase {
 }
 
 function eventually_eq {
-    TIMEOUT=10 # hard-coded 10s timeout
+    TIMEOUT=30 # hard-coded 30s timeout
     until [[ ${TIMEOUT} -lt 1 ]]
     do
       echo "Trying '$@'"
@@ -30,6 +31,7 @@ function eventually_eq {
         echo "Passed '$@'"
         return 0
       fi
+      echo "failed: $@"
       ((TIMEOUT=TIMEOUT-1))
       sleep 1
     done
@@ -40,7 +42,7 @@ function generate_traffic {
     echo "########## Generating Traffic with status code $1"
     while true;  do
         k get canarydeployment -o yaml
-        k exec -ti $(k get pod | grep Running | grep hey | awk '{print $1}') -c hey -- hey -z 1s -c 1 http://example:9898/status/$1 || \
+        k exec $(k get pod | grep Running | grep hey | awk '{print $1}') -c hey -- hey -z 1s -c 1 http://example:9898/status/$1 || \
             echo container not ready
         sleep 1
     done
@@ -95,22 +97,20 @@ k apply -f ../canary_example.yaml
 
 sleep 5
 
-echo "########## Expect Waiting state"
+echo "########## Expect Init to become Waiting state"
 eventually_eq $(phase) Waiting
 
 echo "########## Modifying the target deployment"
 k set image deployment/example podinfod=stefanprodan/podinfo:3.1.1
 
 sleep 1
-echo "########## Expect Evaluating state"
+echo "########## Expect Evaluating state after change"
 eventually_eq $(phase) Evaluating
-
-trap 'kill $(jobs -p)' EXIT
 
 generate_traffic 200 &
 
 sleep 45
-echo "########## Expect Waiting state"
+echo "########## Expect Waiting state after promotion"
 eventually_eq $(phase) Waiting
 eventually_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[0].promotionSucceeded") "true"
 
@@ -118,7 +118,7 @@ echo "########## Modifying the target deployment"
 k set image deployment/example podinfod=stefanprodan/podinfo:3.1.0
 
 sleep 1
-echo "########## Expect Evaluating state"
+echo "########## Expect Evaluating state after second change"
 eventually_eq $(phase) Evaluating
 
 kill $(jobs -p)
