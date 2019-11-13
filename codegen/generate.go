@@ -197,8 +197,8 @@ func phaseFiles(data *model.ProjectData, phase model.Phase) []GenFile {
 	}
 }
 
-func Generate(data *model.ProjectData) ([]GenFile, error) {
-	var files []GenFile
+func Generate(data *model.ProjectData) ([]*GenFile, error) {
+	var files []*GenFile
 	for _, projectFile := range projectFiles(data) {
 		contents, err := projectFile.GenProjectFile(data)
 		if err != nil {
@@ -206,7 +206,7 @@ func Generate(data *model.ProjectData) ([]GenFile, error) {
 		}
 
 		projectFile.Content = contents
-		files = append(files, projectFile)
+		files = append(files, &projectFile)
 	}
 
 	for _, phase := range data.AutoPilotProject.Phases {
@@ -221,8 +221,17 @@ func Generate(data *model.ProjectData) ([]GenFile, error) {
 				return nil, err
 			}
 			phaseFile.Content = contents
-			files = append(files, phaseFile)
+			files = append(files, &phaseFile)
 		}
+	}
+
+	// prepend the generated header to generated files
+	for _, f := range files {
+		if f.SkipOverwrite {
+			// files that are meant to be overwritten should not get this header
+			continue
+		}
+		f.Content = GeneratedHeaderContent + f.Content
 	}
 
 	return files, nil
