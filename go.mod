@@ -5,12 +5,11 @@ go 1.13
 require (
 	github.com/Azure/go-autorest/autorest v0.9.2 // indirect
 	github.com/Azure/go-autorest/autorest/adal v0.8.0 // indirect
-	github.com/deislabs/smi-sdk-go v0.2.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gertd/go-pluralize v0.1.1
 	github.com/go-logr/logr v0.1.0
+	github.com/gobuffalo/envy v1.7.1 // indirect
 	github.com/gobuffalo/packr v1.30.1
-	github.com/gobuffalo/packr/v2 v2.7.1 // indirect
 	github.com/gogo/protobuf v1.3.0
 	github.com/golang/protobuf v1.3.2
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
@@ -34,7 +33,6 @@ require (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.0.0
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
-	k8s.io/kubernetes v1.15.4
 	k8s.io/utils v0.0.0-20190506122338-8fab8cb257d5
 	knative.dev/pkg v0.0.0-20191111150521-6d806b998379
 	sigs.k8s.io/controller-runtime v0.3.0
