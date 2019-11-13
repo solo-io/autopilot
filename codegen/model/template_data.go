@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/gobuffalo/packr"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +17,10 @@ import (
 type ProjectData struct {
 	v1.AutoPilotProject
 	v1.AutoPilotOperator
+
+	// packr box in which text templates are stored
+	// read from codegen/templates
+	Templates packr.Box
 
 	// internal implementation of phases
 	Phases []Phase `json:"phases"`
@@ -36,7 +41,7 @@ type ProjectData struct {
 	KindLowerPlural string // e.g. "canaryresources"
 }
 
-func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator) (*ProjectData, error) {
+func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator, templates packr.Box) (*ProjectData, error) {
 	projectGoPkg := util.GetGoPkg()
 
 	for _, q := range DefaultQueries {
@@ -69,6 +74,7 @@ func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator)
 	data := &ProjectData{
 		AutoPilotProject:     project,
 		AutoPilotOperator:    operator,
+		Templates:            templates,
 		ProjectPackage:       projectGoPkg,
 		Group:                apiGroup,
 		Version:              apiVersion,

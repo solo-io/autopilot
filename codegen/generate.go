@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"bytes"
+	"github.com/gobuffalo/packr"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -18,6 +19,9 @@ import (
 	"github.com/solo-io/autopilot/codegen/util"
 	"sigs.k8s.io/yaml"
 )
+
+// Generate packr code for templates
+//go:generate packr
 
 // load the default config or die
 func MustLoad() *model.ProjectData {
@@ -54,7 +58,10 @@ func Load(autoPilotYaml, operatorYaml string) (*model.ProjectData, error) {
 		return nil, err
 	}
 
-	return model.NewTemplateData(project, operator)
+	// load templates from packr-boxed local directory
+	templates := packr.NewBox("./templates")
+
+	return model.NewTemplateData(project, operator, templates)
 }
 
 type GenFile struct {
@@ -238,36 +245,25 @@ func Generate(data *model.ProjectData) ([]*GenFile, error) {
 }
 
 func renderProjectFile(data *model.ProjectData, templateFile string) (string, error) {
-	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
-	content, err := ioutil.ReadFile(fullPath)
-	if err != nil {
-		return "", err
-	}
-
-	tmpl, err := template.New(templateFile).Funcs(data.Funcs()).Parse(string(content))
-	if err != nil {
-		return "", err
-	}
-	buf := &bytes.Buffer{}
-	if err := tmpl.Funcs(data.Funcs()).Execute(buf, data); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return renderFile(data, data, templateFile)
 }
 
 func renderPhaseFile(data *model.ProjectData, phase model.Phase, templateFile string) (string, error) {
-	fullPath := filepath.Join(autopilotRoot(), "codegen", "templates", templateFile)
-	content, err := ioutil.ReadFile(fullPath)
+	return renderFile(data, phase, templateFile)
+}
+
+func renderFile(projectData *model.ProjectData, templateData interface{}, templateFile string) (string, error) {
+	templateText, err := projectData.Templates.FindString(templateFile)
 	if err != nil {
 		return "", err
 	}
 
-	tmpl, err := template.New(templateFile).Funcs(data.Funcs()).Parse(string(content))
+	tmpl, err := template.New(templateFile).Funcs(projectData.Funcs()).Parse(templateText)
 	if err != nil {
 		return "", err
 	}
 	buf := &bytes.Buffer{}
-	if err := tmpl.Funcs(data.Funcs()).Execute(buf, phase); err != nil {
+	if err := tmpl.Funcs(projectData.Funcs()).Execute(buf, templateData); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

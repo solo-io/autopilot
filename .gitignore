@@ -19,4 +19,5 @@
 #test/e2e/test
 #test/e2e/canary
 
-test/e2e/canary/build/_output/
+# ignore packr files
+*-packr.go
