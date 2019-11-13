@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# source: https://github.com/torokmark/assert.sh/blob/master/assert.sh
 
 #####################################################################
 ##
