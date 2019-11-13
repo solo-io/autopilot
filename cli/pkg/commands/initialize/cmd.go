@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/model"
@@ -19,6 +18,7 @@ import (
 )
 
 var (
+	kind      string
 	group     string
 	version   string
 	skipGomod bool
@@ -26,12 +26,14 @@ var (
 
 func NewCmd() *cobra.Command {
 	genCmd := &cobra.Command{
-		Use:   "init <name>",
-		Short: "Initialize a new project",
-		Long: `The autopilot init command creates a project directory for the given name.
+		Use:   "init <dir> --kind=<kind> --group=<apigroup> --verison=<apiversion> [--skip-gomod]",
+		Short: "Initialize a new project for the given top-level CRD",
+		Long: `The autopilot init command creates a project skeleton in the given directory. 
+If the directory does not exist, it will be created. 
 `,
 		RunE: initFunc,
 	}
+	genCmd.PersistentFlags().StringVar(&kind, "kind", "Example", "Kind (Camel-Cased Name) of Top-Level CRD")
 	genCmd.PersistentFlags().StringVar(&group, "group", "example.io", "API Group for the Top-Level CRD")
 	genCmd.PersistentFlags().StringVar(&version, "version", "v1", "API Version for the Top-Level CRD")
 	genCmd.PersistentFlags().BoolVarP(&skipGomod, "skip-gomod", "s", false, "skip generating go.mod for project")
@@ -40,19 +42,19 @@ func NewCmd() *cobra.Command {
 }
 
 func initFunc(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+	if len(args) != 1 	{
 		return fmt.Errorf("command %s requires exactly one argument", cmd.CommandPath())
 	}
 
 	return initAutopilotProject(args[0])
 }
 
-func initAutopilotProject(name string) error {
-	kind := strcase.ToCamel(name)
-	lowerName := strings.ToLower(name)
-	if err := os.MkdirAll(lowerName, 0777); err != nil {
+func initAutopilotProject(dir string) error {
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return err
 	}
+
+	lowerName := strings.ToLower(kind)
 
 	cfg := &v1.AutoPilotProject{
 		OperatorName: lowerName + "-operator",
@@ -78,11 +80,14 @@ func initAutopilotProject(name string) error {
 			},
 		},
 	}
+
+	logrus.Printf("Creating Project Config: %v", cfg)
+
 	yam, err := util.MarshalYaml(cfg)
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filepath.Join(lowerName, defaults.AutoPilotFile), yam, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(dir, defaults.AutoPilotFile), yam, 0644); err != nil {
 		return err
 	}
 
@@ -91,7 +96,7 @@ func initAutopilotProject(name string) error {
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filepath.Join(lowerName, defaults.OperatorFile), yam, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(dir, defaults.OperatorFile), yam, 0644); err != nil {
 		return err
 	}
 
@@ -101,18 +106,17 @@ func initAutopilotProject(name string) error {
 		}
 	}
 
-	logrus.Printf("Created new project %v", lowerName)
-
 	return nil
 }
 
-func goModExists() bool {
-	_, err := os.Stat(goMod)
+func exists(f string) bool {
+	_, err := os.Stat(f)
 	return err == nil
 }
 
 func initGoMod() error {
-	if goModExists() {
+	if exists(goMod) {
+		logrus.Printf("Skipping gomod")
 		return nil
 	}
 	if err := exec.Command("go", "mod", "init").Run(); err != nil {

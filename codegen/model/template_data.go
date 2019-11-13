@@ -13,7 +13,8 @@ import (
 	"github.com/solo-io/autopilot/codegen/util"
 )
 
-// used for rendering templates
+// ProjectData is used for rendering templates and generating files
+// It is loaded from the user config,
 type ProjectData struct {
 	v1.AutoPilotProject
 	v1.AutoPilotOperator
@@ -30,15 +31,23 @@ type ProjectData struct {
 	Group   string // e.g. "mesh.demos.io"
 	Version string // e.g. "v1"
 
-	TypesImportPath      string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/apis/canaries/v1"
-	SchedulerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/scheduler"
-	FinalizerImportPath  string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/finalizer"
-	ParametersImportPath string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/parameters"
-	MetricsImportPath    string // e.g. "github.com/solo-io/autopilot/examples/promoter/pkg/metrics"
+	// TODO: refactor these duplicates struct
+	// will require refactoring templates
+	TypesRelativePath      string // e.g. "pkg/apis/canaries/v1"
+	SchedulerRelativePath  string // e.g. "pkg/scheduler"
+	FinalizerRelativePath  string // e.g. "pkg/finalizer"
+	ParametersRelativePath string // e.g. "pkg/parameters"
+	MetricsRelativePath    string // e.g. "pkg/metrics"
 
-	KindLowerCamel  string // e.g. "canaryResource"
-	KindLower       string // e.g. "canaryresource"
-	KindLowerPlural string // e.g. "canaryresources"
+	TypesImportPath      string // e.g. "github.com/yourorg/yourproject/pkg/apis/canaries/v1"
+	SchedulerImportPath  string // e.g. "github.com/yourorg/yourproject/pkg/scheduler"
+	FinalizerImportPath  string // e.g. "github.com/yourorg/yourproject/pkg/finalizer"
+	ParametersImportPath string // e.g. "github.com/yourorg/yourproject/pkg/parameters"
+	MetricsImportPath    string // e.g. "github.com/yourorg/yourproject/pkg/metrics"
+
+	KindLowerCamel  string // e.g. "YourKind"
+	KindLower       string // e.g. "yourresource"
+	KindLowerPlural string // e.g. "yourresources"
 }
 
 func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator, templates packr.Box) (*ProjectData, error) {
@@ -55,16 +64,8 @@ func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator,
 		return nil, fmt.Errorf("%v must be format groupname/version", apiVersionParts)
 	}
 
-	c := pluralize.NewClient()
-
 	apiGroup := apiVersionParts[0]
-	apiVersion := apiVersionParts[1]
-
-	apiImportPath := filepath.Join(projectGoPkg, "pkg", "apis", strings.ToLower(c.Plural(project.Kind)), apiVersion)
-	schedulerImportPath := filepath.Join(projectGoPkg, "pkg", "scheduler")
-	finalizerImportPath := filepath.Join(projectGoPkg, "pkg", "finalizer")
-	parametersImportPath := filepath.Join(projectGoPkg, "pkg", "parameters")
-	metricsImportPath := filepath.Join(projectGoPkg, "pkg", "metrics")
+	version := apiVersionParts[1]
 
 	// register all custom types
 	for _, custom := range project.CustomParameters {
@@ -77,12 +78,12 @@ func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator,
 		Templates:            templates,
 		ProjectPackage:       projectGoPkg,
 		Group:                apiGroup,
-		Version:              apiVersion,
-		TypesImportPath:      apiImportPath,
-		SchedulerImportPath:  schedulerImportPath,
-		FinalizerImportPath:  finalizerImportPath,
-		ParametersImportPath: parametersImportPath,
-		MetricsImportPath:    metricsImportPath,
+		Version:              version,
+		TypesImportPath:      filepath.Join(projectGoPkg, TypesRelativePath(project.Kind, version)),
+		SchedulerImportPath:  filepath.Join(projectGoPkg, SchedulerRelativePath),
+		FinalizerImportPath:  filepath.Join(projectGoPkg, FinalizerRelativePath),
+		ParametersImportPath: filepath.Join(projectGoPkg, ParametersRelativePath),
+		MetricsImportPath:    filepath.Join(projectGoPkg, MetricsRelativePath),
 		KindLowerCamel:       strcase.ToLowerCamel(project.Kind),
 		KindLower:            strings.ToLower(project.Kind),
 		KindLowerPlural:      pluralize.NewClient().Plural(strings.ToLower(project.Kind)),

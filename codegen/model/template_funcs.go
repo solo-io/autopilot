@@ -24,7 +24,7 @@ func (d ProjectData) Funcs() template.FuncMap {
 		"has_inputs":           HasInputs,
 		"is_final":             isFinal,
 		"is_metrics":           isMetrics,
-		"worker_import_prefix": WorkerImportPrefix,
+		"worker_import_prefix": WorkerDirName,
 		"worker_package":       d.workerPackage,
 		"needs_metrics":        d.NeedsMetrics,
 		"unique_outputs":       d.UniqueOutputs,
@@ -52,7 +52,7 @@ func isMetrics(param Parameter) bool {
 	return param.Equals(Metrics)
 }
 
-func WorkerImportPrefix(phase Phase) string {
+func WorkerDirName(phase Phase) string {
 	return strings.ToLower(phase.Name)
 }
 

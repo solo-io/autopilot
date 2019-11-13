@@ -32,7 +32,7 @@ func Run(dir string, forceOverwrite bool) error {
 	}
 
 	for _, file := range files {
-		name := filepath.Join(os.Getenv("GOPATH"), "src", file.OutPath)
+		name := filepath.Join(dir, file.OutPath)
 		content := file.Content
 
 		if !forceOverwrite && file.SkipOverwrite {

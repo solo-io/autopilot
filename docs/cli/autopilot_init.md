@@ -1,14 +1,15 @@
 ## autopilot init
 
-Initialize a new project
+Initialize a new project for the given top-level CRD
 
 ### Synopsis
 
-The autopilot init command creates a project directory for the given name.
+The autopilot init command creates a project skeleton in the given directory. 
+If the directory does not exist, it will be created. 
 
 
 ```
-autopilot init <name> [flags]
+autopilot init <dir> --kind=<kind> --group=<apigroup> --verison=<apiversion> [--skip-gomod] [flags]
 ```
 
 ### Options
@@ -16,6 +17,7 @@ autopilot init <name> [flags]
 ```
       --group string     API Group for the Top-Level CRD (default "example.io")
   -h, --help             help for init
+      --kind string      Kind (Camel-Cased Name) of Top-Level CRD (default "Example")
   -s, --skip-gomod       skip generating go.mod for project
       --version string   API Version for the Top-Level CRD (default "v1")
 ```

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/sirupsen/logrus"
@@ -141,17 +142,26 @@ func (gf GenFile) genTemplateFunc(data *model.ProjectData) (string, error) {
 }
 
 func projectFiles(data *model.ProjectData) []GenFile {
-	files := []GenFile{
-		// code
-		{OutPath: filepath.Join(data.ProjectPackage, "cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl"},
-		{OutPath: filepath.Join(data.SchedulerImportPath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
-		{OutPath: filepath.Join(data.ParametersImportPath, "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
+	typesRelativePath := model.TypesRelativePath(data.Kind, data.Version)
 
-		{OutPath: filepath.Join(data.TypesImportPath, "doc.go"), TemplatePath: "code/doc.gotmpl"},
-		{OutPath: filepath.Join(data.TypesImportPath, "phases.go"), TemplatePath: "code/phases.gotmpl"},
-		{OutPath: filepath.Join(data.TypesImportPath, "register.go"), TemplatePath: "code/register.gotmpl"},
-		{OutPath: filepath.Join(data.TypesImportPath, "spec.go"), TemplatePath: "code/spec.gotmpl", SkipOverwrite: true},
-		{OutPath: filepath.Join(data.TypesImportPath, "types.go"), TemplatePath: "code/types.gotmpl"},
+	files := []GenFile{
+		// main
+		{OutPath: filepath.Join("cmd/"+data.OperatorName+"/doc.go"), TemplatePath: "code/main.gotmpl"},
+
+		// scheduler
+		// user should regenerate after changing autopilot.yaml
+		{OutPath: filepath.Join(model.SchedulerRelativePath, "scheduler.go"), TemplatePath: "code/scheduler.gotmpl"},
+
+		// parameters
+		{OutPath: filepath.Join(model.ParametersRelativePath, "parameters.go"), TemplatePath: "code/parameters.gotmpl"},
+
+		// api
+		// user should regenerate after changing autopilot.yaml or spec.go
+		{OutPath: filepath.Join(typesRelativePath, "doc.go"), TemplatePath: "code/doc.gotmpl"},
+		{OutPath: filepath.Join(typesRelativePath, "phases.go"), TemplatePath: "code/phases.gotmpl"},
+		{OutPath: filepath.Join(typesRelativePath, "register.go"), TemplatePath: "code/register.gotmpl"},
+		{OutPath: filepath.Join(typesRelativePath, "spec.go"), TemplatePath: "code/spec.gotmpl", SkipOverwrite: true},
+		{OutPath: filepath.Join(typesRelativePath, "types.go"), TemplatePath: "code/types.gotmpl"},
 
 		// build
 		{OutPath: filepath.Join(data.ProjectPackage, "build", "Dockerfile"), TemplatePath: "build/Dockerfile.tmpl"},
@@ -197,16 +207,25 @@ func projectFiles(data *model.ProjectData) []GenFile {
 	return files
 }
 
-func phaseFiles(data *model.ProjectData, phase model.Phase) []GenFile {
+// phaseFiles returns files for each worker
+func phaseFiles(phase model.Phase) []GenFile {
 	return []GenFile{
-		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "inputs_outputs.go"), TemplatePath: "code/inputs_outputs.gotmpl"},
-		{OutPath: filepath.Join(data.ProjectPackage, "pkg", "workers", model.WorkerImportPrefix(phase), "worker.go"), TemplatePath: "code/worker.gotmpl", SkipOverwrite: true},
+		// worker io file
+		// user should regenerate after changing autopilot.yaml
+		{OutPath: filepath.Join("pkg", "workers", model.WorkerDirName(phase), "inputs_outputs.go"), TemplatePath: "code/inputs_outputs.gotmpl"},
+
+		// worker file
+		// user should modify
+		{OutPath: filepath.Join("pkg", "workers", model.WorkerDirName(phase), "worker.go"), TemplatePath: "code/worker.gotmpl", SkipOverwrite: true},
 	}
 }
 
 func Generate(data *model.ProjectData) ([]*GenFile, error) {
 	var files []*GenFile
 	for _, projectFile := range projectFiles(data) {
+		// shadow variable because we take pointer
+		projectFile := projectFile
+
 		contents, err := projectFile.GenProjectFile(data)
 		if err != nil {
 			return nil, err
@@ -222,7 +241,7 @@ func Generate(data *model.ProjectData) ([]*GenFile, error) {
 			continue
 		}
 		phase := model.MustPhase(data, phase)
-		for _, phaseFile := range phaseFiles(data, phase) {
+		for _, phaseFile := range phaseFiles(phase) {
 			contents, err := phaseFile.GenPhaseFile(data, phase)
 			if err != nil {
 				return nil, err
@@ -238,7 +257,9 @@ func Generate(data *model.ProjectData) ([]*GenFile, error) {
 			// files that are meant to be overwritten should not get this header
 			continue
 		}
-		f.Content = GeneratedHeaderContent + f.Content
+		if strings.HasSuffix(f.OutPath, ".go") {
+			f.Content = GeneratedHeaderContent + f.Content
+		}
 	}
 
 	return files, nil
@@ -267,8 +288,4 @@ func renderFile(projectData *model.ProjectData, templateData interface{}, templa
 		return "", err
 	}
 	return buf.String(), nil
-}
-
-func autopilotRoot() string {
-	return filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "solo-io", "autopilot")
 }

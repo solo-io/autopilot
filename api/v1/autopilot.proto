@@ -147,7 +147,7 @@ message Parameter {
 //     * 100
 //
 // would produce the following `pkg/metrics/metrics.go`:
-//aaww
+//
 
 message MetricsQuery {
     string name = 1;
