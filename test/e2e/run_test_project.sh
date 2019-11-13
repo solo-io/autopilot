@@ -8,7 +8,6 @@ echo "########## Initializing test"
 # source: https://github.com/torokmark/assert.sh/blob/master/assert.sh
 source ./assert.sh
 
-
 echo "########## Init Canary project"
 ap init canary && pushd canary
 echo "########## note: set \$LOCAL to scale operator pods to 0"
@@ -21,17 +20,18 @@ function phase {
     k get canarydeployments.autopilot.examples.io -oyaml | grep "phase: " | sed 's/phase: //'
 }
 
-function eventually {
+function eventually_eq {
     TIMEOUT=10 # hard-coded 10s timeout
     until [[ ${TIMEOUT} -lt 1 ]]
     do
       echo "Trying '$@'"
-      if [[ $($@) -eq 0 ]]; then
+      local res=$(assert_eq $@; echo $?)
+      if [[ ${res} -eq 0 ]]; then
         echo "Passed '$@'"
         return 0
       fi
       ((TIMEOUT=TIMEOUT-1))
-      sleep1
+      sleep 1
     done
     return 1
 }
@@ -93,42 +93,40 @@ sleep 1
 k label namespace e2etest istio-injection=enabled --overwrite
 k apply -f ../canary_example.yaml
 
-sleep 1
+sleep 5
 
 echo "########## Expect Waiting state"
-eventually assert_eq phase Waiting
+eventually_eq $(phase) Waiting
 
 echo "########## Modifying the target deployment"
 k set image deployment/example podinfod=stefanprodan/podinfo:3.1.1
 
 sleep 1
 echo "########## Expect Evaluating state"
-eventually assert_eq phase Evaluating
+eventually_eq $(phase) Evaluating
+
+trap 'kill $(jobs -p)' EXIT
 
 generate_traffic 200 &
 
-sleep 10
+sleep 45
 echo "########## Expect Waiting state"
-eventually assert_eq phase Waiting
-eventually assert_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[0].promotionSucceeded") "true"
-
-kill %1
-
-
+eventually_eq $(phase) Waiting
+eventually_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[0].promotionSucceeded") "true"
 
 echo "########## Modifying the target deployment"
 k set image deployment/example podinfod=stefanprodan/podinfo:3.1.0
 
 sleep 1
 echo "########## Expect Evaluating state"
-eventually assert_eq phase Evaluating
+eventually_eq $(phase) Evaluating
 
+kill $(jobs -p)
 generate_traffic 500 &
 
 sleep 10
 echo "########## Expect Waiting state"
-eventually assert_eq phase Waiting
-eventually assert_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[1].promotionSucceeded") "false"
+eventually_eq $(phase) Waiting
+eventually_eq $(k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.history[1].promotionSucceeded") "false"
 
-kill %1
 
