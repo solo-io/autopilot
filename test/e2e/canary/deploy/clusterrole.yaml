@@ -27,6 +27,12 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - '*'
+- apiGroups:
   - apps
   resources:
   - replicasets
@@ -34,12 +40,6 @@ rules:
   - get
   - list
   - watch
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - '*'
 - apiGroups:
   - networking.istio.io
   resources:
