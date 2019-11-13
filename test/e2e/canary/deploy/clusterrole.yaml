@@ -2,6 +2,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
+    app: canary-operator
     app.kubernetes.io/name: canary-operator
   name: canary-operator
 rules:
@@ -26,12 +27,6 @@ rules:
   - list
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - '*'
-- apiGroups:
   - apps
   resources:
   - replicasets
@@ -39,6 +34,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - '*'
 - apiGroups:
   - networking.istio.io
   resources:

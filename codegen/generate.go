@@ -167,7 +167,7 @@ func projectFiles(data *model.ProjectData) []GenFile {
 		{OutPath: filepath.Join(data.ProjectPackage, "deploy", data.KindLower+"_example.yaml"), TemplateFunc: deploy.CustomResource},
 
 		// repo
-		{OutPath: ".gitignore", TemplatePath: ".gitignore.tmpl"},
+		{OutPath: ".gitignore", TemplatePath: "repo/.gitignore.tmpl"},
 	}
 
 	if data.EnableFinalizer {
