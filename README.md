@@ -1,5 +1,7 @@
 # AutoPilot - The Service Mesh Automator
 
+![](docs/img/logo.png)
+
 **AutoPilot** is an SDK and toolkit for developing and deploying [service mesh operators](). 
 
 **AutoPilot** generates scaffolding, builds, and deploys Operators which run against a local or remote Kubernetes cluster installed with a Service Mesh. 
@@ -12,7 +14,7 @@ Developers define an `autopilot.yaml` and `autopilot-operator.yaml` which specif
 
 AutoPilot makes use of these files to (re-)generate the project skeleton, build, deploy, and manage the lifecycle of the operator via the `ap` CLI.
 
-The `ap` CLI is designed to manage the full lifecycle of the operator, but this can be done with standard tooling (`go`, `docker`, `kubectl`, `helm`, etc.). 
+Users place their API in a generated `spec.go` file, and business logic in generated `worker.go` files. Once these files have been modified, they will not be overwritten by `ap generate`.
 
 # How is it different from SDKs like Operator Framework and Kubebuilder?
 
@@ -54,11 +56,9 @@ AutoPilot is composed of 3 components:
 # cleanup
 - example
 - docs 
-- code generated headers in the right places
 - improve docs generation template
 - bake templates into cli
 - clean up CLI messages
-- generate CLI docs
 
 - idempotent generation of rbac yaml (rule ordering not idempotent)
 
@@ -87,9 +87,20 @@ AutoPilot is composed of 3 components:
 - interactive cli
 - automatic metrics for worker syncs
 - automatic traces for worker syncs
+- option to make workers persistent
 
 
 
+
+
+
+# docs todos:
+- architecture description. how does my AutoPilot operator work?
+- how does autopilot generate code? when do i regenerate? when do i redeploy?
+- user-project directory structure 
+- autopilot libraries/pkg directory structure
+- e2e hello world guide
+    - tour-through-your-hello-world package-by-package
 
 
 
