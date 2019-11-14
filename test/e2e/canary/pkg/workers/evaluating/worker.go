@@ -2,9 +2,10 @@ package evaluating
 
 import (
 	"context"
-	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
 	"strings"
 	"time"
+
+	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -79,7 +80,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 
 	// we still want to be in evaluating phase while we are processing
 	return Outputs{VirtualServices: parameters.VirtualServices{
-		Items: []v1alpha3.VirtualService{virtualService},
-	}},
+			Items: []v1alpha3.VirtualService{virtualService},
+		}},
 		v1.CanaryDeploymentPhaseEvaluating, nil, nil
 }

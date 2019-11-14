@@ -2,9 +2,10 @@ package waiting
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/utils/pointer"
@@ -67,17 +68,17 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 	}
 
 	return Outputs{
-		Deployments: parameters.Deployments{
-			Items: []appsv1.Deployment{
-				canaryDeployment,
+			Deployments: parameters.Deployments{
+				Items: []appsv1.Deployment{
+					canaryDeployment,
+				},
+			},
+			VirtualServices: parameters.VirtualServices{
+				Items: []v1alpha3.VirtualService{
+					virtualService,
+				},
 			},
 		},
-		VirtualServices: parameters.VirtualServices{
-			Items: []v1alpha3.VirtualService{
-				virtualService,
-			},
-		},
-	},
 		v1.CanaryDeploymentPhaseEvaluating,
 		&v1.CanaryDeploymentStatusInfo{TimeStarted: metav1.Now(), History: canary.Status.History},
 		nil

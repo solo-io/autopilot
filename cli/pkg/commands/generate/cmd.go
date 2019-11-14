@@ -8,6 +8,7 @@ import (
 
 var (
 	forceOverwrite bool
+	deepcopyOnly   bool
 )
 
 func NewCmd() *cobra.Command {
@@ -32,11 +33,12 @@ cat deploy/<resource>.yaml | \
 		RunE: genFunc,
 	}
 	genCmd.PersistentFlags().BoolVarP(&forceOverwrite, "overwrite", "f", false, "force overwriting files that are meant to be modified by the user (spec.go, worker.go, etc.)")
+	genCmd.PersistentFlags().BoolVarP(&deepcopyOnly, "deepcopy-only", "d", false, "Only update the zz_generated.deepcopy.go file.")
 	return genCmd
 }
 
 func genFunc(cmd *cobra.Command, args []string) error {
 	util.MustInProjectRoot()
 
-	return codegen.Run(".", forceOverwrite)
+	return codegen.Run(".", forceOverwrite, deepcopyOnly)
 }

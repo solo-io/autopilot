@@ -3,6 +3,7 @@ package initializing
 import (
 	"context"
 	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/solo-io/autopilot/test/e2e/canary/pkg/parameters"
@@ -109,26 +110,26 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 		},
 	}
 	return Outputs{
-		Deployments: parameters.Deployments{
-			Items: []appsv1.Deployment{
-				targetDeployment,
-				primaryDeployment,
-				canaryDeployment,
+			Deployments: parameters.Deployments{
+				Items: []appsv1.Deployment{
+					targetDeployment,
+					primaryDeployment,
+					canaryDeployment,
+				},
+			},
+			Services: parameters.Services{
+				Items: []corev1.Service{
+					primaryService,
+					canaryService,
+					frontService,
+				},
+			},
+			VirtualServices: parameters.VirtualServices{
+				Items: []v1alpha3.VirtualService{
+					vs,
+				},
 			},
 		},
-		Services: parameters.Services{
-			Items: []corev1.Service{
-				primaryService,
-				canaryService,
-				frontService,
-			},
-		},
-		VirtualServices: parameters.VirtualServices{
-			Items: []v1alpha3.VirtualService{
-				vs,
-			},
-		},
-	},
 		v1.CanaryDeploymentPhaseWaiting,
 		nil,
 		nil

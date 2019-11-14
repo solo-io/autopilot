@@ -17,8 +17,8 @@ import (
 // ProjectData is used for rendering templates and generating files
 // It is loaded from the user config,
 type ProjectData struct {
-	v1.AutoPilotProject
-	v1.AutoPilotOperator
+	v1.AutopilotProject
+	v1.AutopilotOperator
 
 	// packr box in which text templates are stored
 	// read from codegen/templates
@@ -51,7 +51,7 @@ type ProjectData struct {
 	KindLowerPlural string // e.g. "yourresources"
 }
 
-func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator, templates packr.Box) (*ProjectData, error) {
+func NewTemplateData(project v1.AutopilotProject, operator v1.AutopilotOperator, templates packr.Box) (*ProjectData, error) {
 	projectGoPkg := util.GetGoPkg()
 
 	for _, q := range DefaultQueries {
@@ -74,8 +74,8 @@ func NewTemplateData(project v1.AutoPilotProject, operator v1.AutoPilotOperator,
 	}
 
 	data := &ProjectData{
-		AutoPilotProject:     project,
-		AutoPilotOperator:    operator,
+		AutopilotProject:     project,
+		AutopilotOperator:    operator,
 		Templates:            templates,
 		ProjectPackage:       projectGoPkg,
 		Group:                apiGroup,

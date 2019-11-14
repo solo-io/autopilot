@@ -13,9 +13,23 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - '*'
+- apiGroups:
   - ""
   resources:
   - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
   verbs:
   - get
   - list
@@ -26,20 +40,6 @@ rules:
   - services
   verbs:
   - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - replicasets
-  verbs:
-  - get
-  - list
-  - watch
 - apiGroups:
   - networking.istio.io
   resources:

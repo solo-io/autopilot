@@ -38,7 +38,6 @@ func GetWeights(virtualService v1alpha3.VirtualService) (int32, int32, error) {
 	return 0, 0, errors.Errorf("no routes found")
 }
 
-
 // sets the weights to the canary and primary destinations
 func SetWeights(virtualService *v1alpha3.VirtualService, primaryWeight, canaryWeight int32) error {
 	// for shift weights on each per-port route
@@ -62,4 +61,3 @@ func SetWeights(virtualService *v1alpha3.VirtualService, primaryWeight, canaryWe
 
 	return nil
 }
-

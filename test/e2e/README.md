@@ -1,8 +1,8 @@
 # Canary Test Example
 
-This directory houses the main test project / example for AutoPilot, which is a Canary Operator built using the `ap` CLI.
+This directory houses the main test project / example for Autopilot, which is a Canary Operator built using the `ap` CLI.
 
-It provides a minimalistic example of how AutoPilot can be used to orchestrate a canary workflow. 
+It provides a minimalistic example of how Autopilot can be used to orchestrate a canary workflow. 
 
 This project is meant to serve only as both an example (for users developing their own Operators) as well as an end-to-end
 test for the project. For a fully-featured Service Mesh Canary solution, we recommend you check out []
@@ -17,7 +17,7 @@ files into the project, and re-generated.
 
 # Generated Documentation
 
-AutoPilot generates documentation for the `autopilot.yaml` and `autopilot-operator.yaml` config files in [docs](./docs):  
+Autopilot generates documentation for the `autopilot.yaml` and `autopilot-operator.yaml` config files in [docs](./docs):  
 
 # TODO
 

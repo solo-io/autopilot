@@ -9,12 +9,12 @@ import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/solo-io/autopilot/api/v1";
 
-// The AutoPilotOperator file is the bootstrap
+// The AutopilotOperator file is the bootstrap
 // Configuration file for the Operator.
 // It is stored and mounted to the operator as a Kubernetes ConfigMap.
 // The Operator will hot-reload when the configuration file changes.
 // Default name is 'autopilot-operator.yaml' and should be stored in the project root.
-message AutoPilotOperator {
+message AutopilotOperator {
     // version of the operator
     // used for logging and metrics
     // default is "0.0.1"
@@ -64,8 +64,8 @@ message AutoPilotOperator {
 
 // MeshProviders provide an interface to monitoring and managing a specific
 // mesh.
-// AutoPilot does not abstract the mesh API - AutoPilot developers must
-// still reason able about Provider-specific CRDs. AutoPilot's job is to
+// Autopilot does not abstract the mesh API - Autopilot developers must
+// still reason able about Provider-specific CRDs. Autopilot's job is to
 // abstract operational concerns such as discovering control plane configuration
 // and monitoring metrics.
 enum MeshProvider {

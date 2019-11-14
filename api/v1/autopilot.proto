@@ -7,12 +7,12 @@ package autopilot;
 
 option go_package = "github.com/solo-io/autopilot/api/v1";
 
-// The AutoPilotProject file is the root configuration file for the project itself.
+// The AutopilotProject file is the root configuration file for the project itself.
 //
 // This file will be used to build and deploy the autopilot operator.
 // It is loaded automatically by the autopilot CLI. Its
 // default location is 'autopilot.yaml'
-message AutoPilotProject {
+message AutopilotProject {
     // the name (kubernetes Kind) of the top-level
     // CRD for the operator
     // Specified via the `ap init <Kind>` command
@@ -37,18 +37,18 @@ message AutoPilotProject {
     // enable use of a Finalizer to handle object deletion
     bool enableFinalizer = 5;
 
-    // custom Parameters which extend AutoPilot's builtin types
+    // custom Parameters which extend Autopilot's builtin types
     repeated Parameter customParameters = 6;
 
-    // custom Queries which extend AutoPilot's metrics queries
+    // custom Queries which extend Autopilot's metrics queries
     repeated MetricsQuery queries = 7;
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific
 // mesh.
 //
-// AutoPilot does not abstract the mesh API - AutoPilot developers must
-// still reason able about Provider-specific CRDs. AutoPilot's job is to
+// Autopilot does not abstract the mesh API - Autopilot developers must
+// still reason able about Provider-specific CRDs. Autopilot's job is to
 // abstract operational concerns such as discovering control plane configuration
 // and monitoring metrics.
 message Phase {
@@ -83,7 +83,7 @@ message Phase {
 }
 
 // Custom Parameters allow code to be generated
-// for inputs/outputs that are not built-in to AutoPilot.
+// for inputs/outputs that are not built-in to Autopilot.
 // These types must be Kubernetes-compatible Go structs.
 message Parameter {
     // the fully lower-case name of this resource

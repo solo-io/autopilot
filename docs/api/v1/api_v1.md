@@ -4,7 +4,7 @@
 ## Table of Contents
 
 - [autopilot.proto](#autopilot.proto)
-    - [AutoPilotProject](#autopilot.AutoPilotProject)
+    - [AutopilotProject](#autopilot.AutopilotProject)
     - [MetricsQuery](#autopilot.MetricsQuery)
     - [Parameter](#autopilot.Parameter)
     - [Phase](#autopilot.Phase)
@@ -14,7 +14,7 @@
   
 
 - [autopilot-operator.proto](#autopilot-operator.proto)
-    - [AutoPilotOperator](#autopilot.AutoPilotOperator)
+    - [AutopilotOperator](#autopilot.AutopilotOperator)
   
     - [MeshProvider](#autopilot.MeshProvider)
   
@@ -35,10 +35,10 @@ as execute tasks related to build and deployment. It can be consumed
 both via the `ap` CLI as well as in `codegen` packages.
 
 
-<a name="autopilot.AutoPilotProject"></a>
+<a name="autopilot.AutopilotProject"></a>
 
-### AutoPilotProject
-The AutoPilotProject file is the root configuration file for the project itself.
+### AutopilotProject
+The AutopilotProject file is the root configuration file for the project itself.
 
 This file will be used to build and deploy the autopilot operator.
 It is loaded automatically by the autopilot CLI. Its
@@ -54,8 +54,8 @@ default location is 'autopilot.yaml'
 
 Each phase specifies a unique name and its own set of inputs and outputs. |
 | enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
-| customParameters | [Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend AutoPilot's builtin types |
-| queries | [MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend AutoPilot's metrics queries |
+| customParameters | [Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend Autopilot's builtin types |
+| queries | [MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend Autopilot's metrics queries |
 
 
 
@@ -83,7 +83,7 @@ Each phase specifies a unique name and its own set of inputs and outputs. |
 
 ### Parameter
 Custom Parameters allow code to be generated
-for inputs/outputs that are not built-in to AutoPilot.
+for inputs/outputs that are not built-in to Autopilot.
 These types must be Kubernetes-compatible Go structs.
 
 
@@ -108,8 +108,8 @@ These types must be Kubernetes-compatible Go structs.
 MeshProviders provide an interface to monitoring and managing a specific
 mesh.
 
-AutoPilot does not abstract the mesh API - AutoPilot developers must
-still reason able about Provider-specific CRDs. AutoPilot's job is to
+Autopilot does not abstract the mesh API - Autopilot developers must
+still reason able about Provider-specific CRDs. Autopilot's job is to
 abstract operational concerns such as discovering control plane configuration
 and monitoring metrics.
 
@@ -150,10 +150,10 @@ this file provides the bootstrap configuration that is loaded to the
 operator at boot-time/runtime
 
 
-<a name="autopilot.AutoPilotOperator"></a>
+<a name="autopilot.AutopilotOperator"></a>
 
-### AutoPilotOperator
-The AutoPilotOperator file is the bootstrap
+### AutopilotOperator
+The AutopilotOperator file is the bootstrap
 Configuration file for the Operator.
 It is stored and mounted to the operator as a Kubernetes ConfigMap.
 The Operator will hot-reload when the configuration file changes.
@@ -184,8 +184,8 @@ Default name is 'autopilot-operator.yaml' and should be stored in the project ro
 ### MeshProvider
 MeshProviders provide an interface to monitoring and managing a specific
 mesh.
-AutoPilot does not abstract the mesh API - AutoPilot developers must
-still reason able about Provider-specific CRDs. AutoPilot's job is to
+Autopilot does not abstract the mesh API - Autopilot developers must
+still reason able about Provider-specific CRDs. Autopilot's job is to
 abstract operational concerns such as discovering control plane configuration
 and monitoring metrics.
 

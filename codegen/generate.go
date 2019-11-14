@@ -27,7 +27,7 @@ import (
 
 // load the default config or die
 func MustLoad() *model.ProjectData {
-	data, err := Load(defaults.AutoPilotFile, defaults.OperatorFile)
+	data, err := Load(defaults.AutopilotFile, defaults.OperatorFile)
 	if err != nil {
 		logrus.Fatalf("failed to load autopilot.yaml: %v", err)
 	}
@@ -41,7 +41,7 @@ func Load(autoPilotYaml, operatorYaml string) (*model.ProjectData, error) {
 	if err != nil {
 		return nil, err
 	}
-	var project v1.AutoPilotProject
+	var project v1.AutopilotProject
 	if err := util.UnmarshalYaml(raw, &project); err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func Load(autoPilotYaml, operatorYaml string) (*model.ProjectData, error) {
 	if err != nil {
 		return nil, err
 	}
-	var operator v1.AutoPilotOperator
+	var operator v1.AutopilotOperator
 	if err := util.UnmarshalYaml(raw, &operator); err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func Generate(data *model.ProjectData) ([]*GenFile, error) {
 		files = append(files, projectFile)
 	}
 
-	for _, phase := range data.AutoPilotProject.Phases {
+	for _, phase := range data.AutopilotProject.Phases {
 		if phase.Final {
 			// do not generate workers/params for final phases
 			continue

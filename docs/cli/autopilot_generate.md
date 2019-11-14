@@ -27,8 +27,9 @@ autopilot generate [flags]
 ### Options
 
 ```
-  -h, --help        help for generate
-  -f, --overwrite   force overwriting files that are meant to be modified by the user (spec.go, worker.go, etc.)
+  -d, --deepcopy-only   Only update the zz_generated.deepcopy.go file.
+  -h, --help            help for generate
+  -f, --overwrite       force overwriting files that are meant to be modified by the user (spec.go, worker.go, etc.)
 ```
 
 ### Options inherited from parent commands

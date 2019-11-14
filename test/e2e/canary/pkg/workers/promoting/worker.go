@@ -2,6 +2,7 @@ package promoting
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/test/e2e/canary/pkg/parameters"
 	"github.com/solo-io/autopilot/test/e2e/canary/pkg/weights"
