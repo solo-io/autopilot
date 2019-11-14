@@ -8,7 +8,6 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gertd/go-pluralize v0.1.1
 	github.com/go-logr/logr v0.1.0
-	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/gobuffalo/envy v1.7.1 // indirect
 	github.com/gobuffalo/packr v1.30.1
 	github.com/gogo/protobuf v1.3.0
@@ -20,17 +19,16 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/common v0.4.1
 	github.com/rogpeppe/go-internal v1.5.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/solo-io/go-utils v0.10.27-0.20191113170737-ff1373ac5ea6
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
 	istio.io/api v0.0.0-20191109011807-2629c6ac1513
 	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0

@@ -8,6 +8,7 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/commands/initialize"
 	"github.com/solo-io/autopilot/cli/pkg/commands/logs"
 	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/autopilot/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +28,7 @@ func AutoPilotCli() *cobra.Command {
 				log.Debug("Debug logging is set")
 			}
 		},
+		Version: version.Version,
 	}
 	root.AddCommand(initialize.NewCmd())
 	root.AddCommand(generate.NewCmd())
