@@ -94,5 +94,6 @@ upload-github-release-assets: build-cli
 # Important to clean before pushing new releases. Dockerfiles and binaries may not update properly
 .PHONY: clean
 clean:
+	rm -rf codegen/*-packr.go
 	rm -rf _output
 	rm -rf test/e2e/canary
