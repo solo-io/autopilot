@@ -91,7 +91,7 @@ type Scheduler struct {
     ctx context.Context
     mgr manager.Manager
     namespace string
-    logger *zap.Logger
+    logger logr.Logger
 {{- if needs_metrics }}
     metrics {{$.KindLower}}metrics.{{$.Kind}}Metrics
 {{- end}}

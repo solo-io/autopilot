@@ -250,16 +250,16 @@ type operatorInstance struct {
 	logger       logr.Logger
 }
 
-func (r *operatorInstance) Start() error {
+func (instance *operatorInstance) Start() error {
 
-	enableLeaderElection := r.config.EnableLeaderElection
-	leaderElectionNamespace := r.config.LeaderElectionNamespace
+	enableLeaderElection := instance.config.EnableLeaderElection
+	leaderElectionNamespace := instance.config.LeaderElectionNamespace
 
 	if enableLeaderElection {
 		leaderNs, err := utils.GetInClusterNamesapce()
 		if err != nil {
 			// override if running out-of-cluster
-			r.logger.Info("Skipping leader-election when running out of cluster")
+			instance.logger.Info("Skipping leader-election when running out of cluster")
 			enableLeaderElection = false
 		} else if leaderElectionNamespace == "" {
 			// use currently deployed namespace as default leader ns
@@ -267,15 +267,19 @@ func (r *operatorInstance) Start() error {
 		}
 	}
 
-	level := r.config.GetLogLevel().GetValue()
-	if level == 0 {
-		level = 1
+	level := 1
+
+	if instance.config.LogLevel != nil {
+		level = int(instance.config.LogLevel.Value)
 	}
-	logLevel.SetLevel(zapcore.Level(level))
+
+	// zap levels start with -1 (for debug)
+	// ours starts with 0 for debug
+	logLevel.SetLevel(zapcore.Level(level - 1))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                  r.scheme,
-		MetricsBindAddress:      r.config.MetricsAddr,
+		Scheme:                  instance.scheme,
+		MetricsBindAddress:      instance.config.MetricsAddr,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: leaderElectionNamespace,
 		// TODO: webhook support
@@ -284,17 +288,17 @@ func (r *operatorInstance) Start() error {
 		return err
 	}
 	params := scheduler.Params{
-		Ctx:       r.ctx,
+		Ctx:       instance.ctx,
 		Manager:   mgr,
-		Namespace: r.config.WatchNamespace,
-		Logger:    r.logger,
+		Namespace: instance.config.WatchNamespace,
+		Logger:    instance.logger,
 	}
 
-	if err := r.addTomanager(params); err != nil {
+	if err := instance.addTomanager(params); err != nil {
 		return err
 	}
 
-	return mgr.Start(r.ctx.Done())
+	return mgr.Start(instance.ctx.Done())
 }
 
 func operatorContext(ctx context.Context, operator *v1.AutopilotOperator, logger logr.Logger) (context.Context, context.CancelFunc) {
