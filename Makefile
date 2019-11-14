@@ -16,7 +16,7 @@ ifeq ($(TAGGED_VERSION),)
 endif
 VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
 
-LDFLAGS := "-X github.com/solo-io/gloo/pkg/version.Version=$(VERSION) -X github.com/solo-io/gloo/pkg/version.EnterpriseTag=$(GLOOE_VERSION)"
+LDFLAGS := "-X github.com/solo-io/autopilot/pkg/version.Version=$(VERSION)"
 GCFLAGS := all="-N -l"
 
 # Passed by cloudbuild
