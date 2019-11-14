@@ -63,8 +63,9 @@ $(OUTDIR)/ap-windows-amd64.exe: $(SOURCES)
 .PHONY: build-cli
 build-cli: ap-linux-amd64 ap-darwin-amd64 ap-windows-amd64
 
-.PHONY: install-ap
-	go build -o ${GOPATH}/bin/$@ $(CLI_DIR)/cmd/main.go
+.PHONY: install-cli
+install-cli:
+	go build -o ${GOPATH}/bin/ap $(CLI_DIR)/cmd/main.go
 
 
 #----------------------------------------------------------------------------------

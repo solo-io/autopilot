@@ -101,7 +101,7 @@ func initAutopilotProject(dir string) error {
 	}
 
 	if !skipGomod {
-		if err := initGoMod(); err != nil {
+		if err := initGoMod(dir); err != nil {
 			return err
 		}
 	}
@@ -114,7 +114,8 @@ func exists(f string) bool {
 	return err == nil
 }
 
-func initGoMod() error {
+func initGoMod(dir string) error {
+	goMod := filepath.Join(dir, "go.mod")
 	if exists(goMod) {
 		logrus.Printf("Skipping gomod")
 		return nil
@@ -130,7 +131,6 @@ func initGoMod() error {
 	return ioutil.WriteFile(goMod, b, 0644)
 }
 
-const goMod = "go.mod"
 const goModFooter = `
 
 // Pinned to kubernetes-1.14.1

@@ -18,26 +18,36 @@ these ConfigMaps exist and contain the data `hello: world`.
 
 # Tutorial
 
-## Build the Autopilot CLI
+## Install the Autopilot CLI
 
-Currently, binary releases of the Autopilot CLi `ap` are not published. To build `ap` locally:
+Download the latest release of the Autopilot CLI from the GitHub releases page: https://github.com/solo-io/autopilot/releases
 
+or install from the terminal:
+
+```bash
+curl -sL https://run.solo.io/autopilot/install | sh
+export PATH=$HOME/.autopilot/bin:$PATH
 ```
-git clone https://github.com/solo-io/autopilot
-cd autopilot
-go get ./...
-make ap
-
-```
-
-> note: tested with `go` 1.13
-
-
-
-
 
 ## Initialize the `hello` operator
+
+Run the following to create the operator directory in your workspace. Can be inside or outside `GOPATH` (uses Go modules):
+
+```bash
+ap init hello --kind Hello --group examples.io --version v1
+```
+
+This should produce the output:
+
+```
+INFO[0000] Creating Project Config: kind:"Hello" apiVersion:"examples.io/v1" operatorName:"hello-operator" phases:<name:"Initializing" description:"Hello has begun initializing" initial:true outputs:"virtualservices" > phases:<name:"Processing" description:"Hello has begun processing" inputs:"metrics" outputs:"virtualservices" > phases:<name:"Finished" description:"Hello has finished" final:true >
+```
+
+If we run `ls`
+
 ## Update the `autopilot.yaml` file
+
+
 ## Generate the code
 ## Test the deployment
 ## Update the API Spec
