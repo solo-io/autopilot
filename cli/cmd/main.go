@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	root := commands.AutoPilotCli()
+	root := commands.AutopilotCli()
 
 	if err := root.Execute(); err != nil {
 		log.Fatalf("fatal err: %v", err)

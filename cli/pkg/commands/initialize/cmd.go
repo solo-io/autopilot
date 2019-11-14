@@ -21,6 +21,7 @@ var (
 	kind      string
 	group     string
 	version   string
+	module    string
 	skipGomod bool
 )
 
@@ -37,12 +38,14 @@ If the directory does not exist, it will be created.
 	genCmd.PersistentFlags().StringVar(&group, "group", "example.io", "API Group for the Top-Level CRD")
 	genCmd.PersistentFlags().StringVar(&version, "version", "v1", "API Version for the Top-Level CRD")
 	genCmd.PersistentFlags().BoolVarP(&skipGomod, "skip-gomod", "s", false, "skip generating go.mod for project")
+	genCmd.PersistentFlags().StringVarP(&module, "module", "m", "", "Sets the name of the module for `go mod init`."+
+		"Required if initializing outside your $GOPATH")
 
 	return genCmd
 }
 
 func initFunc(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 	{
+	if len(args) != 1 {
 		return fmt.Errorf("command %s requires exactly one argument", cmd.CommandPath())
 	}
 
@@ -56,7 +59,7 @@ func initAutopilotProject(dir string) error {
 
 	lowerName := strings.ToLower(kind)
 
-	cfg := &v1.AutoPilotProject{
+	cfg := &v1.AutopilotProject{
 		OperatorName: lowerName + "-operator",
 		ApiVersion:   group + "/" + version,
 		Kind:         kind,
@@ -87,7 +90,7 @@ func initAutopilotProject(dir string) error {
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filepath.Join(dir, defaults.AutoPilotFile), yam, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(dir, defaults.AutopilotFile), yam, 0644); err != nil {
 		return err
 	}
 
@@ -120,7 +123,12 @@ func initGoMod(dir string) error {
 		logrus.Printf("Skipping gomod")
 		return nil
 	}
-	if err := exec.Command("go", "mod", "init").Run(); err != nil {
+	cmd := exec.Command("go", "mod", "init")
+	if module != "" {
+		cmd.Args = append(cmd.Args, module)
+	}
+	cmd.Dir = dir
+	if err := util.ExecCmd(cmd); err != nil {
 		return err
 	}
 	b, err := ioutil.ReadFile(goMod)

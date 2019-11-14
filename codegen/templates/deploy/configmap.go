@@ -15,7 +15,7 @@ func ConfigMap(data *model.ProjectData) runtime.Object {
 }
 
 func configMap(data *model.ProjectData) *v1.ConfigMap {
-	yam, err := util.MarshalYaml(&data.AutoPilotOperator)
+	yam, err := util.MarshalYaml(&data.AutopilotOperator)
 	if err != nil {
 		logrus.Fatalf("failed to marshal autopilot operator config")
 	}

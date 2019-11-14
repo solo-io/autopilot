@@ -20,12 +20,12 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// The AutoPilotProject file is the root configuration file for the project itself.
+// The AutopilotProject file is the root configuration file for the project itself.
 //
 // This file will be used to build and deploy the autopilot operator.
 // It is loaded automatically by the autopilot CLI. Its
 // default location is 'autopilot.yaml'
-type AutoPilotProject struct {
+type AutopilotProject struct {
 	// the name (kubernetes Kind) of the top-level
 	// CRD for the operator
 	// Specified via the `ap init <Kind>` command
@@ -45,83 +45,83 @@ type AutoPilotProject struct {
 	Phases []*Phase `protobuf:"bytes,4,rep,name=phases,proto3" json:"phases,omitempty"`
 	// enable use of a Finalizer to handle object deletion
 	EnableFinalizer bool `protobuf:"varint,5,opt,name=enableFinalizer,proto3" json:"enableFinalizer,omitempty"`
-	// custom Parameters which extend AutoPilot's builtin types
+	// custom Parameters which extend Autopilot's builtin types
 	CustomParameters []*Parameter `protobuf:"bytes,6,rep,name=customParameters,proto3" json:"customParameters,omitempty"`
-	// custom Queries which extend AutoPilot's metrics queries
+	// custom Queries which extend Autopilot's metrics queries
 	Queries              []*MetricsQuery `protobuf:"bytes,7,rep,name=queries,proto3" json:"queries,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *AutoPilotProject) Reset()         { *m = AutoPilotProject{} }
-func (m *AutoPilotProject) String() string { return proto.CompactTextString(m) }
-func (*AutoPilotProject) ProtoMessage()    {}
-func (*AutoPilotProject) Descriptor() ([]byte, []int) {
+func (m *AutopilotProject) Reset()         { *m = AutopilotProject{} }
+func (m *AutopilotProject) String() string { return proto.CompactTextString(m) }
+func (*AutopilotProject) ProtoMessage()    {}
+func (*AutopilotProject) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f7c7e86e2b87635e, []int{0}
 }
 
-func (m *AutoPilotProject) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_AutoPilotProject.Unmarshal(m, b)
+func (m *AutopilotProject) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AutopilotProject.Unmarshal(m, b)
 }
-func (m *AutoPilotProject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_AutoPilotProject.Marshal(b, m, deterministic)
+func (m *AutopilotProject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AutopilotProject.Marshal(b, m, deterministic)
 }
-func (m *AutoPilotProject) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AutoPilotProject.Merge(m, src)
+func (m *AutopilotProject) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutopilotProject.Merge(m, src)
 }
-func (m *AutoPilotProject) XXX_Size() int {
-	return xxx_messageInfo_AutoPilotProject.Size(m)
+func (m *AutopilotProject) XXX_Size() int {
+	return xxx_messageInfo_AutopilotProject.Size(m)
 }
-func (m *AutoPilotProject) XXX_DiscardUnknown() {
-	xxx_messageInfo_AutoPilotProject.DiscardUnknown(m)
+func (m *AutopilotProject) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutopilotProject.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AutoPilotProject proto.InternalMessageInfo
+var xxx_messageInfo_AutopilotProject proto.InternalMessageInfo
 
-func (m *AutoPilotProject) GetKind() string {
+func (m *AutopilotProject) GetKind() string {
 	if m != nil {
 		return m.Kind
 	}
 	return ""
 }
 
-func (m *AutoPilotProject) GetApiVersion() string {
+func (m *AutopilotProject) GetApiVersion() string {
 	if m != nil {
 		return m.ApiVersion
 	}
 	return ""
 }
 
-func (m *AutoPilotProject) GetOperatorName() string {
+func (m *AutopilotProject) GetOperatorName() string {
 	if m != nil {
 		return m.OperatorName
 	}
 	return ""
 }
 
-func (m *AutoPilotProject) GetPhases() []*Phase {
+func (m *AutopilotProject) GetPhases() []*Phase {
 	if m != nil {
 		return m.Phases
 	}
 	return nil
 }
 
-func (m *AutoPilotProject) GetEnableFinalizer() bool {
+func (m *AutopilotProject) GetEnableFinalizer() bool {
 	if m != nil {
 		return m.EnableFinalizer
 	}
 	return false
 }
 
-func (m *AutoPilotProject) GetCustomParameters() []*Parameter {
+func (m *AutopilotProject) GetCustomParameters() []*Parameter {
 	if m != nil {
 		return m.CustomParameters
 	}
 	return nil
 }
 
-func (m *AutoPilotProject) GetQueries() []*MetricsQuery {
+func (m *AutopilotProject) GetQueries() []*MetricsQuery {
 	if m != nil {
 		return m.Queries
 	}
@@ -131,8 +131,8 @@ func (m *AutoPilotProject) GetQueries() []*MetricsQuery {
 // MeshProviders provide an interface to monitoring and managing a specific
 // mesh.
 //
-// AutoPilot does not abstract the mesh API - AutoPilot developers must
-// still reason able about Provider-specific CRDs. AutoPilot's job is to
+// Autopilot does not abstract the mesh API - Autopilot developers must
+// still reason able about Provider-specific CRDs. Autopilot's job is to
 // abstract operational concerns such as discovering control plane configuration
 // and monitoring metrics.
 type Phase struct {
@@ -232,7 +232,7 @@ func (m *Phase) GetOutputs() []string {
 }
 
 // Custom Parameters allow code to be generated
-// for inputs/outputs that are not built-in to AutoPilot.
+// for inputs/outputs that are not built-in to Autopilot.
 // These types must be Kubernetes-compatible Go structs.
 type Parameter struct {
 	// the fully lower-case name of this resource
@@ -389,7 +389,7 @@ func (m *MetricsQuery) GetParameters() []string {
 }
 
 func init() {
-	proto.RegisterType((*AutoPilotProject)(nil), "autopilot.AutoPilotProject")
+	proto.RegisterType((*AutopilotProject)(nil), "autopilot.AutopilotProject")
 	proto.RegisterType((*Phase)(nil), "autopilot.Phase")
 	proto.RegisterType((*Parameter)(nil), "autopilot.Parameter")
 	proto.RegisterType((*MetricsQuery)(nil), "autopilot.MetricsQuery")

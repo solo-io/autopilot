@@ -2,12 +2,13 @@ package codegen
 
 import (
 	"bytes"
-	"github.com/gobuffalo/packr"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/gobuffalo/packr"
 
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
@@ -146,7 +147,7 @@ func projectFiles(data *model.ProjectData) []*GenFile {
 
 	files := []*GenFile{
 		// main
-		{OutPath: filepath.Join("cmd/"+data.OperatorName+"/main.go"), TemplatePath: "code/main.gotmpl", SkipOverwrite: true},
+		{OutPath: filepath.Join("cmd/" + data.OperatorName + "/main.go"), TemplatePath: "code/main.gotmpl", SkipOverwrite: true},
 
 		// scheduler
 		// user should regenerate after changing autopilot.yaml

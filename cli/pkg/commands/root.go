@@ -14,7 +14,7 @@ import (
 
 var verbose bool
 
-func AutoPilotCli() *cobra.Command {
+func AutopilotCli() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "autopilot",
 		Aliases: []string{"ap"},

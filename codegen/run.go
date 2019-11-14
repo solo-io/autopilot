@@ -1,8 +1,9 @@
 package codegen
 
 import (
-	"github.com/solo-io/autopilot/codegen/model"
 	"io/ioutil"
+
+	"github.com/solo-io/autopilot/codegen/model"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/solo-io/autopilot/codegen/util"

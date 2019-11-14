@@ -24,8 +24,8 @@ const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // MeshProviders provide an interface to monitoring and managing a specific
 // mesh.
-// AutoPilot does not abstract the mesh API - AutoPilot developers must
-// still reason able about Provider-specific CRDs. AutoPilot's job is to
+// Autopilot does not abstract the mesh API - Autopilot developers must
+// still reason able about Provider-specific CRDs. Autopilot's job is to
 // abstract operational concerns such as discovering control plane configuration
 // and monitoring metrics.
 type MeshProvider int32
@@ -56,12 +56,12 @@ func (MeshProvider) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_56f975433f2c607a, []int{0}
 }
 
-// The AutoPilotOperator file is the bootstrap
+// The AutopilotOperator file is the bootstrap
 // Configuration file for the Operator.
 // It is stored and mounted to the operator as a Kubernetes ConfigMap.
 // The Operator will hot-reload when the configuration file changes.
 // Default name is 'autopilot-operator.yaml' and should be stored in the project root.
-type AutoPilotOperator struct {
+type AutopilotOperator struct {
 	// version of the operator
 	// used for logging and metrics
 	// default is "0.0.1"
@@ -104,21 +104,21 @@ type AutoPilotOperator struct {
 	XXX_sizecache        int32                 `json:"-"`
 }
 
-func (m *AutoPilotOperator) Reset()         { *m = AutoPilotOperator{} }
-func (m *AutoPilotOperator) String() string { return proto.CompactTextString(m) }
-func (*AutoPilotOperator) ProtoMessage()    {}
-func (*AutoPilotOperator) Descriptor() ([]byte, []int) {
+func (m *AutopilotOperator) Reset()         { *m = AutopilotOperator{} }
+func (m *AutopilotOperator) String() string { return proto.CompactTextString(m) }
+func (*AutopilotOperator) ProtoMessage()    {}
+func (*AutopilotOperator) Descriptor() ([]byte, []int) {
 	return fileDescriptor_56f975433f2c607a, []int{0}
 }
 
-func (m *AutoPilotOperator) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_AutoPilotOperator.Unmarshal(m, b)
+func (m *AutopilotOperator) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AutopilotOperator.Unmarshal(m, b)
 }
-func (m *AutoPilotOperator) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_AutoPilotOperator.Marshal(b, m, deterministic)
+func (m *AutopilotOperator) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AutopilotOperator.Marshal(b, m, deterministic)
 }
-func (m *AutoPilotOperator) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AutoPilotOperator.Merge(m, src)
+func (m *AutopilotOperator) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutopilotOperator.Merge(m, src)
 }
 func (m *AutoPilotOperator) XXX_Size() int {
 	return xxx_messageInfo_AutoPilotOperator.Size(m)

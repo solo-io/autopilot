@@ -2,8 +2,9 @@ package model
 
 import (
 	"fmt"
-	"github.com/gertd/go-pluralize"
 	"strings"
+
+	"github.com/gertd/go-pluralize"
 )
 
 var (

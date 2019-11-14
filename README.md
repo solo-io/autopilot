@@ -1,18 +1,18 @@
-# AutoPilot - The Service Mesh Automator
+# Autopilot - The Service Mesh Automator
 
 ![](docs/img/logo.png)
 
-**AutoPilot** is an SDK and toolkit for developing and deploying [service mesh operators](). 
+**Autopilot** is an SDK and toolkit for developing and deploying [service mesh operators](). 
 
-**AutoPilot** generates scaffolding, builds, and deploys Operators which run against a local or remote Kubernetes cluster installed with a Service Mesh. 
+**Autopilot** generates scaffolding, builds, and deploys Operators which run against a local or remote Kubernetes cluster installed with a Service Mesh. 
 
-**AutoPilot** generated code and libraries provide an easy way to automate configuration and monitoring of a service mesh (and other Kubernetes/infra resources) via the [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) pattern.
+**Autopilot** generated code and libraries provide an easy way to automate configuration and monitoring of a service mesh (and other Kubernetes/infra resources) via the [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) pattern.
 
 # How does it work?
 
-Developers define an `autopilot.yaml` and `autopilot-operator.yaml` which specify the skeleton and configuration of an *AutoPilot Operator*.
+Developers define an `autopilot.yaml` and `autopilot-operator.yaml` which specify the skeleton and configuration of an *Autopilot Operator*.
 
-AutoPilot makes use of these files to (re-)generate the project skeleton, build, deploy, and manage the lifecycle of the operator via the `ap` CLI.
+Autopilot makes use of these files to (re-)generate the project skeleton, build, deploy, and manage the lifecycle of the operator via the `ap` CLI.
 
 Users place their API in a generated `spec.go` file, and business logic in generated `worker.go` files. Once these files have been modified, they will not be overwritten by `ap generate`.
 
@@ -20,12 +20,12 @@ Users place their API in a generated `spec.go` file, and business logic in gener
 
 The [Operator Framework](https://github.com/operator-framework) and [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder) are open-ended SDKs that take a far less opinionated approach to building Kubernetes software.
 
-**AutoPilot** provides a more opinionated control loop via a generated *scheduler* that implements the [Controller-Runtime Reconciler interface](https://github.com/kubernetes-sigs/controller-runtime/blob/master/pkg/reconcile/reconcile.go#L80), for which users write stateless Work functions for various states of their top-level CRD. State information is stored
- on the *status* of the CRD, promoting a stateless design for AutoPilot operators.
+**Autopilot** provides a more opinionated control loop via a generated *scheduler* that implements the [Controller-Runtime Reconciler interface](https://github.com/kubernetes-sigs/controller-runtime/blob/master/pkg/reconcile/reconcile.go#L80), for which users write stateless Work functions for various states of their top-level CRD. State information is stored
+ on the *status* of the CRD, promoting a stateless design for Autopilot operators.
  
-**AutoPilot** additionally provides primitives, generated code, and helper functions for interacting with a variery of service meshes. While AutoPilot can be used to build operators that do not configure or monitor a mesh, much of *AutoPilot*'s design has been oriented to facilitate easy integration with popular service meshes.
+**Autopilot** additionally provides primitives, generated code, and helper functions for interacting with a variery of service meshes. While Autopilot can be used to build operators that do not configure or monitor a mesh, much of *Autopilot*'s design has been oriented to facilitate easy integration with popular service meshes.
 
-Finally, **AutoPilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
+Finally, **Autopilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
 
 # Requirements
 
@@ -41,15 +41,15 @@ Finally, **AutoPilot** favors simplicity over flexibility, though it is the inte
 
 ## scrap
 
-AutoPilot provides an opinionated structure 
+Autopilot provides an opinionated structure 
 for executing an operator's 
 workflow. Read more about the 
-[AutoPilot Architecture]() to learn about 
-how AutoPilot Operators schedule and execute work.
+[Autopilot Architecture]() to learn about 
+how Autopilot Operators schedule and execute work.
 
 Code generation can also be invoked from Go code using the `codegen` package. 
 
-AutoPilot is composed of 3 components:
+Autopilot is composed of 3 components:
 - `cli`
 - `codegen` package
 - `pkg` libraries
@@ -100,7 +100,7 @@ AutoPilot is composed of 3 components:
 
 
 # docs todos:
-- architecture description. how does my AutoPilot operator work?
+- architecture description. how does my Autopilot operator work?
     - user-project directory structure 
 - how does autopilot generate code? when do i regenerate? when do i redeploy?
 - autopilot libraries/pkg directory structure

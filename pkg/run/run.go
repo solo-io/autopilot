@@ -3,9 +3,10 @@ package run
 import (
 	"context"
 	"flag"
+	"os"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
 	zaputil "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/fsnotify/fsnotify"
@@ -61,7 +62,7 @@ type Options struct {
 // Function to wire the scheduler into the Manager
 type AddToManager func(params scheduler.Params) error
 
-// the main entrypoint for the AutoPilot Operator
+// the main entrypoint for the Autopilot Operator
 func Run(addToManager AddToManager) error {
 	logger := logf.Log
 
@@ -110,8 +111,8 @@ func Run(addToManager AddToManager) error {
 }
 
 // a channel that only ever sends a single config
-func singleConfig(ctx context.Context, operator *v1.AutoPilotOperator) <-chan *v1.AutoPilotOperator {
-	configs := make(chan *v1.AutoPilotOperator)
+func singleConfig(ctx context.Context, operator *v1.AutopilotOperator) <-chan *v1.AutopilotOperator {
+	configs := make(chan *v1.AutopilotOperator)
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -122,8 +123,8 @@ func singleConfig(ctx context.Context, operator *v1.AutoPilotOperator) <-chan *v
 	return configs
 }
 
-func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile string) (<-chan *v1.AutoPilotOperator, error) {
-	configs := make(chan *v1.AutoPilotOperator)
+func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile string) (<-chan *v1.AutopilotOperator, error) {
+	configs := make(chan *v1.AutopilotOperator)
 
 	// set up the config watcher
 	watcher, err := fsnotify.NewWatcher()
@@ -195,7 +196,7 @@ func watchOperatorConfigs(ctx context.Context, logger logr.Logger, operatorFile 
 
 func runOperatorOnConfigChange(
 	ctx context.Context,
-	configs <-chan *v1.AutoPilotOperator,
+	configs <-chan *v1.AutopilotOperator,
 	logger logr.Logger,
 	scheme *runtime.Scheme,
 	addTomanager AddToManager) {
@@ -243,7 +244,7 @@ func runOperatorOnConfigChange(
 // the operatorInstance launches instances of the operator on config changes
 type operatorInstance struct {
 	ctx          context.Context
-	config       *v1.AutoPilotOperator
+	config       *v1.AutopilotOperator
 	scheme       *runtime.Scheme
 	addTomanager AddToManager
 	logger       logr.Logger
@@ -296,7 +297,7 @@ func (r *operatorInstance) Start() error {
 	return mgr.Start(r.ctx.Done())
 }
 
-func operatorContext(ctx context.Context, operator *v1.AutoPilotOperator, logger logr.Logger) (context.Context, context.CancelFunc) {
+func operatorContext(ctx context.Context, operator *v1.AutopilotOperator, logger logr.Logger) (context.Context, context.CancelFunc) {
 	ctx = config.ContextWithConfig(ctx, operator)
 	ctx = utils.ContextWithLogger(ctx, logger)
 	return context.WithCancel(ctx)

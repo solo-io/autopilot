@@ -1,20 +1,20 @@
-# HelloWorld with AutoPilot
+# HelloWorld with Autopilot - AutoRouter
 
-This guide will walk you through building a minimalistic "HelloWorld" Operator with AutoPilot.
+This guide will walk you through building a minimalistic "HelloWorld" Operator with Autopilot. 
+This operator will automatically generate ingress routes for discovered deployments.
 
-The Operator will process CRDs of kind `Hello` in API group `example.io/v1`.
+The Operator will process CRDs of kind `AutoRoute` in API group `example.io/v1`.
 
-The `Hello` CRD will have three phases: `Initializing`, `Replying`, `Resting`.
+The `AutoRoute` CRD will have two phases: `Updating`, and `Ready`.
 
-In the `Initializing` phase, the Operator will create the desired configmaps. The next phase is `Replying`.
+In the `Updating` phase, the `AutoRoute` ensure Istio provides ingress routes to any deployments matching the `spec.selector` on the `AutoRoute`. 
+ The `AutoRoute` will ensure that Istio has an ingress route for each selected deployment. Once the routes are created, the 
+ state will change to the `Ready` phase to mark that the `AutoRoute` is ready to serve traffic.
 
-In the `Replying` phase, the Operator will set the target confgimaps' data to `hello: world`. The next phase is `Resting`.
+In the `Ready` phase, the Operator watch for new deployments. If the list of deployments falls out of sync with the configured routes,
+the `AutoRoute` will go back to the `Updating` phase.
 
-In the `Resting` phase, the Operator will monitor the configmaps. If they get out-of-sync, 
-the Operator will send us back to the `Initializing` and `Replying` stages. Otherwise, the `Restign` phase will be maintained.
-
-The `Hello` CRD spec specifies the name of one or more kube ConfigMaps. The `Hello` operator will ensure 
-these ConfigMaps exist and contain the data `hello: world`.
+The purpose of this application is to demonstrate basic functionality in Autopilot 
 
 # Tutorial
 
@@ -37,15 +37,33 @@ Run the following to create the operator directory in your workspace. Can be ins
 ap init hello --kind Hello --group examples.io --version v1
 ```
 
+> Note: if running outside your $GOPATH, you will need to add the flag
+> `--module hello.io` 
+
 This should produce the output:
 
 ```
 INFO[0000] Creating Project Config: kind:"Hello" apiVersion:"examples.io/v1" operatorName:"hello-operator" phases:<name:"Initializing" description:"Hello has begun initializing" initial:true outputs:"virtualservices" > phases:<name:"Processing" description:"Hello has begun processing" inputs:"metrics" outputs:"virtualservices" > phases:<name:"Finished" description:"Hello has finished" final:true >
+go: creating new go.mod: module hello.io
 ```
 
-If we run `ls`
+If you run `tree` on the newly created `hello` directory, you'll see the following files were created:
+
+```
+.
+└── hello
+    ├── autopilot-operator.yaml
+    ├── autopilot.yaml
+    └── go.mod
+``` 
+
+* `autopilot.yaml`: the project configuration file. Use this to generate the operator code, build, and deployment files.
+* `autopilot-operator.yaml`: the runtime configuration for the Operator.
+* `go.mod` - a generated `go.mod` file with some `replace` statements necessary to import Autopilot and its dependencies.
+
 
 ## Update the `autopilot.yaml` file
+
 
 
 ## Generate the code

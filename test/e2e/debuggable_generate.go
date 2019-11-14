@@ -3,8 +3,9 @@
 package main
 
 import (
-	"github.com/solo-io/autopilot/codegen"
 	"log"
+
+	"github.com/solo-io/autopilot/codegen"
 )
 
 func main() {

@@ -2,9 +2,10 @@ package model
 
 import (
 	"fmt"
-	"github.com/gobuffalo/packr"
 	"path/filepath"
 	"strings"
+
+	"github.com/gobuffalo/packr"
 
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
