@@ -37,6 +37,14 @@ func RegisterModel(param Parameter) Parameter {
 }
 
 var (
+	Events = RegisterModel(Parameter{
+		LowerName:    "events",
+		PluralName:   "Events",
+		SingleName:   "Event",
+		ImportPrefix: "corev1",
+		Package:      "k8s.io/api/core/v1",
+		ApiGroup:     "",
+	})
 	ConfigMaps = RegisterModel(Parameter{
 		LowerName:    "configmaps",
 		PluralName:   "ConfigMaps",

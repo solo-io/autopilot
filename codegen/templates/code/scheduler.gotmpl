@@ -19,13 +19,17 @@ import (
 
     "github.com/solo-io/autopilot/pkg/config"
     "github.com/solo-io/autopilot/pkg/ezkube"
+{{- if needs_metrics }}
     "github.com/solo-io/autopilot/pkg/metrics"
+{{- end}}
     "github.com/solo-io/autopilot/pkg/scheduler"
     "github.com/solo-io/autopilot/pkg/utils"
 
     {{$.Version}} "{{$.TypesImportPath}}"
 
+{{- if needs_metrics }}
     {{$.KindLower}}metrics "{{$.MetricsImportPath}}"
+{{- end}}
 
 {{- if $.EnableFinalizer }}
     finalizer "{{.FinalizerImportPath}}"
@@ -87,32 +91,39 @@ type Scheduler struct {
     ctx context.Context
     mgr manager.Manager
     namespace string
-    logger logr.Logger
+    logger *zap.Logger
+{{- if needs_metrics }}
     metrics {{$.KindLower}}metrics.{{$.Kind}}Metrics
+{{- end}}
     workInterval time.Duration
 }
 
 func NewScheduler(params scheduler.Params) (*Scheduler, error) {
 	cfg := config.ConfigFromContext(params.Ctx)
-    metricsServer := metrics.GetMetricsServerAddr(cfg.MeshProvider, cfg.ControlPlaneNs)
-    metricsBase, err := metrics.NewPrometheusClient(metricsServer)
-    if err != nil {
-    	return nil, err
-    }
-    metricsClient := {{.KindLower}}metrics.NewMetricsClient(metricsBase)
 
     workInterval, err := ptypes.Duration(cfg.WorkInterval)
     if err != nil {
     	return nil, err
     }
 
+{{- if needs_metrics }}
+    metricsServer := metrics.GetMetricsServerAddr(cfg.MeshProvider, cfg.ControlPlaneNs)
+    metricsBase, err := metrics.NewPrometheusClient(metricsServer)
+    if err != nil {
+    	return nil, err
+    }
+    metricsClient := {{.KindLower}}metrics.NewMetricsClient(metricsBase)
+{{- end}}
+
     return &Scheduler{
     	ctx:       params.Ctx,
     	mgr:       params.Manager,
         namespace: params.Namespace,
         logger:    params.Logger,
-        metrics:   metricsClient,
     	workInterval: workInterval,
+{{- if needs_metrics }}
+        metrics:   metricsClient,
+{{- end}}
     }, nil
 }
 

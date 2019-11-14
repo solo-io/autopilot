@@ -55,6 +55,7 @@ func (p permission) verbs() []string {
 	}
 	if p.write {
 		// writing currently requires reading as we use the EzKube.Ensure method
+		// delete is added here as well as controllers may need to remove resources they write
 		verbs = []string{"*"}
 	}
 	return verbs
@@ -95,7 +96,10 @@ func rules(data *model.ProjectData) []v1.PolicyRule {
 	// these permissions required by controller-runtime
 	setRead(model.ReplicaSets)
 	setRead(model.Pods)
+
+	// required by leader election
 	setWrite(model.ConfigMaps)
+	setWrite(model.Events)
 
 	var rules []v1.PolicyRule
 	for _, param := range requiredPermissions {
@@ -121,10 +125,15 @@ func rules(data *model.ProjectData) []v1.PolicyRule {
 	})
 
 	rules = append(rules, v1.PolicyRule{
-		Verbs:     []string{"*"},
+		Verbs:     []string{"get", "list", "watch"},
 		APIGroups: []string{data.Group},
 		Resources: []string{
 			data.KindLowerPlural,
+		},
+	}, v1.PolicyRule{
+		Verbs:     []string{"update"},
+		APIGroups: []string{data.Group},
+		Resources: []string{
 			data.KindLowerPlural + "/status",
 		},
 	})
