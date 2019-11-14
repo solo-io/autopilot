@@ -26,9 +26,10 @@ Currently, binary releases of the Autopilot CLi `ap` are not published. To build
 git clone https://github.com/solo-io/autopilot
 cd autopilot
 go get ./...
+make ap
 
 ```
- 
+
 > note: tested with `go` 1.13
 
 

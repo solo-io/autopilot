@@ -37,10 +37,8 @@ steps:
       - 'GOPATH=/workspace/gopath'
       - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
       - 'KUBECONFIG=/workspace/kube-e2e'
-
-    dir: './gopath/src/github.com/solo-io/gloo'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-chart'
+    id: 'release-assets'
 
 
 secrets:
