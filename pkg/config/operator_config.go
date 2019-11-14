@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/pkg/defaults"
@@ -28,7 +28,9 @@ var DefaultConfig = v1.AutoPilotOperator{
 
 	EnableLeaderElection: true,
 
-	WatchNamespace: os.Getenv(k8sutil.WatchNamespaceEnvVar),
+	WatchNamespace: os.Getenv(defaults.WatchNamespaceEnvVar),
+
+	LogLevel: &wrappers.UInt32Value{Value: 1},
 }
 
 // GetConfig attempts to read the autopilot-operator.yaml config file

@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/autopilot/pkg/defaults"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,7 @@ func deployment(data *model.ProjectData, clusterScoped bool) *appsv1.Deployment 
 	labels := map[string]string{"name": data.OperatorName}
 
 	watchNamespaceEnv := v1.EnvVar{
-		Name: k8sutil.WatchNamespaceEnvVar,
+		Name: defaults.WatchNamespaceEnvVar,
 		ValueFrom: &v1.EnvVarSource{
 			FieldRef: &v1.ObjectFieldSelector{
 				FieldPath: "metadata.namespace",
@@ -62,7 +62,7 @@ func deployment(data *model.ProjectData, clusterScoped bool) *appsv1.Deployment 
 						Env: []v1.EnvVar{
 							watchNamespaceEnv,
 							{
-								Name: k8sutil.PodNameEnvVar,
+								Name: defaults.PodNameEnvVar,
 								ValueFrom: &v1.EnvVarSource{
 									FieldRef: &v1.ObjectFieldSelector{
 										FieldPath: "metadata.name",
@@ -70,7 +70,7 @@ func deployment(data *model.ProjectData, clusterScoped bool) *appsv1.Deployment 
 								},
 							},
 							{
-								Name:  k8sutil.OperatorNameEnvVar,
+								Name:  defaults.OperatorNameEnvVar,
 								Value: data.OperatorName,
 							},
 						},

@@ -5,6 +5,7 @@ syntax = "proto3";
 package autopilot;
 
 import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/solo-io/autopilot/api/v1";
 
@@ -48,6 +49,17 @@ message AutoPilotOperator {
     // defaults to the watchNamespace
     string leaderElectionNamespace = 8;
 
+    // Log level for the operator's logger
+    // values:
+    // 0 - Debug
+    // 1 - Info
+    // 2 - Warn
+    // 3 - Error
+    // 4 - DPanic
+    // 5 - Panic
+    // 6 - Fatal
+    // Defaults to Info
+    google.protobuf.UInt32Value logLevel = 9;
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific
