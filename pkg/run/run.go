@@ -3,12 +3,14 @@ package run
 import (
 	"context"
 	"flag"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"os"
+	zaputil "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
 	"github.com/gogo/protobuf/proto"
-	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "github.com/solo-io/autopilot/api/v1"
@@ -38,6 +40,8 @@ var (
 		Ctx:          context.Background(),
 		OperatorFile: defaults.OperatorFile,
 	}
+
+	logLevel = zap.NewAtomicLevel()
 )
 
 // init functions should register their types with this scheme
@@ -72,7 +76,6 @@ func Run(addToManager AddToManager) error {
 
 	// Add the zap logger flag set to the CLI. The flag set must
 	// be added before calling pflag.Parse().
-	pflag.CommandLine.AddFlagSet(zap.FlagSet())
 
 	// Add flags registered by imported packages (e.g. glog and
 	// controller-runtime)
@@ -80,15 +83,10 @@ func Run(addToManager AddToManager) error {
 
 	pflag.Parse()
 
-	// Use a zap logr.Logger implementation. If none of the zap
-	// flags are configured (or if the zap flag set is not being
-	// used), this defaults to a production zap logger.
-	//
-	// The logger instantiated here can be changed to any logger
-	// implementing the logr.Logger interface. This logger will
-	// be propagated through the whole operator, generating
-	// uniform and structured logs.
-	logf.SetLogger(zap.Logger())
+	// set zap as the global logger
+	logf.SetLogger(zaputil.New(func(options *zaputil.Options) {
+		options.Level = &logLevel
+	}))
 
 	// cancel the root context on Signal
 	ctx := contextWithStop(cfg.Ctx, ctrl.SetupSignalHandler())
@@ -267,6 +265,12 @@ func (r *operatorInstance) Start() error {
 			leaderElectionNamespace = leaderNs
 		}
 	}
+
+	level := r.config.GetLogLevel().GetValue()
+	if level == 0 {
+		level = 1
+	}
+	logLevel.SetLevel(zapcore.Level(level))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  r.scheme,

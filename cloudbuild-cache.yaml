@@ -1,12 +1,12 @@
 steps:
-    - name: gcr.io/cloud-builders/gsutil
-      entrypoint: 'bash'
-      args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/autopilot/autopilot-mod.tar.gz | tar -xzf -']
-      env:
-      volumes: &vol
-        - name: 'gopath'
-          path: '/go/pkg'
-      id: 'untar-mod-cache'
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: 'bash'
+    args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/autopilot/autopilot-mod.tar.gz | tar -xzf -']
+    env:
+    volumes: &vol
+      - name: 'gopath'
+        path: '/go/pkg'
+    id: 'untar-mod-cache'
 
   - name: 'golang:1.12'
     args: ['go', 'mod', 'download']

@@ -170,6 +170,7 @@ Default name is 'autopilot-operator.yaml' and should be stored in the project ro
 | enableLeaderElection | [bool](#bool) |  | Enable leader election. This will prevent more than one operator from running at a time defaults to true |
 | watchNamespace | [string](#string) |  | if non-empty, watchNamespace will restrict the Operator to watching resources in a single namespace if empty (default), the Operator must have Cluster-scope RBAC permissions (ClusterRole/Binding) can also be set via the WATCH_NAMESPACE environment variable |
 | leaderElectionNamespace | [string](#string) |  | The namespace to use for Leader Election (requires read/write ConfigMap permissions) defaults to the watchNamespace |
+| logLevel | [google.protobuf.UInt32Value](#google.protobuf.UInt32Value) |  | Log level for the operator's logger values: 0 - Debug 1 - Info 2 - Warn 3 - Error 4 - DPanic 5 - Panic 6 - Fatal Defaults to Info |
 
 
 
