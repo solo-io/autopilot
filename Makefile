@@ -37,26 +37,26 @@ generated-code:
 
 
 # CLI
-CLI_DIR=cli/
+CLI_DIR=cli
 
 .PHONY: ap
-ap: $(OUTPUT)/ap
-$(OUTPUT)/ap: $(SOURCES)
+ap: $(OUTDIR)/ap
+$(OUTDIR)/ap: $(SOURCES)
 	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(CLI_DIR)/cmd/main.go
 
 .PHONY: ap-linux-amd64
-ap-linux-amd64: $(OUTPUT)/ap-linux-amd64
-$(OUTPUT)/ap-linux-amd64: $(SOURCES)
+ap-linux-amd64: $(OUTDIR)/ap-linux-amd64
+$(OUTDIR)/ap-linux-amd64: $(SOURCES)
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(CLI_DIR)/cmd/main.go
 
 .PHONY: ap-darwin-amd64
-ap-darwin-amd64: $(OUTPUT)/ap-darwin-amd64
-$(OUTPUT)/ap-darwin-amd64: $(SOURCES)
+ap-darwin-amd64: $(OUTDIR)/ap-darwin-amd64
+$(OUTDIR)/ap-darwin-amd64: $(SOURCES)
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(CLI_DIR)/cmd/main.go
 
 .PHONY: ap-windows-amd64
-ap-windows-amd64: $(OUTPUT)/ap-windows-amd64.exe
-$(OUTPUT)/ap-windows-amd64.exe: $(SOURCES)
+ap-windows-amd64: $(OUTDIR)/ap-windows-amd64.exe
+$(OUTDIR)/ap-windows-amd64.exe: $(SOURCES)
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ $(CLI_DIR)/cmd/main.go
 
 
@@ -64,7 +64,7 @@ $(OUTPUT)/ap-windows-amd64.exe: $(SOURCES)
 build-cli: ap-linux-amd64 ap-darwin-amd64 ap-windows-amd64
 
 .PHONY: install-ap
-	go build -o ${GOPATH}/bin/$@ cli/cmd/main.go
+	go build -o ${GOPATH}/bin/$@ $(CLI_DIR)/cmd/main.go
 
 
 #----------------------------------------------------------------------------------
