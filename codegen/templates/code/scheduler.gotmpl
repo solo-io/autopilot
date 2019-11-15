@@ -54,8 +54,7 @@ func AddToManager(params scheduler.Params) error {
     	return err
     }
     // Create a new controller
-    c, err := controlle
-    r.New("{{.KindLowerCamel}}-controller", params.Manager, controller.Options{Reconciler: scheduler})
+    c, err := controller.New("{{.KindLowerCamel}}-controller", params.Manager, controller.Options{Reconciler: scheduler})
     if err != nil {
         return err
     }
