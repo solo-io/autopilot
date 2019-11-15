@@ -1,17 +1,29 @@
-# HelloWorld with Autopilot - AutoRouter
+# Getting Started with Autopilot Part 1 - Initializing the Operator
 
-This guide will walk you through building a minimalistic "HelloWorld" Operator with Autopilot. 
-This operator will automatically generate ingress routes for discovered deployments.
+This is the first part in a series of guides that will walk you through building a minimalistic "AutoRouter" Operator with Autopilot. 
 
-The Operator will process CRDs of kind `AutoRoute` in API group `example.io/v1`.
+This operator will automatically provide ingress access for selected Kubernetes deployments.
 
-The `AutoRoute` CRD will have three phases: `Initializing`, `Syncing`, and `Ready`.
+Part 1 of the tutorial introduces the operator and the steps 
+to initialize the operator and deploy it to Kubernetes.
+
+In part 2, we'll implement business logic for the operator in the form of "workers" that process the `AutoRoute` CRD.
+
+Finally, in part 3 we'll redeploy the operator with our changes. Then we create an AutoRoute and a deployment, and test the Operator by sending ingress traffic to the deployed container through Istio.
+
+To see the completed code for this tutorial, check out https://github.com/solo-io/autorouter
+
+## About the `AutoRoute` Example Operator
+
+The Operator we will build processes CRDs of kind `AutoRoute` in API group `example.io/v1`. The `AutoRoute` specifies a `selector` which routes to deployments based on their labels.
+
+The `AutoRoute` Operator will have three phases: `Initializing`, `Syncing`, and `Ready`.
 
 In the `Initializing` phase, the `AutoRoute` will be marked as `Syncing` to confirm processing has begun.
 
 In the `Syncing` phase, the `AutoRoute` ensure Istio provides ingress routes to any deployments matching the `spec.selector` on the `AutoRoute`. 
- The `AutoRoute` will ensure that Istio has an ingress route for each selected deployment. Once the routes are created, the 
- state will change to the `Ready` phase to mark that the `AutoRoute` is ready to serve traffic.
+
+The `AutoRoute` will ensure that Istio has an ingress route for each selected deployment. Once the routes are created, the state will change to the `Ready` phase to mark that the `AutoRoute` is ready to serve traffic.
 
 In the `Ready` phase, the Operator watch for new deployments. If the list of deployments falls out of sync with the configured routes,
 the `AutoRoute` will go back to the `Syncing` phase.
@@ -37,7 +49,7 @@ curl -sL https://run.solo.io/autopilot/install | sh
 export PATH=$HOME/.autopilot/bin:$PATH
 ```
 
-## Initialize the `autorouter` operator
+## Initialize the `autorouter` project
 
 Run the following to create the operator directory in your workspace. Can be inside or outside `GOPATH` (uses Go modules):
 
@@ -173,7 +185,7 @@ INFO[0001] Generating Deepcopy code for API: &args.GeneratorArgs{InputDirs:[]str
 INFO[0005] Finished generating examples.io/v1.AutoRoute
 ```
 
-## Test the deployment
+## Build and Deploy the Operator
 
 Our Operator should already be ready to build and deploy to Kubernetes! Let's try it out!
 
@@ -285,12 +297,72 @@ We can tail logs from the pod as well (`Ctrl^C` to exit):
 ap logs -f
 ```
 
+```json
+{"level":"info","ts":1573768902.359966,"msg":"Starting Operator with config","config":"version:\"0.0.1\" controlPlaneNs:\"istio-system\" workInterval:<seconds:5 > metricsAddr:\":9091\" enableLeaderElection:true logLevel:<value:1 > "}
+{"level":"info","ts":1573768902.3601103,"msg":"Warning: Flushing Operator Metrics!"}
+{"level":"info","ts":1573768903.0675852,"logger":"controller-runtime.metrics","msg":"metrics server is starting to listen","addr":":9091"}
+{"level":"info","ts":1573768903.0686636,"msg":"Registering watch for primary resource AutoRoute"}
+{"level":"info","ts":1573768903.0687194,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"autoRoute-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1573768903.0688958,"msg":"Registering watch for output resource Services"}
+{"level":"info","ts":1573768903.0689237,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"autoRoute-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1573768903.0690174,"msg":"Registering watch for output resource VirtualServices"}
+{"level":"info","ts":1573768903.0690434,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"autoRoute-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1573768903.069132,"msg":"Registering watch for output resource Gateways"}
+{"level":"info","ts":1573768903.0691571,"logger":"controller-runtime.controller","msg":"Starting EventSource","controller":"autoRoute-controller","source":"kind source: /, Kind="}
+{"level":"info","ts":1573768903.0693312,"logger":"controller-runtime.manager","msg":"starting metrics server","path":"/metrics"}
+^C
+```
 
-## Update the API Spec
-## Re-Generate the code
-## Write an example CRD
-## Update the Initializing Worker
-## Update the Replying Worker
-## Update the Resting Worker
-## Redeploy
-## Try it out!
+# Test the Operator with an AutoRoute Resource
+
+Cool! We've already gotten our first Service Mesh Operator built and deployed! But it's not doing anything yet, right? 
+
+Let's see what happens when we create an `AutoRoute` resource (an example of which Autopilot conveniently generates in the `deploy/` directory):
+
+```bash
+kubectl create ns example
+kubectl apply -n example -f deploy/autoroute_example.yaml
+```
+
+```bash
+autoroute.examples.io/example created
+```
+
+Now we'll notice the pod is crashing:
+
+```bash
+kubectl get pod -n autoroute-operator
+```
+```bash
+autoroute-operator-ccbd545c6-sj6tx   0/1     CrashLoopBackOff   2          4m1s
+```
+```bash
+ap logs
+```
+```bash
+...
+E1114 22:06:10.089481       1 runtime.go:67] Observed a panic: implement me!
+/Users/ilackarms/go/pkg/mod/k8s.io/apimachinery@v0.0.0-20190404173353-6a84e37a896d/pkg/util/runtime/runtime.go:76
+/Users/ilackarms/go/pkg/mod/k8s.io/apimachinery@v0.0.0-20190404173353-6a84e37a896d/pkg/util/runtime/runtime.go:65
+/Users/ilackarms/go/pkg/mod/k8s.io/apimachinery@v0.0.0-20190404173353-6a84e37a896d/pkg/util/runtime/runtime.go:51
+/usr/local/Cellar/go/1.13.3/libexec/src/runtime/panic.go:679
+/Users/ilackarms/workspace/goprojects/autorouter/pkg/workers/initializing/worker.go:20
+/Users/ilackarms/workspace/goprojects/autorouter/pkg/scheduler/scheduler.go:145
+/Users/ilackarms/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.3.0/pkg/internal/controller/controller.go:216
+/Users/ilackarms/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.3.0/pkg/internal/controller/controller.go:192
+/Users/ilackarms/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.3.0/pkg/internal/controller/controller.go:171
+/Users/ilackarms/go/pkg/mod/k8s.io/apimachinery@v0.0.0-20190404173353-6a84e37a896d/pkg/util/wait/wait.go:152
+/Users/ilackarms/go/pkg/mod/k8s.io/apimachinery@v0.0.0-20190404173353-6a84e37a896d/pkg/util/wait/wait.go:153
+/Users/ilackarms/go/pkg/mod/k8s.io/apimachinery@v0.0.0-20190404173353-6a84e37a896d/pkg/util/wait/wait.go:88
+/usr/local/Cellar/go/1.13.3/libexec/src/runtime/asm_amd64.s:1357
+panic: implement me! [recovered]
+	panic: implement me!
+
+```
+
+We haven't implemented anything yet, and our Operator is letting us know by panicking. Let's go ahead and start implementing our 
+operator!
+
+Continue to [part 2](getting_started_2.md) to start implementing 
+the business logic for our service mesh operator.
+

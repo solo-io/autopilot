@@ -1,6 +1,6 @@
 # Autopilot - The Service Mesh Automator
 
-![](docs/img/logo.png)
+![](docs/content/img/logo.png)
 
 **Autopilot** is an SDK and toolkit for developing and deploying [service mesh operators](). 
 

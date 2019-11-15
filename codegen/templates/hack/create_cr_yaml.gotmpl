@@ -19,7 +19,6 @@ import (
 // TODO: modify this object and re-run the script in order to produce the output YAML file
 var Example{{$.Kind}} = &{{$.Version}}.{{$.Kind}}{
 	ObjectMeta: metav1.ObjectMeta{
-		Namespace: "default",
 		Name:      "example",
 	},
 	TypeMeta: metav1.TypeMeta{
@@ -32,7 +31,7 @@ var Example{{$.Kind}} = &{{$.Version}}.{{$.Kind}}{
 }
 
 // modify this string to change the output file path
-var OutputFile = filepath.Join(util.MustGetThisDir(), "..", "deploy", "example_{{ lower $.Kind }}.yaml")
+var OutputFile = filepath.Join(util.MustGetThisDir(), "..", "deploy", "{{ lower $.Kind }}_example.yaml")
 
 func main() {
 	yam, err := yaml.Marshal(Example{{$.Kind}})
