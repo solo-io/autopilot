@@ -31,7 +31,13 @@ GCR_REPO_PREFIX := gcr.io/$(GCLOUD_PROJECT_ID)
 # Build
 #----------------------------------------------------------------------------------
 
+# Build dependencies
+.PHONY: generate-deps
+generate-deps:
+	go get -u github.com/gobuffalo/packr/packr
+
 # Generated Code & Docs
+.PHONY: generated-code
 generated-code:
 	go generate ./...
 
