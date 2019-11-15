@@ -5,7 +5,7 @@ This directory houses the main test project / example for Autopilot, which is a 
 It provides a minimalistic example of how Autopilot can be used to orchestrate a canary workflow. 
 
 This project is meant to serve only as both an example (for users developing their own Operators) as well as an end-to-end
-test for the project. For a fully-featured Service Mesh Canary solution, we recommend you check out []
+test for the project. For a fully-featured Service Mesh Canary solution, we recommend you check out [Flagger](https://flagger.app/).
 
 This project can be generated, deployed, and tested, by running `run_test_project.sh`. Note that this will blow away any local
 changes to the `canary` subdirectory, so make sure you've backed up your changes before running.

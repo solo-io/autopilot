@@ -38,110 +38,45 @@ The [Operator Framework](https://github.com/operator-framework) and [kubebuilder
 
 Finally, **Autopilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
 
+## Getting Started
+
+The [Getting Started Tutorial](docs/content/tutorial_code/getting_started_1.md) provides the best entrypoint to begin understanding and using 
+Autopilot.
+
 ## Next Steps
 - Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
 - Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
-- Check out the docs: [https://gloo.solo.io](https://gloo.solo.io)
-- Check out the code and contribute: [Contribution Guide](CONTRIBUTING.md)
+- Check out the docs: [https://autopilot.solo.io](https://autopilot.solo.io)
 - Contribute to the [Docs](https://github.com/solo-io/solo-docs)
 
 ### Thanks
 
-**Gloo** would not be possible without the valuable open-source work of projects in the community. We would like to extend a special thank-you to [Envoy](https://www.envoyproxy.io).
+**Autopilot** would not be possible without the valuable open-source work of projects in the community. 
 
+Autopilot has leveraged inspiration and libraries from the following Kubernetes projects:
 
-
-
-
-# Requirements
-
-- in $GOPATH
-    - k8s.io/gengo/boilerplate/boilerplate.go.txt
-
-# Hello World
-
-
+- [Flagger](https://flagger.app/) - a robust, feature-rich service mesh operator which deploys canaries. Flagger has helped pioneer the service mesh operator space.
+- [Controller Runtime](https://github.com/kubernetes-sigs/controller-runtime) - Excellent libraries for building k8s controllers. Many of 
+- [Operator Framework](https://github.com/operator-framework) - An SDK for building generalized k8s operators. The source of much inspiration for Autopilot.
 
 # Roadmap
 - Support for managing multiple (remote) clusters.
-
-## scrap
-
-Autopilot provides an opinionated structure 
-for executing an operator's 
-workflow. Read more about the 
-[Autopilot Architecture]() to learn about 
-how Autopilot Operators schedule and execute work.
-
-Code generation can also be invoked from Go code using the `codegen` package. 
-
-Autopilot is composed of 3 components:
-- `cli`
-- `codegen` package
-- `pkg` libraries
-
-
-
-# todo
-
-# cleanup
-- example
-- docs 
-- improve docs generation template
-- bake templates into cli
-- clean up CLI messages
-
-- idempotent generation of rbac yaml (rule ordering not idempotent)
-
-## test
-- e2e metrics test with istio
-
-## features
-- git ops
-- define custom metrics queries in autopilot.yaml
+- GitOps integrations ootb
+- Support opaque user config added in autopilot-operator.yaml
 - validate method for project config
     - check operatorName is kube compliant
     - apiVerson, kind, phases are correct
     - customParameters
     - final phase with i/o
-- add user config to configmap with config settings
-- curl script to download
-- builders
-- ap undeploy
-- label everything for easy deletion/listing
-- expose garbage collection func to workers
+- Builder funcs for service mesh types (VirtualServices, Gateways, etc.)
+- ap undeploy (undeploy / delete all deployed resources)
+    - includes label all resources for easy list/delete
+- Expose garbage collection func to workers
     - rollback the phase when something ensure fails? (option in config)
-- multiple crds
-
-## punt
-- schema generation
+- Support Operators with multiple top-level crds
+- Language-agnostic gRPC Worker interface
+- OpenAPI schema generation
 - interactive cli
 - automatic metrics for worker syncs
 - automatic traces for worker syncs
 - option to make workers persistent
-
-
-
-
-
-
-# docs todos:
-- architecture description. how does my Autopilot operator work?
-    - user-project directory structure 
-- how does autopilot generate code? when do i regenerate? when do i redeploy?
-- autopilot libraries/pkg directory structure
-- e2e hello world guide
-    - tour-through-your-hello-world package-by-package
-- tutorial through e2e
-
-
-
-# done 
-* works across namespaces..
-
-
-# code guide:
-
-explain where all the existing things are - the templated queries and clients
-
-folder -> what does it do
