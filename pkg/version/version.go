@@ -1,4 +1,6 @@
 package version
 
-// This will be set by the linker during build
-var Version = "dev"
+var DevVersion = "dev"
+
+// This will be set by the linker on release builds
+var Version = DevVersion

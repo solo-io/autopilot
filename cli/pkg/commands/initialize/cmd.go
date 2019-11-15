@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	autopilotversion "github.com/solo-io/autopilot/pkg/version"
+
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 	"github.com/solo-io/autopilot/codegen/model"
@@ -107,6 +109,9 @@ func initAutopilotProject(dir string) error {
 		if err := initGoMod(dir); err != nil {
 			return err
 		}
+		if err := initialGoGet(dir); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -137,6 +142,24 @@ func initGoMod(dir string) error {
 	}
 	b = append(b, []byte(goModFooter)...)
 	return ioutil.WriteFile(goMod, b, 0644)
+}
+
+func initialGoGet(dir string) error {
+	versionSuffix := ""
+	if autopilotversion.Version != autopilotversion.DevVersion {
+		versionSuffix = "@" + autopilotversion.Version
+	}
+	cmd := exec.Command("go", "get", "-v", "github.com/solo-io/autopilot"+versionSuffix)
+	if module != "" {
+		cmd.Args = append(cmd.Args, module)
+	}
+	cmd.Env = append(cmd.Env, os.Environ()...)
+	cmd.Env = append(cmd.Env, "GO111MODULE=on")
+	cmd.Dir = dir
+	if err := util.ExecCmd(cmd); err != nil {
+		return err
+	}
+	return nil
 }
 
 const goModFooter = `
