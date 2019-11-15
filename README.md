@@ -1,12 +1,23 @@
-# Autopilot - The Service Mesh Automator
 
-![](docs/content/img/logo.png)
+<h1 align="center">
+    <img src="https://github.com/solo-io/autopilot/blob/master/docs/content/img/logo.png?raw=true" alt="Autopilot" width="260" height="242">
+  <br>
+  The Service Mesh SDK
+</h1>
 
-**Autopilot** is an SDK and toolkit for developing and deploying [service mesh operators](). 
+**Autopilot** is an SDK and toolkit for developing and deploying [service mesh operators](docs/content/concepts/service_mesh_operators.md). 
 
 **Autopilot** generates scaffolding, builds, and deploys Operators which run against a local or remote Kubernetes cluster installed with a Service Mesh. 
 
 **Autopilot** generated code and libraries provide an easy way to automate configuration and monitoring of a service mesh (and other Kubernetes/infra resources) via the [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) pattern.
+
+[**Installation**](https://autopilot.solo.io/installation/) &nbsp; |
+&nbsp; [**Documentation**](https://autopilot.solo.io) &nbsp; |
+&nbsp; [**Blog**](TODO LINK) &nbsp; |
+&nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
+&nbsp; [**Twitter**](https://twitter.com/soloio_inc)
+
+<BR><center><img src=""https://github.com/solo-io/autopilot/blob/master/docs/content/img/architecture.png?raw=true" alt="Autopilot Architecture" width="906"></center>
 
 # How does it work?
 
@@ -26,6 +37,21 @@ The [Operator Framework](https://github.com/operator-framework) and [kubebuilder
 **Autopilot** additionally provides primitives, generated code, and helper functions for interacting with a variery of service meshes. While Autopilot can be used to build operators that do not configure or monitor a mesh, much of *Autopilot*'s design has been oriented to facilitate easy integration with popular service meshes.
 
 Finally, **Autopilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
+
+## Next Steps
+- Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
+- Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
+- Check out the docs: [https://gloo.solo.io](https://gloo.solo.io)
+- Check out the code and contribute: [Contribution Guide](CONTRIBUTING.md)
+- Contribute to the [Docs](https://github.com/solo-io/solo-docs)
+
+### Thanks
+
+**Gloo** would not be possible without the valuable open-source work of projects in the community. We would like to extend a special thank-you to [Envoy](https://www.envoyproxy.io).
+
+
+
+
 
 # Requirements
 
