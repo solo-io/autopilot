@@ -42,7 +42,7 @@ import (
 {{- end}}
 
 {{- range $phase := .Phases}}
-    {{- if or (has_inputs $phase) (has_outputs $phase) }}
+    {{- if not $phase.Final }}
     {{worker_import_prefix $phase}} "{{worker_package $phase}}"
     {{- end}}
 {{- end}}
