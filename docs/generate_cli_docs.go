@@ -5,8 +5,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/solo-io/go-utils/clidoc"
+
 	"github.com/solo-io/autopilot/cli/pkg/commands"
-	"github.com/spf13/cobra/doc"
 )
 
 //go:generate go run generate_cli_docs.go
@@ -19,14 +20,14 @@ func main() {
 }
 
 func run() error {
-	if err := os.RemoveAll("cli"); err != nil {
+	if err := os.RemoveAll("content/cli"); err != nil {
 		return err
 	}
-	if err := os.MkdirAll("cli", 0777); err != nil {
+	if err := os.MkdirAll("content/cli", 0777); err != nil {
 		return err
 	}
 	cli := commands.AutopilotCli()
-	if err := doc.GenMarkdownTree(cli, "cli"); err != nil {
+	if err := clidoc.GenerateCliDocsWithConfig(cli, clidoc.Config{OutputDir: "content/cli"}); err != nil {
 		return err
 	}
 	return nil
