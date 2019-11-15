@@ -1,0 +1,6 @@
+controlPlaneNs: istio-system
+enableLeaderElection: true
+logLevel: 1
+metricsAddr: :9091
+version: 0.0.1
+workInterval: 5s
