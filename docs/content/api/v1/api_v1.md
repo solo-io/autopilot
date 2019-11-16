@@ -1,5 +1,10 @@
-# Protocol Documentation
+---
+title: "Autopilot Config Files"
+weight: 5
+---
+
 <a name="top"></a>
+
 
 ## Table of Contents
 
@@ -21,7 +26,6 @@
   
   
 
-- [Scalar Value Types](#scalar-value-types)
 
 
 
@@ -50,12 +54,12 @@ default location is 'autopilot.yaml'
 | kind | [string](#string) |  | the name (kubernetes Kind) of the top-level CRD for the operator Specified via the `ap init <Kind>` command |
 | apiVersion | [string](#string) |  | the ApiVersion of the top-level CRD for the operator |
 | operatorName | [string](#string) |  | the name of the Operator this is used to name and label loggers, k8s resources, and metrics exposed by the operator. Should be [valid Kube resource names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names). |
-| phases | [Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
+| phases | [][Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
 
 Each phase specifies a unique name and its own set of inputs and outputs. |
 | enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
-| customParameters | [Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend Autopilot's builtin types |
-| queries | [MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend Autopilot's metrics queries |
+| customParameters | [][Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend Autopilot's builtin types |
+| queries | [][MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend Autopilot's metrics queries |
 
 
 
@@ -65,14 +69,59 @@ Each phase specifies a unique name and its own set of inputs and outputs. |
 <a name="autopilot.MetricsQuery"></a>
 
 ### MetricsQuery
+MetricsQueries extend the query options available to workers.
+MetricsQueries are accessible to workers via generated client code
+that lives in <project root>/pkg/metrics
 
+
+The following MetricsQuery:
+
+```
+name: success-rate
+parameters:
+- Name
+- Namespace
+- Interval
+queryTemplate: |
+    sum(
+        rate(
+            envoy_cluster_upstream_rq{
+                kubernetes_namespace="{{ .Namespace }}",
+                kubernetes_pod_name=~"{{ .Name }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)",
+                envoy_response_code!~"5.*"
+            }[{{ .Interval }}]
+        )
+    )
+    /
+    sum(
+        rate(
+            envoy_cluster_upstream_rq{
+                kubernetes_namespace="{{ .Namespace }}",
+                kubernetes_pod_name=~"{{ .Name }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)"
+            }[{{ .Interval }}]
+        )
+    )
+    * 100
+```
+
+would produce the following `metrics` Interface:
+
+```go
+type CanaryDeploymentMetrics interface {
+    metrics.Client
+    GetIstioSuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+    GetIstioRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+    GetEnvoySuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+    GetEnvoyRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+}
+```
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | name | [string](#string) |  |  |
 | queryTemplate | [string](#string) |  |  |
-| parameters | [string](#string) | repeated |  |
+| parameters | [][string](#string) | repeated |  |
 
 
 
@@ -120,10 +169,10 @@ and monitoring metrics.
 | description | [string](#string) |  | description of the phase. used for comments and docs |
 | initial | [bool](#bool) |  | indicates whether this is the initial phase of the system. exactly one phase must be the initial phase |
 | final | [bool](#bool) |  | indicates whether this is a "final" or "resting" phase of the system. when the CRD is in the final phase, no more processing will be done on it |
-| inputs | [string](#string) | repeated | the set of inputs for this phase the inputs will be retrieved by the scheduler and passed to the worker as input parameters
+| inputs | [][string](#string) | repeated | the set of inputs for this phase the inputs will be retrieved by the scheduler and passed to the worker as input parameters
 
 custom inputs can be defined in the autopilot.yaml |
-| outputs | [string](#string) | repeated | the set of outputs for this phase the inputs will be propagated to k8s storage (etcd) by the scheduler.
+| outputs | [][string](#string) | repeated | the set of outputs for this phase the inputs will be propagated to k8s storage (etcd) by the scheduler.
 
 custom outputs can be defined in the autopilot.yaml |
 
@@ -202,23 +251,3 @@ and monitoring metrics.
  <!-- end services -->
 
 
-
-## Scalar Value Types
-
-| .proto Type | Notes | C++ Type | Java Type | Python Type |
-| ----------- | ----- | -------- | --------- | ----------- |
-| <a name="double" /> double |  | double | double | float |
-| <a name="float" /> float |  | float | float | float |
-| <a name="int32" /> int32 | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead. | int32 | int | int |
-| <a name="int64" /> int64 | Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead. | int64 | long | int/long |
-| <a name="uint32" /> uint32 | Uses variable-length encoding. | uint32 | int | int/long |
-| <a name="uint64" /> uint64 | Uses variable-length encoding. | uint64 | long | int/long |
-| <a name="sint32" /> sint32 | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s. | int32 | int | int |
-| <a name="sint64" /> sint64 | Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s. | int64 | long | int/long |
-| <a name="fixed32" /> fixed32 | Always four bytes. More efficient than uint32 if values are often greater than 2^28. | uint32 | int | int |
-| <a name="fixed64" /> fixed64 | Always eight bytes. More efficient than uint64 if values are often greater than 2^56. | uint64 | long | int/long |
-| <a name="sfixed32" /> sfixed32 | Always four bytes. | int32 | int | int |
-| <a name="sfixed64" /> sfixed64 | Always eight bytes. | int64 | long | int/long |
-| <a name="bool" /> bool |  | bool | boolean | boolean |
-| <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode |
-| <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str |

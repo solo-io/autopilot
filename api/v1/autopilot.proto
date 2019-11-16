@@ -120,6 +120,7 @@ message Parameter {
 //
 // The following MetricsQuery:
 //
+// ```
 // name: success-rate
 // parameters:
 // - Name
@@ -145,10 +146,19 @@ message Parameter {
 //         )
 //     )
 //     * 100
+// ```
 //
-// would produce the following `pkg/metrics/metrics.go`:
+// would produce the following `metrics` Interface:
 //
-
+// ```go
+// type CanaryDeploymentMetrics interface {
+//     metrics.Client
+//     GetIstioSuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+//     GetIstioRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+//     GetEnvoySuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+//     GetEnvoyRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+// }
+// ```
 message MetricsQuery {
     string name = 1;
     string queryTemplate = 2;

@@ -14,13 +14,13 @@ VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
 # Passed by cloudbuild
 GCLOUD_PROJECT_ID := $(GCLOUD_PROJECT_ID)
 
-GCR_REPO_PREFIX := gcr.io/$(GCLOUD_PROJECT_ID)
+GCR_REPO_PREFIX ?= gcr.io/$(GCLOUD_PROJECT_ID)
 ### REPLACE with product name
-IMAGE_LEAF_NAME := productname-docs
+IMAGE_LEAF_NAME := autopilot-docs
 IMAGE_REPO := $(GCR_REPO_PREFIX)/$(IMAGE_LEAF_NAME)
 
 ### REPLACE with product name
-PRODUCT_SCOPE := productname
+PRODUCT_SCOPE := autopilot
 DOCS_VERSION := latest
 
 #----------------------------------------------------------------------------------
@@ -29,13 +29,10 @@ DOCS_VERSION := latest
 
 .PHONY: site-common
 site-common: clean
-# this theme is crucial (has the nested scoped short codes: protobuf and versioned_link_path - see gloo docs for use demos)
+# this theme is crucial (has the nested scoped short codes: protobuf and versioned_link_path - see autopilot docs for use demos)
 	if [ ! -d themes/hugo-theme-soloio ]; then git clone https://github.com/solo-io/hugo-theme-soloio themes/hugo-theme-soloio; fi
-	# style updates for putting docs in the gloo repo, see details here https://github.com/solo-io/hugo-theme-soloio/commit/e0c50784a92fb7f61c635ff9a6e3a010f636f550
+	# style updates for putting docs in the autopilot repo, see details here https://github.com/solo-io/hugo-theme-soloio/commit/e0c50784a92fb7f61c635ff9a6e3a010f636f550
 	git -C themes/hugo-theme-soloio checkout e0c50784a92fb7f61c635ff9a6e3a010f636f550
-## don't need this
-	# go run cmd/generate_changelog_doc.go gen-changelog-md gloo > content/static/content/gloo-changelog.docgen
-	# go run cmd/generate_changelog_doc.go gen-changelog-md glooe > content/static/content/glooe-changelog.docgen
 
 .PHONY: site-test
 site-test: site-common
