@@ -27,7 +27,7 @@ Kubernetes to delete the existing operator pod (to trigger a fresh image pull)
 
 ```bash
 ap build <image>
-ap deploy <image> -d
+ap deploy <image> -p -d
 ```
 
 We should see that our pod is running:

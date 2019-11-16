@@ -98,7 +98,7 @@ mkdir -p pkg/weights
 cp ../virtual_service_weights.go.txt pkg/weights/virtual_service_weights.go
 
 ap build ${IMAGE_REPO}/canary
-ap deploy ${IMAGE_REPO}/canary -d
+ap deploy ${IMAGE_REPO}/canary -p -d
 
 if [[ -n ${LOCAL} ]]; then
     kubectl -n canary-operator scale deployment canary-operator --replicas=0
