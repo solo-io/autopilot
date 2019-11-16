@@ -1,33 +1,22 @@
 #!/usr/bin/env bash
 
-IMAGE_REPO="docker.io/ilackarms"
-
-set -e
-
-echo "########## Initializing test"
-trap 'kill $(jobs -p)' EXIT
-
-source ./assert.sh
-
-echo "########## Init Canary project"
-ap init canary --skip-gomod && pushd canary
-
-echo "########## note: set \$LOCAL to scale operator pods to 0"
+## Variables
+IMAGE_REPO=${IMAGE_REPO:-"docker.io/ilackarms"}
 
 function k {
     kubectl --namespace e2etest $@
 }
 
 function phase {
-    k get canarydeployments.autopilot.examples.io -oyaml | grep "phase: " | sed 's/phase: //'
+    k get canarydeployments.autopilot.examples.io example -ojson | jq ".status.phase" -r
 }
 
 function eventually_eq {
     TIMEOUT=30 # hard-coded 30s timeout
     until [[ ${TIMEOUT} -lt 1 ]]
     do
-      echo "Trying '$@'"
-      local res=$(assert_eq $@; echo $?)
+      echo "Trying '$1' == '$2'"
+      local res=$(assert_eq $1 $2; echo $?)
       if [[ ${res} -eq 0 ]]; then
         echo "Passed '$@'"
         return 0
@@ -48,6 +37,30 @@ function generate_traffic {
         sleep 1
     done
 }
+
+function cleanup {
+    kubectl delete ns canary-operator
+    kubectl delete ns e2etest
+    kubectl delete crd canarydeployments.autopilot.examples.io
+}
+
+set -e
+
+echo "########## Using docker image repo ${IMAGE_REPO}"
+echo "########## Set \$IMAGE_REPO to change"
+
+echo "########## Initializing test"
+trap 'cleanup && kill $(jobs -p)' EXIT
+
+source ./assert.sh
+
+echo "########## Init Canary project"
+ap init canary --skip-gomod && pushd canary
+
+echo "########## note: set \$LOCAL to scale operator pods to 0"
+
+
+
 echo "######### Cleaning up previous CanaryDeployment"
 k create ns e2etest || echo Namespace exists
 k delete -f ../canary_example.yaml --ignore-not-found || echo cleanup failed, skipping
@@ -122,7 +135,6 @@ sleep 1
 echo "########## Expect Evaluating state after second change"
 eventually_eq $(phase) Evaluating
 
-kill $(jobs -p)
 generate_traffic 500 &
 
 sleep 10

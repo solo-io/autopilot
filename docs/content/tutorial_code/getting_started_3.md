@@ -1,3 +1,9 @@
+---
+title: "Getting Started Pt 3"
+weight: 3
+description: Redeploy and test our operator 
+---
+
 # Getting Started with Autopilot Part 3 - Deploying the Operator
 
 In part 3 of the Getting Started tutorial for AutoPilot, we'll deploy and test our changes from [part 2](getting_started_2.md).
@@ -12,7 +18,7 @@ To see the completed code for this tutorial, check out https://github.com/solo-i
 
 ## Prerequisites
 
-- Completed parts [one](getting_started_1.md) and [two](getting_started_2.md) of this tutorial series.
+- Completed parts [one]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_1">}}) and [two]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_2">}}) of this tutorial series.
 
 ## Build the Operator
 

@@ -5,9 +5,8 @@ package v1
 
 import (
 	fmt "fmt"
-	math "math"
-
 	proto "github.com/golang/protobuf/proto"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -40,7 +39,7 @@ type AutopilotProject struct {
 	OperatorName string `protobuf:"bytes,3,opt,name=operatorName,proto3" json:"operatorName,omitempty"`
 	// Each phase represents a different
 	// stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
-	//
+	// <br>
 	// Each phase specifies a unique name
 	// and its own set of inputs and outputs.
 	Phases []*Phase `protobuf:"bytes,4,rep,name=phases,proto3" json:"phases,omitempty"`
@@ -334,6 +333,52 @@ func (m *Parameter) GetIsCrd() bool {
 	return false
 }
 
+// MetricsQueries extend the query options available to workers.
+// MetricsQueries are accessible to workers via generated client code
+// that lives in <project root>/pkg/metrics
+//
+//
+// The following MetricsQuery:
+//
+// ```
+// name: success-rate
+// parameters:
+// - Name
+// - Namespace
+// - Interval
+// queryTemplate: |
+//     sum(
+//         rate(
+//             envoy_cluster_upstream_rq{
+//                 kubernetes_namespace="{{ .Namespace }}",
+//                 kubernetes_pod_name=~"{{ .Name }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)",
+//                 envoy_response_code!~"5.*"
+//             }[{{ .Interval }}]
+//         )
+//     )
+//     /
+//     sum(
+//         rate(
+//             envoy_cluster_upstream_rq{
+//                 kubernetes_namespace="{{ .Namespace }}",
+//                 kubernetes_pod_name=~"{{ .Name }}-[0-9a-zA-Z]+(-[0-9a-zA-Z]+)"
+//             }[{{ .Interval }}]
+//         )
+//     )
+//     * 100
+// ```
+//
+// would produce the following `metrics` Interface:
+//
+// ```go
+// type CanaryDeploymentMetrics interface {
+//     metrics.Client
+//     GetIstioSuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+//     GetIstioRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+//     GetEnvoySuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+//     GetEnvoyRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
+// }
+// ```
 type MetricsQuery struct {
 	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	QueryTemplate        string   `protobuf:"bytes,2,opt,name=queryTemplate,proto3" json:"queryTemplate,omitempty"`

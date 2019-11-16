@@ -1,3 +1,9 @@
+---
+title: "Getting Started Pt 1"
+weight: 1
+description: Initialize a simple operator and deploy it to Kubernetes
+---
+
 # Getting Started with Autopilot Part 1 - Initializing the Operator
 
 This is the first part in a series of guides that will walk you through building a minimalistic "AutoRouter" Operator with Autopilot. 
@@ -235,8 +241,10 @@ INFO[0012] Operator build complete.
 Next, we'll deploy:
 
 ```bash
-ap deploy <image tag>
+ap deploy <image tag> -p
 ```
+
+> Note: Omit the `-p` flag if you wish to skip the `docker push` step.
 
 Should yield the output:
 
@@ -363,6 +371,6 @@ panic: implement me! [recovered]
 We haven't implemented anything yet, and our Operator is letting us know by panicking. Let's go ahead and start implementing our 
 operator!
 
-Continue to [part 2](getting_started_2.md) to start implementing 
+Continue to [part 2]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_2">}}) to start implementing 
 the business logic for our service mesh operator.
 

@@ -1,5 +1,10 @@
-# Protocol Documentation
+---
+title: "Autopilot Config Files"
+weight: 5
+---
+
 <a name="top"></a>
+
 
 ## Table of Contents
 {{range .Files}}
@@ -13,7 +18,6 @@
   {{range .Services}}  - [{{.Name}}](#{{.FullName}})
   {{end}}
 {{end}}
-- [Scalar Value Types](#scalar-value-types)
 
 {{range .Files}}
 {{$file_name := .Name}}
@@ -33,7 +37,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 {{range .Fields -}}
-  | {{.Name}} | [{{.LongType}}](#{{.FullType}}) | {{.Label}} | {{nobr .Description}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}} |
+  | {{.Name}} | {{ if eq .Label "repeated" }}[]{{- end }}[{{.LongType}}](#{{.FullType}}) | {{.Label}} | {{nobr .Description}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}} |
 {{end}}
 {{end}}
 
@@ -85,12 +89,4 @@
 {{end}}
 {{end}} <!-- end services -->
 
-{{end}}
-
-## Scalar Value Types
-
-| .proto Type | Notes | C++ Type | Java Type | Python Type |
-| ----------- | ----- | -------- | --------- | ----------- |
-{{range .Scalars -}}
-  | <a name="{{.ProtoType}}" /> {{.ProtoType}} | {{.Notes}} | {{.CppType}} | {{.JavaType}} | {{.PythonType}} |
 {{end}}

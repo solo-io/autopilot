@@ -21,6 +21,7 @@ var (
 	image         string
 	deletePods    bool
 	clusterScoped bool
+	push          bool
 )
 
 func NewCmd() *cobra.Command {
@@ -34,6 +35,7 @@ func NewCmd() *cobra.Command {
 	deployCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to which to deploy the operator")
 	deployCmd.PersistentFlags().BoolVarP(&deletePods, "deletepods", "d", false, "Delete existing pods after pushing images (to force Kubernetes to pull the newly pushed image)")
 	deployCmd.PersistentFlags().BoolVarP(&clusterScoped, "cluster-scoped", "c", true, "Deploy the operator as a cluster-wide operator. This is required to provide the operator with the ClusterRole required to read and write to other namespaces")
+	deployCmd.PersistentFlags().BoolVarP(&push, "push", "p", false, "Push the operator image before deploying. Use in place of `docker push <image>`.")
 	return deployCmd
 }
 
@@ -91,12 +93,14 @@ func getManifestsToApply(needsPrometheus bool) []string {
 
 func deploy(operatorName string, needsPrometheus bool) error {
 
-	log.Printf("Pushing image %v", image)
-	push := exec.Command("docker", "push", image)
-	push.Stderr = os.Stderr
-	push.Stdout = os.Stdout
-	if err := push.Run(); err != nil {
-		return err
+	if push {
+		log.Printf("Pushing image %v", image)
+		push := exec.Command("docker", "push", image)
+		push.Stderr = os.Stderr
+		push.Stdout = os.Stdout
+		if err := push.Run(); err != nil {
+			return err
+		}
 	}
 
 	utils.Kubectl(nil, "create", "ns", namespace)
