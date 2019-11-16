@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	if err := codegen.Run("canary", false, false); err != nil {
+	if err := codegen.Run("/Users/ilackarms/go/src/autorouter", false, false); err != nil {
 		log.Fatal(err)
 	}
 }

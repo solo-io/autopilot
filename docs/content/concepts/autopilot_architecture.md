@@ -1,3 +1,8 @@
+---
+title: "Operator Architecture"
+description: "Overvriew of the Architecture of Operators built with Autopilot"
+weight: 3
+---
 
 # cleanup
 - docs 

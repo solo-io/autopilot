@@ -15,6 +15,7 @@ require (
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/gophercloud/gophercloud v0.2.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
+	github.com/ilackarms/protokit v0.1.0
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.8.0

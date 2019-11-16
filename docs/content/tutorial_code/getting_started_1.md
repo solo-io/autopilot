@@ -369,6 +369,6 @@ panic: implement me! [recovered]
 We haven't implemented anything yet, and our Operator is letting us know by panicking. Let's go ahead and start implementing our 
 operator!
 
-Continue to [part 2](getting_started_2.md) to start implementing 
+Continue to [part 2]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_2">}}) to start implementing 
 the business logic for our service mesh operator.
 

@@ -1,6 +1,6 @@
 ---
 title: "Tutorials"
-weight: 3
+weight: 4
 ---
 
 This section contains tutorials for using Autopilot.

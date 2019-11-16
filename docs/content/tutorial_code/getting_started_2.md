@@ -34,7 +34,7 @@ with the `Syncing` phase to indicate to the user that processing has started
 
 ## Prerequisites
 
-- Completed [part one](getting_started_1.md) of this tutorial series.
+- Completed [part one]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_1">}}) of this tutorial series.
 
 
 ## Update the API Spec
@@ -478,5 +478,5 @@ func (w *Worker) getMatchingDeployments(route *v1.AutoRoute, deployments []appsv
 
 Once our 3 workers are implemented, we're done with the Operator!
 
-[Move to part 3 of our tutorial](getting_started_3.md) where  we'll build and deploy our changes, and test using a real `AutoRoute`
+[Move to part 3 of our tutorial]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_3">}}) where  we'll build and deploy our changes, and test using a real `AutoRoute`
 custom resource.
