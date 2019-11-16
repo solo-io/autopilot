@@ -1,3 +1,9 @@
+---
+title: "Getting Started Pt 1"
+weight: 1
+description: Initialize a simple operator and deploy it to Kubernetes
+---
+
 # Getting Started with Autopilot Part 1 - Initializing the Operator
 
 This is the first part in a series of guides that will walk you through building a minimalistic "AutoRouter" Operator with Autopilot. 
