@@ -241,8 +241,10 @@ INFO[0012] Operator build complete.
 Next, we'll deploy:
 
 ```bash
-ap deploy <image tag>
+ap deploy <image tag> -p
 ```
+
+> Note: Omit the `-p` flag if you wish to skip the `docker push` step.
 
 Should yield the output:
 

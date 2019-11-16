@@ -39,7 +39,7 @@ type AutopilotProject struct {
 	OperatorName string `protobuf:"bytes,3,opt,name=operatorName,proto3" json:"operatorName,omitempty"`
 	// Each phase represents a different
 	// stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
-	//
+	// <br>
 	// Each phase specifies a unique name
 	// and its own set of inputs and outputs.
 	Phases []*Phase `protobuf:"bytes,4,rep,name=phases,proto3" json:"phases,omitempty"`

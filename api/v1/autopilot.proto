@@ -1,4 +1,5 @@
-// autopilot-operator.proto defines the API Schema for the autopilot.yaml configuration file.
+// The following Schema defines the structure of the `autopilot.yaml` configuration file.
+//
 // This file is used to generate and re-generate the project structure, as well
 // as execute tasks related to build and deployment. It can be consumed
 // both via the `ap` CLI as well as in `codegen` packages.
@@ -29,7 +30,7 @@ message AutopilotProject {
 
     // Each phase represents a different
     // stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
-    //
+    // <br>
     // Each phase specifies a unique name
     // and its own set of inputs and outputs.
     repeated Phase phases = 4;

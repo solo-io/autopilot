@@ -33,7 +33,8 @@ weight: 5
 <p align="right"><a href="#top">Top</a></p>
 
 ## autopilot.proto
-autopilot-operator.proto defines the API Schema for the autopilot.yaml configuration file.
+The following Schema defines the structure of the `autopilot.yaml` configuration file.
+
 This file is used to generate and re-generate the project structure, as well
 as execute tasks related to build and deployment. It can be consumed
 both via the `ap` CLI as well as in `codegen` packages.
@@ -54,9 +55,7 @@ default location is 'autopilot.yaml'
 | kind | [string](#string) |  | the name (kubernetes Kind) of the top-level CRD for the operator Specified via the `ap init <Kind>` command |
 | apiVersion | [string](#string) |  | the ApiVersion of the top-level CRD for the operator |
 | operatorName | [string](#string) |  | the name of the Operator this is used to name and label loggers, k8s resources, and metrics exposed by the operator. Should be [valid Kube resource names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names). |
-| phases | [][Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
-
-Each phase specifies a unique name and its own set of inputs and outputs. |
+| phases | [][Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed). <br> Each phase specifies a unique name and its own set of inputs and outputs. |
 | enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
 | customParameters | [][Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend Autopilot's builtin types |
 | queries | [][MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend Autopilot's metrics queries |
