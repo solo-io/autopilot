@@ -3,11 +3,12 @@ package main
 //go:generate go run generate_cli_docs.go
 
 import (
-	"github.com/solo-io/autopilot/cli/pkg/commands"
-	"github.com/solo-io/go-utils/clidoc"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/solo-io/autopilot/cli/pkg/commands"
+	"github.com/solo-io/go-utils/clidoc"
 )
 
 func main() {
