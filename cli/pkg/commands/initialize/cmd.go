@@ -150,9 +150,6 @@ func initialGoGet(dir string) error {
 		versionSuffix = "@" + autopilotversion.Version
 	}
 	cmd := exec.Command("go", "get", "-v", "github.com/solo-io/autopilot"+versionSuffix)
-	if module != "" {
-		cmd.Args = append(cmd.Args, module)
-	}
 	cmd.Env = append(cmd.Env, os.Environ()...)
 	cmd.Env = append(cmd.Env, "GO111MODULE=on")
 	cmd.Dir = dir
