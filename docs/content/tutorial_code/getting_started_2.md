@@ -18,7 +18,9 @@ the `phases` of your `autopilot.yaml`
 Each worker is responsible for handling a different `phase` of the 
 top-level CRD.
 
-When the CRD or a watched resource is created or updated, Autopilot invokes the `Sync` function for the worker corresponding to the CRD's current phase.
+Autopilot executes its main reconcile function whenever a top-level Custom Resource is created or updated. It can also be called on deletions by setting `enableFinalizer: true` in your `autopilot.yaml`. The main reconcile function will be called whenever an `input` or `output` resource is modified as well, to ensure dependencies between the top-level CRD and other resources is respected.
+
+When the main reconcile function is called, it will defer to a user-defined `Worker` which corresponds to the current `Phase` of the top-level Custom Resource. The main reconcile function constructs a one-off instance of the worker whose `Sync` function is invoked. This allows Autopilot users to write workers as stateless one-off "serverless-style" functions.
 
 Workers pass action to one another (or requeue themselves) by progressing the CRD state (or persisting it in its current state).
 
