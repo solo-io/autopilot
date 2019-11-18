@@ -17,8 +17,9 @@
 &nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
-
+<center>
 <img src="https://github.com/solo-io/autopilot/blob/master/docs/content/img/autopilot-workflow.png?raw=true" alt="Autopilot">
+</center>
 
 ### How does it work?
 
