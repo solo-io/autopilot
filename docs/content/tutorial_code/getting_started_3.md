@@ -123,21 +123,21 @@ cat <<EOF | kubectl apply -n example -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpbin-${i}
+  name: hello-autopilot-${i}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: httpbin-${i}
+      app: hello-autopilot-${i}
   template:
     metadata:
       labels:
-        app: httpbin-${i}
+        app: hello-autopilot-${i}
     spec:
       containers:
-        - image: docker.io/kennethreitz/httpbin
+        - image: docker.io/soloio/hello-autopilot
           imagePullPolicy: IfNotPresent
-          name: httpbin
+          name: hello-autopilot
           ports:
             - containerPort: 80
 EOF
@@ -145,9 +145,9 @@ done
 ```
 
 ```
-deployment.apps/httpbin-1 created
-deployment.apps/httpbin-2 created
-deployment.apps/httpbin-3 created
+deployment.apps/hello-autopilot-1 created
+deployment.apps/hello-autopilot-2 created
+deployment.apps/hello-autopilot-3 created
 ```
 
 
@@ -204,9 +204,9 @@ Finally, send some requests using `curl`:
 
 
 ```bash
-curl -I -HHost:httpbin-1.example http://$INGRESS_HOST:$INGRESS_PORT/status/200
-curl -I -HHost:httpbin-2.example http://$INGRESS_HOST:$INGRESS_PORT/status/200
-curl -I -HHost:httpbin-3.example http://$INGRESS_HOST:$INGRESS_PORT/status/200
+curl -I -HHost:hello-autopilot-1.example http://$INGRESS_HOST:$INGRESS_PORT/status/200
+curl -I -HHost:hello-autopilot-2.example http://$INGRESS_HOST:$INGRESS_PORT/status/200
+curl -I -HHost:hello-autopilot-3.example http://$INGRESS_HOST:$INGRESS_PORT/status/200
 ```
 
 All 3 of our services should reply with `HTTP/1.1 200 OK`:
@@ -232,9 +232,9 @@ kubectl get virtualservices.networking.istio.io -n example
 
 ```
 NAME                GATEWAYS    HOSTS                 AGE
-httpbin-1.example   [example]   [httpbin-1.example]   2m
-httpbin-2.example   [example]   [httpbin-2.example]   2m
-httpbin-3.example   [example]   [httpbin-3.example]   2m
+hello-autopilot-1.example   [example]   [hello-autopilot-1.example]   2m
+hello-autopilot-2.example   [example]   [hello-autopilot-2.example]   2m
+hello-autopilot-3.example   [example]   [hello-autopilot-3.example]   2m
 ```
 
 As well as standard Kube services:
@@ -245,9 +245,9 @@ kubectl get svc -n example
 
 ```
 NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
-httpbin-1   ClusterIP   10.3.252.230   <none>        80/TCP    4m51s
-httpbin-2   ClusterIP   10.3.243.217   <none>        80/TCP    4m51s
-httpbin-3   ClusterIP   10.3.253.81    <none>        80/TCP    4m51s
+hello-autopilot-1   ClusterIP   10.3.252.230   <none>        80/TCP    4m51s
+hello-autopilot-2   ClusterIP   10.3.243.217   <none>        80/TCP    4m51s
+hello-autopilot-3   ClusterIP   10.3.253.81    <none>        80/TCP    4m51s
 ```
 
 ## Tearing down
