@@ -18,7 +18,7 @@
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
 
-<img src="https://github.com/solo-io/autopilot/blob/master/docs/content/img/autopilot-workflow.png?raw=true" alt="Autopilot" width="260" height="242">
+<img src="https://github.com/solo-io/autopilot/blob/master/docs/content/img/autopilot-workflow.png?raw=true" alt="Autopilot">
 
 ### How does it work?
 
