@@ -19,7 +19,7 @@ autopilot init <dir> --kind=<kind> --group=<apigroup> --verison=<apiversion> [--
 ### Options
 
 ```
-      --group string         API Group for the Top-Level CRD (default "example.io")
+      --group string         API Group for the Top-Level CRD (default "examples.io")
   -h, --help                 help for init
       --kind string          Kind (Camel-Cased Name) of Top-Level CRD (default "Example")
   -m, --module go mod init   Sets the name of the module for go mod init.Required if initializing outside your $GOPATH

@@ -37,7 +37,7 @@ If the directory does not exist, it will be created.
 		RunE: initFunc,
 	}
 	genCmd.PersistentFlags().StringVar(&kind, "kind", "Example", "Kind (Camel-Cased Name) of Top-Level CRD")
-	genCmd.PersistentFlags().StringVar(&group, "group", "example.io", "API Group for the Top-Level CRD")
+	genCmd.PersistentFlags().StringVar(&group, "group", "examples.io", "API Group for the Top-Level CRD")
 	genCmd.PersistentFlags().StringVar(&version, "version", "v1", "API Version for the Top-Level CRD")
 	genCmd.PersistentFlags().BoolVarP(&skipGomod, "skip-gomod", "s", false, "skip generating go.mod for project")
 	genCmd.PersistentFlags().StringVarP(&module, "module", "m", "", "Sets the name of the module for `go mod init`."+
