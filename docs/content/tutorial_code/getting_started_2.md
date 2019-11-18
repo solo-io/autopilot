@@ -4,7 +4,7 @@ weight: 2
 description: Write the business logic for our simple operator 
 ---
 
-# Getting Started with Autopilot Part 2 - Implementing the Workers
+## Getting Started with Autopilot Part 2 - Implementing the Workers
 
 In part 2 of the Getting Started tutorial for AutoPilot, we'll implement business logic for the operator in the form of "workers" that process the `AutoRoute` CRD.
 

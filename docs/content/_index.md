@@ -21,9 +21,7 @@ weight: 1
 &nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
-<BR><center><img src=""https://github.com/solo-io/autopilot/blob/master/docs/content/img/architecture.png?raw=true" alt="Autopilot Architecture" width="906"></center>
-
-# How does it work?
+### How does it work?
 
 Developers define an `autopilot.yaml` and `autopilot-operator.yaml` which specify the skeleton and configuration of an *Autopilot Operator*.
 
@@ -31,7 +29,7 @@ Autopilot makes use of these files to (re-)generate the project skeleton, build,
 
 Users place their API in a generated `spec.go` file, and business logic in generated `worker.go` files. Once these files have been modified, they will not be overwritten by `ap generate`.
 
-# How is it different from SDKs like Operator Framework and Kubebuilder?
+### How is it different from SDKs like Operator Framework and Kubebuilder?
 
 The [Operator Framework](https://github.com/operator-framework) and [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder) are open-ended SDKs that take a far less opinionated approach to building Kubernetes software.
 
@@ -42,12 +40,12 @@ The [Operator Framework](https://github.com/operator-framework) and [kubebuilder
 
 Finally, **Autopilot** favors simplicity over flexibility, though it is the intention of the project to support the vast majority of DevOps workflows built on top of Kubernetes+Service mesh.
 
-## Getting Started
+### Getting Started
 
-The [Getting Started Tutorial](docs/content/tutorial_code/getting_started_1.md) provides the best entrypoint to begin understanding and using 
+The [Getting Started Tutorial]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_1">}}) provides the best entrypoint to begin understanding and using 
 Autopilot.
 
-## Next Steps
+### Next Steps
 - Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
 - Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
 - Check out the docs: [https://docs.solo.io/autopilot/latest](https://docs.solo.io/autopilot/latest)
@@ -63,7 +61,7 @@ Autopilot has leveraged inspiration and libraries from the following Kubernetes 
 - [Controller Runtime](https://github.com/kubernetes-sigs/controller-runtime) - Excellent libraries for building k8s controllers. Many of 
 - [Operator Framework](https://github.com/operator-framework) - An SDK for building generalized k8s operators. The source of much inspiration for Autopilot.
 
-# Roadmap
+### Roadmap
 - Support for managing multiple (remote) clusters.
 - GitOps integrations ootb
 - Support opaque user config added in autopilot-operator.yaml
@@ -73,7 +71,7 @@ Autopilot has leveraged inspiration and libraries from the following Kubernetes 
     - customParameters
     - final phase with i/o
 - Builder funcs for service mesh types (VirtualServices, Gateways, etc.)
-- ap undeploy (undeploy / delete all deployed resources)
+- `ap undeploy` command (undeploy / delete all deployed resources)
     - includes label all resources for easy list/delete
 - Expose garbage collection func to workers
     - rollback the phase when something ensure fails? (option in config)

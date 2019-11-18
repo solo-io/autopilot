@@ -4,7 +4,7 @@ weight: 1
 description: Initialize a simple operator and deploy it to Kubernetes
 ---
 
-# Getting Started with Autopilot Part 1 - Initializing the Operator
+## Getting Started with Autopilot Part 1 - Initializing the Operator
 
 This is the first part in a series of guides that will walk you through building a minimalistic "AutoRouter" Operator with Autopilot. 
 
@@ -321,7 +321,7 @@ ap logs -f
 ^C
 ```
 
-# Test the Operator with an AutoRoute Resource
+## Test the Operator with an AutoRoute Resource
 
 Cool! We've already gotten our first Service Mesh Operator built and deployed! But it's not doing anything yet, right? 
 

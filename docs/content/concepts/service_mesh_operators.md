@@ -4,7 +4,7 @@ description: "Introduction to Service Mesh Operators"
 weight: 1
 ---
 
-# Concepts - Service Mesh Operators
+### Concepts - Service Mesh Operators
 
 Scale and complexity have made infrastructure configuration impossible via Helm charts and BASH scripts alone. 
 As a result, we have seen an explosion of [Kubernetes Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) 

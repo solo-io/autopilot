@@ -4,7 +4,7 @@ weight: 3
 description: Redeploy and test our operator 
 ---
 
-# Getting Started with Autopilot Part 3 - Deploying the Operator
+## Getting Started with Autopilot Part 3 - Deploying the Operator
 
 In part 3 of the Getting Started tutorial for AutoPilot, we'll deploy and test our changes from [part 2](getting_started_2.md).
 
