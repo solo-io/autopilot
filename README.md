@@ -17,6 +17,9 @@
 &nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
+
+<img src="https://github.com/solo-io/autopilot/blob/master/docs/content/img/autopilot-workflow.png?raw=true" alt="Autopilot" width="260" height="242">
+
 ### How does it work?
 
 Developers define an `autopilot.yaml` and `autopilot-operator.yaml` which specify the skeleton and configuration of an *Autopilot Operator*.
