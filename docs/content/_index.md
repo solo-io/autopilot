@@ -15,8 +15,8 @@ weight: 1
 
 **Autopilot** generated code and libraries provide an easy way to automate configuration and monitoring of a service mesh (and other Kubernetes/infra resources) via the [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) pattern.
 
-[**Installation**](https://autopilot.solo.io/installation/) &nbsp; |
-&nbsp; [**Documentation**](https://autopilot.solo.io) &nbsp; |
+[**Installation**](https://docs.solo.io/autopilot/latest/installation/) &nbsp; |
+&nbsp; [**Documentation**](https://docs.solo.io/autopilot/latest) &nbsp; |
 &nbsp; [**Blog**](TODO LINK) &nbsp; |
 &nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
@@ -50,7 +50,7 @@ Autopilot.
 ## Next Steps
 - Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
 - Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
-- Check out the docs: [https://autopilot.solo.io](https://autopilot.solo.io)
+- Check out the docs: [https://docs.solo.io/autopilot/latest](https://docs.solo.io/autopilot/latest)
 - Contribute to the [Docs](https://github.com/solo-io/solo-docs)
 
 ### Thanks
