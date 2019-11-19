@@ -13,7 +13,7 @@
 
 [**Installation**](https://docs.solo.io/autopilot/latest/installation/) &nbsp; |
 &nbsp; [**Documentation**](https://docs.solo.io/autopilot/latest) &nbsp; |
-&nbsp; [**Blog**](TODO LINK) &nbsp; |
+&nbsp; [**Blog**](https://medium.com/solo-io/autopilot-an-operator-framework-for-building-workflows-on-top-of-service-mesh-bd4a2fb3e742) &nbsp; |
 &nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
