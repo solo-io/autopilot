@@ -1,7 +1,7 @@
 ---
 title: "Installation"
 description: "Installing the Autopilot CLI"
-weight: 3
+weight: 4
 ---
 
 To install the Autopilot CLI, simply run the following:

@@ -38,6 +38,9 @@ message AutopilotProject {
     // enable use of a Finalizer to handle object deletion
     bool enableFinalizer = 5;
 
+    // enable GitSync features in
+    bool enableGitSync = 8;
+
     // custom Parameters which extend Autopilot's builtin types
     repeated Parameter customParameters = 6;
 

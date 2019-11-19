@@ -30,7 +30,11 @@ require (
 	github.com/spf13/pflag v1.0.3
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
+	golang.org/x/crypto v0.0.0-20191117063200-497ca9f6d64f // indirect
+	golang.org/x/net v0.0.0-20191116160921-f9c825593386 // indirect
+	golang.org/x/sys v0.0.0-20191118133127-cf1e2d577169 // indirect
 	golang.org/x/tools v0.0.0-20191018212557-ed542cd5b28a
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	istio.io/api v0.0.0-20191109011807-2629c6ac1513
 	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
 	k8s.io/api v0.0.0

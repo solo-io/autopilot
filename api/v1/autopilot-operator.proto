@@ -60,6 +60,9 @@ message AutopilotOperator {
     // 6 - Fatal
     // Defaults to Info
     google.protobuf.UInt32Value logLevel = 9;
+
+    //
+    GitConfig gitSyncConfig = 10;
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific
