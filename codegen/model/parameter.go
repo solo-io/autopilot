@@ -2,15 +2,21 @@ package model
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 )
 
-type Parameter v1.Parameter
+type Parameter v1.ThirdPartyResource
 
 func (p Parameter) String() string {
-	return string(p.LowerName)
+	return p.LowerName
+}
+
+func (p Parameter) Version() string {
+	path := strings.Split(p.Package, "/")
+	return path[len(path)-1]
 }
 
 func (p Parameter) Equals(parameter Parameter) bool {

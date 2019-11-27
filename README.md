@@ -82,3 +82,91 @@ Autopilot has leveraged inspiration and libraries from the following Kubernetes 
 - automatic metrics for worker syncs
 - automatic traces for worker syncs
 - option to make workers persistent
+
+
+
+# use case architecture
+
+2 clusters per AZ = 6 clusters
+1 replica of each service per cluster for resiliency
+service client (in mesh) has dependency on service
+
+- upgrading istio control plane
+- provide a developer interface that abstracts the virtual service. provide a safe subset
+
+
+# new style
+
+
+# TODO
+
+Handler interface
+
+for each type
+
+```go
+// interface.go
+// this interface must be implemented by the user
+// this file gets regenerated
+type TypeHandler interface {
+    // method for each phase
+}
+```
+
+```go
+// type_handler.go
+// the user can implement whatever they want.
+// this file will be regenerated if it is missing
+// option to disable generating it.
+// provides a skeleton for writing the handler
+
+// edit this file!
+// must implement TypeHandler
+type typeHandlerImpl struct {
+}
+
+func NewTypeHandlerImpl() {
+
+}
+```
+
+```go
+// type_reconciler.go
+// generated file, do not touch
+// 
+// retrieves inputs, applies outputs
+// logging, telemetry
+// calls the handler for the correct phase
+type typeHandlerImpl struct {
+}
+
+func NewTypeHandlerImpl() {
+
+}
+```
+
+```go
+// main.go
+
+func main() {
+	// move this into an autopilot_registered_schemes
+	run.RegisterAddToScheme(.AddToScheme)
+	
+	
+	canaryHandler := &myCanaryHandler{}
+	fooHandler := &myFooHandler{}
+	
+	// this func will change when we add/remove controller types
+	// calls internal run
+	generated_run.Run(canaryHandler, fooHandler)
+	
+	if err := run.Run(scheduler.AddToManager); err != nil {
+		logf.Log.Error(err, "fatal error")
+		os.Exit(1)
+	}
+}
+
+```
+    
+
+    

@@ -201,7 +201,6 @@ func runOperatorOnConfigChange(
 	scheme *runtime.Scheme,
 	addTomanager AddToManager) {
 
-	var operatorCtx context.Context
 	var cancel context.CancelFunc = func() {}
 	for {
 		select {
@@ -216,7 +215,9 @@ func runOperatorOnConfigChange(
 			cancel()
 
 			// initialize a new context for the operator
-			operatorCtx, cancel = operatorContext(ctx, operator, logger)
+			operatorCtx, c := operatorContext(ctx, operator, logger)
+
+			cancel = c
 
 			instance := operatorInstance{
 				ctx:          operatorCtx,
@@ -227,7 +228,6 @@ func runOperatorOnConfigChange(
 			}
 
 			go func() {
-				logger.Info("Warning: Flushing Operator Metrics!")
 
 				// metrics must be flushed as the new Controller re-registers metrics with the same name
 				metrics.Registry = prometheus.NewRegistry()
@@ -304,7 +304,12 @@ func (instance *operatorInstance) Start() error {
 func operatorContext(ctx context.Context, operator *v1.AutopilotOperator, logger logr.Logger) (context.Context, context.CancelFunc) {
 	ctx = config.ContextWithConfig(ctx, operator)
 	ctx = utils.ContextWithLogger(ctx, logger)
-	return context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(ctx)
+	cancelWithWarning := func() {
+		logger.Info("Warning: Flushing Operator Metrics!")
+		cancel()
+	}
+	return ctx, cancelWithWarning
 }
 
 func contextWithStop(ctx context.Context, stop <-chan struct{}) context.Context {

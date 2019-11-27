@@ -5,9 +5,9 @@ package v1
 
 import (
 	fmt "fmt"
-	math "math"
-
 	proto "github.com/golang/protobuf/proto"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,29 +27,21 @@ const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 // It is loaded automatically by the autopilot CLI. Its
 // default location is 'autopilot.yaml'
 type AutopilotProject struct {
-	// the name (kubernetes Kind) of the top-level
-	// CRD for the operator
-	// Specified via the `ap init <Kind>` command
-	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
-	// the ApiVersion of the top-level
-	// CRD for the operator
-	ApiVersion string `protobuf:"bytes,2,opt,name=apiVersion,proto3" json:"apiVersion,omitempty"`
 	// the name of the Operator
 	// this is used to name and label loggers, k8s resources, and metrics exposed
-	// by the operator. Should be [valid Kube resource names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names).
-	OperatorName string `protobuf:"bytes,3,opt,name=operatorName,proto3" json:"operatorName,omitempty"`
-	// Each phase represents a different
-	// stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
-	// <br>
-	// Each phase specifies a unique name
-	// and its own set of inputs and outputs.
-	Phases []*Phase `protobuf:"bytes,4,rep,name=phases,proto3" json:"phases,omitempty"`
-	// enable use of a Finalizer to handle object deletion
-	EnableFinalizer bool `protobuf:"varint,5,opt,name=enableFinalizer,proto3" json:"enableFinalizer,omitempty"`
-	// custom Parameters which extend Autopilot's builtin types
-	CustomParameters []*Parameter `protobuf:"bytes,6,rep,name=customParameters,proto3" json:"customParameters,omitempty"`
-	// custom Queries which extend Autopilot's metrics queries
-	Queries              []*MetricsQuery `protobuf:"bytes,7,rep,name=queries,proto3" json:"queries,omitempty"`
+	// by the operator. Should be [a valid Kube resource name](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names).
+	OperatorName string `protobuf:"bytes,1,opt,name=operatorName,proto3" json:"operatorName,omitempty"`
+	// the set of Top-Level Custom Resources that are managed by this Operator.
+	// the Operator will run a [Controller](https://kubernetes.io/docs/concepts/architecture/controller/)
+	// loop for each resource.
+	// To add CRDs without creating a controller,
+	// set enableController: false on the resource.
+	Resources []*Resource `protobuf:"bytes,2,rep,name=resources,proto3" json:"resources,omitempty"`
+	// Third-party CRDs which can be used as parameters.
+	// Extends Autopilot's builtin types
+	ThirdPartyResources []*ThirdPartyResource `protobuf:"bytes,5,rep,name=thirdPartyResources,proto3" json:"thirdPartyResources,omitempty"`
+	// custom Queries which extend Autopilot's builtin metrics queries
+	Queries              []*MetricsQuery `protobuf:"bytes,6,rep,name=queries,proto3" json:"queries,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
@@ -80,20 +72,6 @@ func (m *AutopilotProject) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AutopilotProject proto.InternalMessageInfo
 
-func (m *AutopilotProject) GetKind() string {
-	if m != nil {
-		return m.Kind
-	}
-	return ""
-}
-
-func (m *AutopilotProject) GetApiVersion() string {
-	if m != nil {
-		return m.ApiVersion
-	}
-	return ""
-}
-
 func (m *AutopilotProject) GetOperatorName() string {
 	if m != nil {
 		return m.OperatorName
@@ -101,23 +79,16 @@ func (m *AutopilotProject) GetOperatorName() string {
 	return ""
 }
 
-func (m *AutopilotProject) GetPhases() []*Phase {
+func (m *AutopilotProject) GetResources() []*Resource {
 	if m != nil {
-		return m.Phases
+		return m.Resources
 	}
 	return nil
 }
 
-func (m *AutopilotProject) GetEnableFinalizer() bool {
+func (m *AutopilotProject) GetThirdPartyResources() []*ThirdPartyResource {
 	if m != nil {
-		return m.EnableFinalizer
-	}
-	return false
-}
-
-func (m *AutopilotProject) GetCustomParameters() []*Parameter {
-	if m != nil {
-		return m.CustomParameters
+		return m.ThirdPartyResources
 	}
 	return nil
 }
@@ -127,6 +98,108 @@ func (m *AutopilotProject) GetQueries() []*MetricsQuery {
 		return m.Queries
 	}
 	return nil
+}
+
+// An Autopilot Resource is a Custom Resource.
+// Autopilot will generate Go code for
+//
+type Resource struct {
+	// the name (kubernetes Kind) of the Custom Resource
+	// e.g. "MyResource"
+	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	// the Api Group of the top-level
+	// CRD for the operator
+	// e.g. "mycompany.io"
+	Group string `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	// e.g. "v1"
+	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	// Each phase represents a different
+	// stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed).
+	// <br>
+	// Each phase specifies a unique name
+	// and its own set of inputs and outputs.
+	// <br>
+	// If a controller is generated for this Resource,
+	// each phase will define the inputs/outputs and work function
+	// the controller will run.
+	Phases []*Phase `protobuf:"bytes,4,rep,name=phases,proto3" json:"phases,omitempty"`
+	// Generate and run a controller to manage this resource.
+	// This is set to 'true' by default.
+	// Set this to 'false' to create the resource without generating or running a controller for it.
+	EnableController *wrappers.BoolValue `protobuf:"bytes,5,opt,name=enableController,proto3" json:"enableController,omitempty"`
+	// enable use of a Finalizer to handle object deletion.
+	// only applies if enableController is not set to false
+	EnableFinalizer      bool     `protobuf:"varint,6,opt,name=enableFinalizer,proto3" json:"enableFinalizer,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Resource) Reset()         { *m = Resource{} }
+func (m *Resource) String() string { return proto.CompactTextString(m) }
+func (*Resource) ProtoMessage()    {}
+func (*Resource) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7c7e86e2b87635e, []int{1}
+}
+
+func (m *Resource) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Resource.Unmarshal(m, b)
+}
+func (m *Resource) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Resource.Marshal(b, m, deterministic)
+}
+func (m *Resource) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Resource.Merge(m, src)
+}
+func (m *Resource) XXX_Size() int {
+	return xxx_messageInfo_Resource.Size(m)
+}
+func (m *Resource) XXX_DiscardUnknown() {
+	xxx_messageInfo_Resource.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Resource proto.InternalMessageInfo
+
+func (m *Resource) GetKind() string {
+	if m != nil {
+		return m.Kind
+	}
+	return ""
+}
+
+func (m *Resource) GetGroup() string {
+	if m != nil {
+		return m.Group
+	}
+	return ""
+}
+
+func (m *Resource) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+func (m *Resource) GetPhases() []*Phase {
+	if m != nil {
+		return m.Phases
+	}
+	return nil
+}
+
+func (m *Resource) GetEnableController() *wrappers.BoolValue {
+	if m != nil {
+		return m.EnableController
+	}
+	return nil
+}
+
+func (m *Resource) GetEnableFinalizer() bool {
+	if m != nil {
+		return m.EnableFinalizer
+	}
+	return false
 }
 
 // MeshProviders provide an interface to monitoring and managing a specific
@@ -147,29 +220,26 @@ type Phase struct {
 	// indicates whether this is a "final" or "resting" phase of the system.
 	// when the CRD is in the final phase, no more processing will be done on it
 	Final bool `protobuf:"varint,4,opt,name=final,proto3" json:"final,omitempty"`
-	// the set of inputs for this phase
-	// the inputs will be retrieved by the scheduler
-	// and passed to the worker as input parameters
-	//
-	// custom inputs can be defined in the
-	// autopilot.yaml
-	Inputs []string `protobuf:"bytes,5,rep,name=inputs,proto3" json:"inputs,omitempty"`
+	// The set of inputs for this phase.
+	// The inputs will be retrieved by the scheduler
+	// and passed to the worker as input parameters.
+	Inputs []*Input `protobuf:"bytes,5,rep,name=inputs,proto3" json:"inputs,omitempty"`
 	// the set of outputs for this phase
 	// the inputs will be propagated to k8s storage (etcd) by the scheduler.
 	//
 	// custom outputs can be defined in the
 	// autopilot.yaml
-	Outputs              []string `protobuf:"bytes,6,rep,name=outputs,proto3" json:"outputs,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Outputs              []*Output `protobuf:"bytes,6,rep,name=outputs,proto3" json:"outputs,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
 func (m *Phase) Reset()         { *m = Phase{} }
 func (m *Phase) String() string { return proto.CompactTextString(m) }
 func (*Phase) ProtoMessage()    {}
 func (*Phase) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f7c7e86e2b87635e, []int{1}
+	return fileDescriptor_f7c7e86e2b87635e, []int{2}
 }
 
 func (m *Phase) XXX_Unmarshal(b []byte) error {
@@ -218,120 +288,335 @@ func (m *Phase) GetFinal() bool {
 	return false
 }
 
-func (m *Phase) GetInputs() []string {
+func (m *Phase) GetInputs() []*Input {
 	if m != nil {
 		return m.Inputs
 	}
 	return nil
 }
 
-func (m *Phase) GetOutputs() []string {
+func (m *Phase) GetOutputs() []*Output {
 	if m != nil {
 		return m.Outputs
 	}
 	return nil
 }
 
-// Custom Parameters allow code to be generated
-// for inputs/outputs that are not built-in to Autopilot.
-// These types must be Kubernetes-compatible Go structs.
-type Parameter struct {
-	// the fully lower-case name of this resource
-	// e.g. "pods", "services", "replicasets", "configmaps"
-	LowerName string `protobuf:"bytes,1,opt,name=lowerName,proto3" json:"lowerName,omitempty"`
-	// the singular CamelCased name of the resource
-	// equivalent to Kind
-	SingleName string `protobuf:"bytes,2,opt,name=singleName,proto3" json:"singleName,omitempty"`
-	// the plural CamelCased name of the resource
-	// equivalent to the pluralized form of Kind
-	PluralName string `protobuf:"bytes,3,opt,name=pluralName,proto3" json:"pluralName,omitempty"`
-	// import prefix used by generated code
-	ImportPrefix string `protobuf:"bytes,4,opt,name=importPrefix,proto3" json:"importPrefix,omitempty"`
-	// go package (import path) to the go struct for the resource
-	Package string `protobuf:"bytes,5,opt,name=package,proto3" json:"package,omitempty"`
-	// Kubernetes API group for the resource
-	// e.g. "networking.istio.io"
-	ApiGroup string `protobuf:"bytes,6,opt,name=apiGroup,proto3" json:"apiGroup,omitempty"`
-	// indicates whether the resource is a CRD
-	// if true, the Resource will be added to the operator's runtime.Scheme
-	IsCrd                bool     `protobuf:"varint,7,opt,name=isCrd,proto3" json:"isCrd,omitempty"`
+// Input represents an input parameter type
+// These can either be a k8s resource,
+// a metric, or a webhook.
+type Input struct {
+	// Types that are valid to be assigned to InputType:
+	//	*Input_Resource
+	//	*Input_Metric
+	//	*Input_Webhook
+	InputType            isInput_InputType `protobuf_oneof:"inputType"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *Input) Reset()         { *m = Input{} }
+func (m *Input) String() string { return proto.CompactTextString(m) }
+func (*Input) ProtoMessage()    {}
+func (*Input) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7c7e86e2b87635e, []int{3}
+}
+
+func (m *Input) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Input.Unmarshal(m, b)
+}
+func (m *Input) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Input.Marshal(b, m, deterministic)
+}
+func (m *Input) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Input.Merge(m, src)
+}
+func (m *Input) XXX_Size() int {
+	return xxx_messageInfo_Input.Size(m)
+}
+func (m *Input) XXX_DiscardUnknown() {
+	xxx_messageInfo_Input.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Input proto.InternalMessageInfo
+
+type isInput_InputType interface {
+	isInput_InputType()
+}
+
+type Input_Resource struct {
+	Resource *ResourceParameter `protobuf:"bytes,1,opt,name=resource,proto3,oneof"`
+}
+
+type Input_Metric struct {
+	Metric string `protobuf:"bytes,2,opt,name=metric,proto3,oneof"`
+}
+
+type Input_Webhook struct {
+	Webhook string `protobuf:"bytes,3,opt,name=webhook,proto3,oneof"`
+}
+
+func (*Input_Resource) isInput_InputType() {}
+
+func (*Input_Metric) isInput_InputType() {}
+
+func (*Input_Webhook) isInput_InputType() {}
+
+func (m *Input) GetInputType() isInput_InputType {
+	if m != nil {
+		return m.InputType
+	}
+	return nil
+}
+
+func (m *Input) GetResource() *ResourceParameter {
+	if x, ok := m.GetInputType().(*Input_Resource); ok {
+		return x.Resource
+	}
+	return nil
+}
+
+func (m *Input) GetMetric() string {
+	if x, ok := m.GetInputType().(*Input_Metric); ok {
+		return x.Metric
+	}
+	return ""
+}
+
+func (m *Input) GetWebhook() string {
+	if x, ok := m.GetInputType().(*Input_Webhook); ok {
+		return x.Webhook
+	}
+	return ""
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Input) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*Input_Resource)(nil),
+		(*Input_Metric)(nil),
+		(*Input_Webhook)(nil),
+	}
+}
+
+// Output represents an output parameter type
+// Currently, these can only be a k8s resource
+type Output struct {
+	// Types that are valid to be assigned to OutputType:
+	//	*Output_Resource
+	OutputType           isOutput_OutputType `protobuf_oneof:"outputType"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *Output) Reset()         { *m = Output{} }
+func (m *Output) String() string { return proto.CompactTextString(m) }
+func (*Output) ProtoMessage()    {}
+func (*Output) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7c7e86e2b87635e, []int{4}
+}
+
+func (m *Output) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Output.Unmarshal(m, b)
+}
+func (m *Output) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Output.Marshal(b, m, deterministic)
+}
+func (m *Output) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Output.Merge(m, src)
+}
+func (m *Output) XXX_Size() int {
+	return xxx_messageInfo_Output.Size(m)
+}
+func (m *Output) XXX_DiscardUnknown() {
+	xxx_messageInfo_Output.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Output proto.InternalMessageInfo
+
+type isOutput_OutputType interface {
+	isOutput_OutputType()
+}
+
+type Output_Resource struct {
+	Resource *ResourceParameter `protobuf:"bytes,1,opt,name=resource,proto3,oneof"`
+}
+
+func (*Output_Resource) isOutput_OutputType() {}
+
+func (m *Output) GetOutputType() isOutput_OutputType {
+	if m != nil {
+		return m.OutputType
+	}
+	return nil
+}
+
+func (m *Output) GetResource() *ResourceParameter {
+	if x, ok := m.GetOutputType().(*Output_Resource); ok {
+		return x.Resource
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Output) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*Output_Resource)(nil),
+	}
+}
+
+type ResourceParameter struct {
+	// resource Api Kind
+	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	// resource Api Group. leave empty for core resources
+	Group string `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	// resource Api Version
+	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	// parameter should be a list of resources
+	// (in one or all namespaces)
+	// if set to false (default)
+	List                 bool     `protobuf:"varint,4,opt,name=list,proto3" json:"list,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Parameter) Reset()         { *m = Parameter{} }
-func (m *Parameter) String() string { return proto.CompactTextString(m) }
-func (*Parameter) ProtoMessage()    {}
-func (*Parameter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f7c7e86e2b87635e, []int{2}
+func (m *ResourceParameter) Reset()         { *m = ResourceParameter{} }
+func (m *ResourceParameter) String() string { return proto.CompactTextString(m) }
+func (*ResourceParameter) ProtoMessage()    {}
+func (*ResourceParameter) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7c7e86e2b87635e, []int{5}
 }
 
-func (m *Parameter) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Parameter.Unmarshal(m, b)
+func (m *ResourceParameter) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResourceParameter.Unmarshal(m, b)
 }
-func (m *Parameter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Parameter.Marshal(b, m, deterministic)
+func (m *ResourceParameter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResourceParameter.Marshal(b, m, deterministic)
 }
-func (m *Parameter) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Parameter.Merge(m, src)
+func (m *ResourceParameter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResourceParameter.Merge(m, src)
 }
-func (m *Parameter) XXX_Size() int {
-	return xxx_messageInfo_Parameter.Size(m)
+func (m *ResourceParameter) XXX_Size() int {
+	return xxx_messageInfo_ResourceParameter.Size(m)
 }
-func (m *Parameter) XXX_DiscardUnknown() {
-	xxx_messageInfo_Parameter.DiscardUnknown(m)
+func (m *ResourceParameter) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResourceParameter.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Parameter proto.InternalMessageInfo
+var xxx_messageInfo_ResourceParameter proto.InternalMessageInfo
 
-func (m *Parameter) GetLowerName() string {
+func (m *ResourceParameter) GetKind() string {
 	if m != nil {
-		return m.LowerName
+		return m.Kind
 	}
 	return ""
 }
 
-func (m *Parameter) GetSingleName() string {
+func (m *ResourceParameter) GetGroup() string {
 	if m != nil {
-		return m.SingleName
+		return m.Group
 	}
 	return ""
 }
 
-func (m *Parameter) GetPluralName() string {
+func (m *ResourceParameter) GetVersion() string {
 	if m != nil {
-		return m.PluralName
+		return m.Version
 	}
 	return ""
 }
 
-func (m *Parameter) GetImportPrefix() string {
+func (m *ResourceParameter) GetList() bool {
 	if m != nil {
-		return m.ImportPrefix
-	}
-	return ""
-}
-
-func (m *Parameter) GetPackage() string {
-	if m != nil {
-		return m.Package
-	}
-	return ""
-}
-
-func (m *Parameter) GetApiGroup() string {
-	if m != nil {
-		return m.ApiGroup
-	}
-	return ""
-}
-
-func (m *Parameter) GetIsCrd() bool {
-	if m != nil {
-		return m.IsCrd
+		return m.List
 	}
 	return false
+}
+
+// ThirdPartyCustomResource allow code to be generated
+// for input/output CRDs that are not built-in to Autopilot.
+// These types must be Kubernetes-compatible Go structs.
+type ThirdPartyResource struct {
+	// the singular CamelCased name of the resource
+	// equivalent to Kind
+	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	// Kubernetes API group for the resource
+	// e.g. "networking.istio.io"
+	Group string `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	// Kubernetes API Version for the resource
+	// e.g. "v1beta3"
+	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	// the plural CamelCased name of the resource
+	// equivalent to the pluralized form of Kind
+	PluralKind string `protobuf:"bytes,4,opt,name=pluralKind,proto3" json:"pluralKind,omitempty"`
+	// go package (import path) containing the go struct for the resource
+	GoPackage            string   `protobuf:"bytes,5,opt,name=goPackage,proto3" json:"goPackage,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ThirdPartyResource) Reset()         { *m = ThirdPartyResource{} }
+func (m *ThirdPartyResource) String() string { return proto.CompactTextString(m) }
+func (*ThirdPartyResource) ProtoMessage()    {}
+func (*ThirdPartyResource) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7c7e86e2b87635e, []int{6}
+}
+
+func (m *ThirdPartyResource) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ThirdPartyResource.Unmarshal(m, b)
+}
+func (m *ThirdPartyResource) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ThirdPartyResource.Marshal(b, m, deterministic)
+}
+func (m *ThirdPartyResource) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ThirdPartyResource.Merge(m, src)
+}
+func (m *ThirdPartyResource) XXX_Size() int {
+	return xxx_messageInfo_ThirdPartyResource.Size(m)
+}
+func (m *ThirdPartyResource) XXX_DiscardUnknown() {
+	xxx_messageInfo_ThirdPartyResource.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ThirdPartyResource proto.InternalMessageInfo
+
+func (m *ThirdPartyResource) GetKind() string {
+	if m != nil {
+		return m.Kind
+	}
+	return ""
+}
+
+func (m *ThirdPartyResource) GetGroup() string {
+	if m != nil {
+		return m.Group
+	}
+	return ""
+}
+
+func (m *ThirdPartyResource) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+func (m *ThirdPartyResource) GetPluralKind() string {
+	if m != nil {
+		return m.PluralKind
+	}
+	return ""
+}
+
+func (m *ThirdPartyResource) GetGoPackage() string {
+	if m != nil {
+		return m.GoPackage
+	}
+	return ""
 }
 
 // MetricsQueries extend the query options available to workers.
@@ -393,7 +678,7 @@ func (m *MetricsQuery) Reset()         { *m = MetricsQuery{} }
 func (m *MetricsQuery) String() string { return proto.CompactTextString(m) }
 func (*MetricsQuery) ProtoMessage()    {}
 func (*MetricsQuery) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f7c7e86e2b87635e, []int{3}
+	return fileDescriptor_f7c7e86e2b87635e, []int{7}
 }
 
 func (m *MetricsQuery) XXX_Unmarshal(b []byte) error {
@@ -437,43 +722,56 @@ func (m *MetricsQuery) GetParameters() []string {
 
 func init() {
 	proto.RegisterType((*AutopilotProject)(nil), "autopilot.AutopilotProject")
+	proto.RegisterType((*Resource)(nil), "autopilot.Resource")
 	proto.RegisterType((*Phase)(nil), "autopilot.Phase")
-	proto.RegisterType((*Parameter)(nil), "autopilot.Parameter")
+	proto.RegisterType((*Input)(nil), "autopilot.Input")
+	proto.RegisterType((*Output)(nil), "autopilot.Output")
+	proto.RegisterType((*ResourceParameter)(nil), "autopilot.ResourceParameter")
+	proto.RegisterType((*ThirdPartyResource)(nil), "autopilot.ThirdPartyResource")
 	proto.RegisterType((*MetricsQuery)(nil), "autopilot.MetricsQuery")
 }
 
 func init() { proto.RegisterFile("autopilot.proto", fileDescriptor_f7c7e86e2b87635e) }
 
 var fileDescriptor_f7c7e86e2b87635e = []byte{
-	// 467 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x53, 0xdb, 0x8e, 0xd3, 0x30,
-	0x10, 0x55, 0xb7, 0x6d, 0xda, 0xcc, 0x2e, 0xda, 0xca, 0x5a, 0x81, 0x85, 0x10, 0x8a, 0x02, 0x48,
-	0x79, 0xa1, 0xd5, 0xc2, 0x0f, 0x70, 0x91, 0xe0, 0x09, 0x54, 0x22, 0xc4, 0x03, 0x6f, 0x6e, 0x3a,
-	0xdb, 0x0e, 0xeb, 0xc4, 0xc6, 0x17, 0x60, 0xf9, 0x19, 0x3e, 0x82, 0xaf, 0xe1, 0x6f, 0x90, 0xdd,
-	0xa6, 0x49, 0x61, 0xdf, 0x7c, 0xce, 0x19, 0x8f, 0x66, 0xce, 0xb1, 0xe1, 0x5c, 0x78, 0xa7, 0x34,
-	0x49, 0xe5, 0xe6, 0xda, 0x28, 0xa7, 0x58, 0x7a, 0x20, 0xf2, 0xdf, 0x27, 0x30, 0x7b, 0xd9, 0xa2,
-	0xa5, 0x51, 0x5f, 0xb0, 0x72, 0x8c, 0xc1, 0xe8, 0x9a, 0x9a, 0x35, 0x1f, 0x64, 0x83, 0x22, 0x2d,
-	0xe3, 0x99, 0x3d, 0x04, 0x10, 0x9a, 0x3e, 0xa1, 0xb1, 0xa4, 0x1a, 0x7e, 0x12, 0x95, 0x1e, 0xc3,
-	0x72, 0x38, 0x53, 0x1a, 0x8d, 0x70, 0xca, 0xbc, 0x17, 0x35, 0xf2, 0x61, 0xac, 0x38, 0xe2, 0x58,
-	0x01, 0x89, 0xde, 0x0a, 0x8b, 0x96, 0x8f, 0xb2, 0x61, 0x71, 0xfa, 0x6c, 0x36, 0xef, 0x26, 0x5b,
-	0x06, 0xa1, 0xdc, 0xeb, 0xac, 0x80, 0x73, 0x6c, 0xc4, 0x4a, 0xe2, 0x1b, 0x6a, 0x84, 0xa4, 0x9f,
-	0x68, 0xf8, 0x38, 0x1b, 0x14, 0xd3, 0xf2, 0x5f, 0x9a, 0xbd, 0x80, 0x59, 0xe5, 0xad, 0x53, 0xf5,
-	0x52, 0x18, 0x51, 0xa3, 0x43, 0x63, 0x79, 0x12, 0xbb, 0x5f, 0xf4, 0xbb, 0xb7, 0x62, 0xf9, 0x5f,
-	0x35, 0xbb, 0x84, 0xc9, 0x57, 0x8f, 0x86, 0xd0, 0xf2, 0x49, 0xbc, 0x78, 0xaf, 0x77, 0xf1, 0x1d,
-	0x3a, 0x43, 0x95, 0xfd, 0xe0, 0xd1, 0xdc, 0x94, 0x6d, 0x5d, 0xfe, 0x6b, 0x00, 0xe3, 0x38, 0x70,
-	0xb0, 0xaa, 0x09, 0xeb, 0xee, 0xad, 0x0a, 0x67, 0x96, 0xc1, 0xe9, 0x1a, 0x6d, 0x65, 0x48, 0xbb,
-	0xce, 0xab, 0x3e, 0xc5, 0x38, 0x4c, 0xa8, 0x21, 0x47, 0x42, 0x46, 0x9f, 0xa6, 0x65, 0x0b, 0xd9,
-	0x05, 0x8c, 0xaf, 0xc2, 0x6e, 0x7c, 0x14, 0xf9, 0x1d, 0x60, 0x77, 0x21, 0xa1, 0x46, 0x7b, 0x67,
-	0xf9, 0x38, 0x1b, 0x16, 0x69, 0xb9, 0x47, 0xa1, 0x8f, 0xf2, 0x2e, 0x0a, 0x49, 0x14, 0x5a, 0x98,
-	0xff, 0x19, 0x40, 0x7a, 0xd8, 0x91, 0x3d, 0x80, 0x54, 0xaa, 0xef, 0xb8, 0x4b, 0x66, 0x37, 0x6a,
-	0x47, 0x84, 0x68, 0x2d, 0x35, 0x1b, 0x89, 0x51, 0xde, 0x47, 0xdb, 0x31, 0x41, 0xd7, 0xd2, 0x1b,
-	0x21, 0x7b, 0xc1, 0xf6, 0x98, 0x10, 0x3d, 0xd5, 0x5a, 0x19, 0xb7, 0x34, 0x78, 0x45, 0x3f, 0xe2,
-	0xe8, 0x69, 0x79, 0xc4, 0x85, 0x49, 0xb5, 0xa8, 0xae, 0xc5, 0x06, 0x63, 0x90, 0x69, 0xd9, 0x42,
-	0x76, 0x1f, 0xa6, 0x42, 0xd3, 0x5b, 0xa3, 0xbc, 0xe6, 0x49, 0x94, 0x0e, 0x38, 0xb8, 0x41, 0xf6,
-	0xb5, 0x59, 0xf3, 0xc9, 0xce, 0x8d, 0x08, 0xf2, 0x2d, 0x9c, 0xf5, 0x63, 0xb9, 0x35, 0x83, 0xc7,
-	0x70, 0x27, 0x84, 0x75, 0xf3, 0x11, 0x6b, 0x2d, 0x85, 0x6b, 0xd7, 0x3a, 0x26, 0xe3, 0x66, 0xdd,
-	0xb3, 0x19, 0x46, 0x0b, 0x7b, 0xcc, 0xab, 0x27, 0x9f, 0x1f, 0x6d, 0xc8, 0x6d, 0xfd, 0x6a, 0x5e,
-	0xa9, 0x7a, 0x61, 0x95, 0x54, 0x4f, 0x49, 0x2d, 0x0e, 0xaf, 0x63, 0x21, 0x34, 0x2d, 0xbe, 0x5d,
-	0xae, 0x92, 0xf8, 0xad, 0x9e, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0xe9, 0x2a, 0x1e, 0x67, 0x69,
-	0x03, 0x00, 0x00,
+	// 615 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x53, 0xdd, 0x6e, 0x13, 0x3d,
+	0x10, 0xed, 0x36, 0xff, 0x93, 0x7e, 0x6a, 0xeb, 0x7e, 0x12, 0xab, 0xaa, 0x54, 0xd1, 0x02, 0x52,
+	0x24, 0x44, 0xa2, 0x96, 0x3b, 0xee, 0x08, 0x52, 0x55, 0x84, 0xa0, 0xc1, 0xaa, 0xb8, 0xe0, 0xce,
+	0x49, 0xa7, 0x1b, 0x13, 0x67, 0x6d, 0x6c, 0x6f, 0xab, 0xf0, 0x00, 0x3c, 0x02, 0x4f, 0xc4, 0xd3,
+	0x20, 0xf1, 0x0e, 0x68, 0x67, 0x77, 0x93, 0x2d, 0xe9, 0x1d, 0xbd, 0xf3, 0x9c, 0x39, 0x33, 0x3e,
+	0xc7, 0x33, 0x86, 0x5d, 0x91, 0x7a, 0x6d, 0xa4, 0xd2, 0x7e, 0x60, 0xac, 0xf6, 0x9a, 0x75, 0x56,
+	0xc0, 0xe1, 0x71, 0xac, 0x75, 0xac, 0x70, 0x48, 0x89, 0x49, 0x7a, 0x3d, 0xbc, 0xb5, 0xc2, 0x18,
+	0xb4, 0x2e, 0xa7, 0x46, 0xbf, 0x03, 0xd8, 0x7b, 0x5d, 0xb2, 0xc7, 0x56, 0x7f, 0xc1, 0xa9, 0x67,
+	0x11, 0xec, 0x68, 0x83, 0x56, 0x78, 0x6d, 0x3f, 0x88, 0x05, 0x86, 0x41, 0x2f, 0xe8, 0x77, 0xf8,
+	0x1d, 0x8c, 0x9d, 0x40, 0xc7, 0xa2, 0xd3, 0xa9, 0x9d, 0xa2, 0x0b, 0xb7, 0x7b, 0xb5, 0x7e, 0xf7,
+	0xf4, 0x60, 0xb0, 0x16, 0xc2, 0x8b, 0x1c, 0x5f, 0xb3, 0xd8, 0x05, 0x1c, 0xf8, 0x99, 0xb4, 0x57,
+	0x63, 0x61, 0xfd, 0x92, 0xaf, 0x8a, 0x1b, 0x54, 0xfc, 0xb8, 0x52, 0x7c, 0xb9, 0xc1, 0xe2, 0xf7,
+	0x55, 0xb2, 0x13, 0x68, 0x7d, 0x4d, 0xd1, 0x4a, 0x74, 0x61, 0x93, 0x9a, 0x3c, 0xaa, 0x34, 0x79,
+	0x8f, 0xde, 0xca, 0xa9, 0xfb, 0x98, 0xa2, 0x5d, 0xf2, 0x92, 0x17, 0xfd, 0x0a, 0xa0, 0x5d, 0x36,
+	0x60, 0x0c, 0xea, 0x73, 0x99, 0x5c, 0x15, 0xfe, 0xe8, 0xcc, 0xfe, 0x87, 0x46, 0x6c, 0x75, 0x6a,
+	0xc2, 0x6d, 0x02, 0xf3, 0x80, 0x85, 0xd0, 0xba, 0x41, 0xeb, 0xa4, 0x4e, 0xc2, 0x1a, 0xe1, 0x65,
+	0xc8, 0xfa, 0xd0, 0x34, 0x33, 0xe1, 0xd0, 0x85, 0x75, 0x92, 0xb0, 0x57, 0x91, 0x30, 0xce, 0x12,
+	0xbc, 0xc8, 0xb3, 0x33, 0xd8, 0xc3, 0x44, 0x4c, 0x14, 0xbe, 0xd1, 0x89, 0xb7, 0x5a, 0x29, 0xb4,
+	0x61, 0xa3, 0x17, 0xf4, 0xbb, 0xa7, 0x87, 0x83, 0x7c, 0x4a, 0x83, 0x72, 0x4a, 0x83, 0x91, 0xd6,
+	0xea, 0x93, 0x50, 0x29, 0xf2, 0x8d, 0x1a, 0xd6, 0x87, 0xdd, 0x1c, 0x3b, 0x93, 0x89, 0x50, 0xf2,
+	0x1b, 0xda, 0xb0, 0xd9, 0x0b, 0xfa, 0x6d, 0xfe, 0x37, 0x1c, 0xfd, 0x0c, 0xa0, 0x41, 0x1a, 0x32,
+	0xa7, 0xc9, 0x7a, 0x92, 0x74, 0x66, 0x3d, 0xe8, 0x5e, 0xa1, 0x9b, 0x5a, 0x69, 0x7c, 0xe6, 0x2b,
+	0xf7, 0x5b, 0x85, 0x32, 0xd7, 0x32, 0x91, 0x5e, 0x0a, 0x45, 0xae, 0xdb, 0xbc, 0x0c, 0xb3, 0x57,
+	0xba, 0xce, 0xae, 0x09, 0xeb, 0x84, 0xe7, 0x41, 0xf6, 0x16, 0x32, 0x31, 0xa9, 0x2f, 0x67, 0x5a,
+	0x7d, 0x8b, 0xb7, 0x59, 0x82, 0x17, 0x79, 0xf6, 0x1c, 0x5a, 0x3a, 0xf5, 0x44, 0xcd, 0x27, 0xb7,
+	0x5f, 0xa1, 0x5e, 0x50, 0x86, 0x97, 0x8c, 0xe8, 0x7b, 0x00, 0x0d, 0x2a, 0x67, 0xaf, 0xa0, 0x5d,
+	0xae, 0x13, 0x59, 0xe9, 0x9e, 0x1e, 0xdd, 0xb3, 0x73, 0x63, 0x61, 0xc5, 0x02, 0x3d, 0xda, 0xf3,
+	0x2d, 0xbe, 0xe2, 0xb3, 0x10, 0x9a, 0x0b, 0x5a, 0x89, 0xdc, 0xe9, 0xf9, 0x16, 0x2f, 0x62, 0x76,
+	0x08, 0xad, 0x5b, 0x9c, 0xcc, 0xb4, 0x9e, 0xe7, 0xc3, 0x3d, 0xdf, 0xe2, 0x25, 0x30, 0xea, 0x42,
+	0x87, 0x24, 0x5f, 0x2e, 0x0d, 0x46, 0x1c, 0x9a, 0xb9, 0xb6, 0x7f, 0x11, 0x32, 0xda, 0x01, 0xc8,
+	0x9d, 0x51, 0xcf, 0x39, 0xec, 0x6f, 0xd0, 0x1f, 0x64, 0x31, 0x19, 0xd4, 0x95, 0x74, 0xbe, 0x98,
+	0x10, 0x9d, 0xa3, 0x1f, 0x01, 0xb0, 0xcd, 0xcf, 0xf5, 0x20, 0xd7, 0x1d, 0x03, 0x18, 0x95, 0x5a,
+	0xa1, 0xde, 0x65, 0x9d, 0xea, 0x94, 0xac, 0x20, 0xec, 0x08, 0x3a, 0xb1, 0x1e, 0x8b, 0xe9, 0x5c,
+	0xc4, 0x48, 0x6b, 0xdf, 0xe1, 0x6b, 0x20, 0x9a, 0xc1, 0x4e, 0xf5, 0xbf, 0xde, 0xbb, 0xaf, 0x4f,
+	0xe1, 0xbf, 0xec, 0x17, 0x2f, 0x2f, 0x71, 0x61, 0x94, 0xf0, 0x58, 0x28, 0xbb, 0x0b, 0x92, 0x8e,
+	0xf2, 0x1d, 0x5d, 0x58, 0xeb, 0xd5, 0x48, 0xc7, 0x0a, 0x19, 0x3d, 0xfb, 0xfc, 0x24, 0x96, 0x7e,
+	0x96, 0x4e, 0x06, 0x53, 0xbd, 0x18, 0x3a, 0xad, 0xf4, 0x0b, 0xa9, 0x87, 0xab, 0xd9, 0x0d, 0x85,
+	0x91, 0xc3, 0x9b, 0x93, 0x49, 0x93, 0xbe, 0xe2, 0xcb, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xb0,
+	0x86, 0x0b, 0xc1, 0x5c, 0x05, 0x00, 0x00,
 }

@@ -10,9 +10,13 @@ weight: 5
 
 - [autopilot.proto](#autopilot.proto)
     - [AutopilotProject](#autopilot.AutopilotProject)
+    - [Input](#autopilot.Input)
     - [MetricsQuery](#autopilot.MetricsQuery)
-    - [Parameter](#autopilot.Parameter)
+    - [Output](#autopilot.Output)
     - [Phase](#autopilot.Phase)
+    - [Resource](#autopilot.Resource)
+    - [ResourceParameter](#autopilot.ResourceParameter)
+    - [ThirdPartyResource](#autopilot.ThirdPartyResource)
   
   
   
@@ -52,13 +56,29 @@ default location is 'autopilot.yaml'
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| kind | [string](#string) |  | the name (kubernetes Kind) of the top-level CRD for the operator Specified via the `ap init <Kind>` command |
-| apiVersion | [string](#string) |  | the ApiVersion of the top-level CRD for the operator |
-| operatorName | [string](#string) |  | the name of the Operator this is used to name and label loggers, k8s resources, and metrics exposed by the operator. Should be [valid Kube resource names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names). |
-| phases | [][Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed). <br> Each phase specifies a unique name and its own set of inputs and outputs. |
-| enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion |
-| customParameters | [][Parameter](#autopilot.Parameter) | repeated | custom Parameters which extend Autopilot's builtin types |
-| queries | [][MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend Autopilot's metrics queries |
+| operatorName | [string](#string) |  | the name of the Operator this is used to name and label loggers, k8s resources, and metrics exposed by the operator. Should be [a valid Kube resource name](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names). |
+| resources | [][Resource](#autopilot.Resource) | repeated | the set of Top-Level Custom Resources that are managed by this Operator. the Operator will run a [Controller](https://kubernetes.io/docs/concepts/architecture/controller/) loop for each resource. To add CRDs without creating a controller, set enableController: false on the resource. |
+| thirdPartyResources | [][ThirdPartyResource](#autopilot.ThirdPartyResource) | repeated | Third-party CRDs which can be used as parameters. Extends Autopilot's builtin types |
+| queries | [][MetricsQuery](#autopilot.MetricsQuery) | repeated | custom Queries which extend Autopilot's builtin metrics queries |
+
+
+
+
+
+
+<a name="autopilot.Input"></a>
+
+### Input
+Input represents an input parameter type
+These can either be a k8s resource,
+a metric, or a webhook.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| resource | [ResourceParameter](#autopilot.ResourceParameter) |  | a kubernetes resource. this can include builtin and custom resources. <br> Only one of `resource`, `metric`, or `webhook` should be set. |
+| metric | [string](#string) |  | a named metric query. this can reference either a built-in query, or a custom query defined in the root of the `autopilot.yaml` the names of built-in queries are listed here: https://docs.solo.io/autopilot/latest/reference/queries |
+| webhook | [string](#string) |  | the name of a webhook defined in the `autopilot.yaml`. Phase inputs will contain a queue of unprocessed of payloads received by the webhook. |
 
 
 
@@ -127,23 +147,16 @@ type CanaryDeploymentMetrics interface {
 
 
 
-<a name="autopilot.Parameter"></a>
+<a name="autopilot.Output"></a>
 
-### Parameter
-Custom Parameters allow code to be generated
-for inputs/outputs that are not built-in to Autopilot.
-These types must be Kubernetes-compatible Go structs.
+### Output
+Output represents an output parameter type
+Currently, these can only be a k8s resource
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| lowerName | [string](#string) |  | the fully lower-case name of this resource e.g. "pods", "services", "replicasets", "configmaps" |
-| singleName | [string](#string) |  | the singular CamelCased name of the resource equivalent to Kind |
-| pluralName | [string](#string) |  | the plural CamelCased name of the resource equivalent to the pluralized form of Kind |
-| importPrefix | [string](#string) |  | import prefix used by generated code |
-| package | [string](#string) |  | go package (import path) to the go struct for the resource |
-| apiGroup | [string](#string) |  | Kubernetes API group for the resource e.g. "networking.istio.io" |
-| isCrd | [bool](#bool) |  | indicates whether the resource is a CRD if true, the Resource will be added to the operator's runtime.Scheme |
+| resource | [ResourceParameter](#autopilot.ResourceParameter) |  | a kubernetes resource. this can include builtin and custom resources. <br> Only `resource` can currently be set. |
 
 
 
@@ -168,12 +181,70 @@ and monitoring metrics.
 | description | [string](#string) |  | description of the phase. used for comments and docs |
 | initial | [bool](#bool) |  | indicates whether this is the initial phase of the system. exactly one phase must be the initial phase |
 | final | [bool](#bool) |  | indicates whether this is a "final" or "resting" phase of the system. when the CRD is in the final phase, no more processing will be done on it |
-| inputs | [][string](#string) | repeated | the set of inputs for this phase the inputs will be retrieved by the scheduler and passed to the worker as input parameters
-
-custom inputs can be defined in the autopilot.yaml |
-| outputs | [][string](#string) | repeated | the set of outputs for this phase the inputs will be propagated to k8s storage (etcd) by the scheduler.
+| inputs | [][Input](#autopilot.Input) | repeated | The set of inputs for this phase. The inputs will be retrieved by the scheduler and passed to the worker as input parameters. |
+| outputs | [][Output](#autopilot.Output) | repeated | the set of outputs for this phase the inputs will be propagated to k8s storage (etcd) by the scheduler.
 
 custom outputs can be defined in the autopilot.yaml |
+
+
+
+
+
+
+<a name="autopilot.Resource"></a>
+
+### Resource
+An Autopilot Resource is a Custom Resource.
+Autopilot will generate Go code for
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| kind | [string](#string) |  | the name (kubernetes Kind) of the Custom Resource e.g. "MyResource" |
+| group | [string](#string) |  | the Api Group of the top-level CRD for the operator e.g. "mycompany.io" |
+| version | [string](#string) |  | e.g. "v1" |
+| phases | [][Phase](#autopilot.Phase) | repeated | Each phase represents a different stage in the lifecycle of the CRD (e.g. Pending/Succeeded/Failed). <br> Each phase specifies a unique name and its own set of inputs and outputs. <br> If a controller is generated for this Resource, each phase will define the inputs/outputs and work function the controller will run. |
+| enableController | [google.protobuf.BoolValue](#google.protobuf.BoolValue) |  | Generate and run a controller to manage this resource. This is set to 'true' by default. Set this to 'false' to create the resource without generating or running a controller for it. |
+| enableFinalizer | [bool](#bool) |  | enable use of a Finalizer to handle object deletion. only applies if enableController is not set to false |
+
+
+
+
+
+
+<a name="autopilot.ResourceParameter"></a>
+
+### ResourceParameter
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| kind | [string](#string) |  | resource Api Kind |
+| group | [string](#string) |  | resource Api Group. leave empty for core resources |
+| version | [string](#string) |  | resource Api Version |
+| list | [bool](#bool) |  | parameter should be a list of resources (in one or all namespaces) if set to false (default) |
+
+
+
+
+
+
+<a name="autopilot.ThirdPartyResource"></a>
+
+### ThirdPartyResource
+ThirdPartyCustomResource allow code to be generated
+for input/output CRDs that are not built-in to Autopilot.
+These types must be Kubernetes-compatible Go structs.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| kind | [string](#string) |  | the singular CamelCased name of the resource equivalent to Kind |
+| group | [string](#string) |  | Kubernetes API group for the resource e.g. "networking.istio.io" |
+| version | [string](#string) |  | Kubernetes API Version for the resource e.g. "v1beta3" |
+| pluralKind | [string](#string) |  | the plural CamelCased name of the resource equivalent to the pluralized form of Kind |
+| goPackage | [string](#string) |  | go package (import path) containing the go struct for the resource |
 
 
 

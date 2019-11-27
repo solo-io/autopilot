@@ -3,13 +3,14 @@
 package metrics
 
 import (
-	"context"
+	"time"
 
 	"github.com/solo-io/autopilot/pkg/metrics"
 )
 
 type CanaryDeploymentMetrics interface {
 	metrics.Client
+	GetMyquery(ctx context.Context,  string) (*metrics.QueryResult, error)
 	GetIstioSuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
 	GetIstioRequestDuration(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
 	GetEnvoySuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error)
@@ -22,6 +23,13 @@ type metricsClient struct {
 
 func NewMetricsClient(client metrics.Client) *metricsClient {
 	return &metricsClient{Client: client}
+}
+
+func (c *metricsClient) GetMyquery(ctx context.Context,  string) (*metrics.QueryResult, error) {
+	queryTemplate := `sum`
+	queryParameters := map[string]string{
+	}
+	return c.Client.RunQuery(ctx, queryTemplate, queryParameters)
 }
 
 func (c *metricsClient) GetIstioSuccessRate(ctx context.Context, Namespace, Name, Interval string) (*metrics.QueryResult, error) {
@@ -45,9 +53,9 @@ func (c *metricsClient) GetIstioSuccessRate(ctx context.Context, Namespace, Name
 	) 
 	* 100`
 	queryParameters := map[string]string{
-		"Namespace": Namespace,
-		"Name":      Name,
-		"Interval":  Interval,
+	"Namespace": Namespace,
+	"Name": Name,
+	"Interval": Interval,
 	}
 	return c.Client.RunQuery(ctx, queryTemplate, queryParameters)
 }
@@ -65,9 +73,9 @@ func (c *metricsClient) GetIstioRequestDuration(ctx context.Context, Namespace, 
 		) by (le)
 	)`
 	queryParameters := map[string]string{
-		"Namespace": Namespace,
-		"Name":      Name,
-		"Interval":  Interval,
+	"Namespace": Namespace,
+	"Name": Name,
+	"Interval": Interval,
 	}
 	return c.Client.RunQuery(ctx, queryTemplate, queryParameters)
 }
@@ -93,9 +101,9 @@ func (c *metricsClient) GetEnvoySuccessRate(ctx context.Context, Namespace, Name
 	) 
 	* 100`
 	queryParameters := map[string]string{
-		"Namespace": Namespace,
-		"Name":      Name,
-		"Interval":  Interval,
+	"Namespace": Namespace,
+	"Name": Name,
+	"Interval": Interval,
 	}
 	return c.Client.RunQuery(ctx, queryTemplate, queryParameters)
 }
@@ -113,9 +121,9 @@ func (c *metricsClient) GetEnvoyRequestDuration(ctx context.Context, Namespace, 
 		) by (le)
 	)`
 	queryParameters := map[string]string{
-		"Namespace": Namespace,
-		"Name":      Name,
-		"Interval":  Interval,
+	"Namespace": Namespace,
+	"Name": Name,
+	"Interval": Interval,
 	}
 	return c.Client.RunQuery(ctx, queryTemplate, queryParameters)
 }

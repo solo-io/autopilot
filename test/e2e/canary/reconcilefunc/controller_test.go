@@ -1,4 +1,4 @@
-package controller_test
+package reconcilefunc_test
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-var _ = Describe("Controller", func() {
+var _ = Describe("Canary Reconcile", func() {
 	var (
 		client    ezkube.RestClient
 		mgr       manager.Manager

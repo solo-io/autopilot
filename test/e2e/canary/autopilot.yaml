@@ -47,3 +47,8 @@ phases:
     outputs:
       - deployments
       - virtualservices
+
+queries:
+  - name: myquery
+    queryTemplate: |
+      sum
