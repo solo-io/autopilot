@@ -6,7 +6,9 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/solo-io/autopilot/pkg/controller"
 	"github.com/solo-io/autopilot/pkg/ezkube"
-	aphandler "github.com/solo-io/autopilot/pkg/handler"
+	appredicate "github.com/solo-io/autopilot/pkg/predicate"
+	"github.com/solo-io/autopilot/pkg/request"
+	"github.com/solo-io/autopilot/pkg/workqueue"
 	"github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/testutils"
 	v1 "k8s.io/api/core/v1"
@@ -21,7 +23,7 @@ import (
 	"time"
 )
 
-var _ = Describe("EventSources", func() {
+var _ = Describe("Controller", func() {
 	var (
 		client    ezkube.RestClient
 		mgr       manager.Manager
@@ -48,10 +50,10 @@ var _ = Describe("EventSources", func() {
 		})
 		cancel()
 	})
-	It("works", func() {
-		logger := aphandler.LoggingPredicate{log.Log}
+	It("watches the top level resource and its dependencies", func() {
+		logger := appredicate.EventLogger{log.Log}
 
-		recFunc := func(topLevelResource runtime.Object) (result reconcile.Result, e error) {
+		recFunc := func(primaryResource runtime.Object) (result reconcile.Result, e error) {
 			result.RequeueAfter = time.Second
 			return
 		}
@@ -59,23 +61,28 @@ var _ = Describe("EventSources", func() {
 		labelMatch := map[string]string{"service": "mesh"}
 
 		predicates := []predicate.Predicate{
-			aphandler.LabelMatchingPredicate{
+			appredicate.LabelMatcher{
 				Selector: labels.SelectorFromSet(labelMatch),
 			},
 			logger,
 		}
 
+		queue := &workqueue.MultiClusterQueues{}
+
 		opts := Controller{
-			Name:               "test",
-			Ctx:                context.Background(),
-			Reconcile: func(topLevelResource runtime.Object) (result reconcile.Result, e error) {
-				return recFunc(topLevelResource)
+			Cluster: "",
+			Ctx:     context.Background(),
+			Reconcile: func(primaryResource runtime.Object) (result reconcile.Result, e error) {
+				return recFunc(primaryResource)
 			},
-			TopLevelResource:   &v1.ConfigMap{},
-			TopLevelPredicates: predicates,
+			PrimaryResource:   &v1.ConfigMap{},
+			PrimaryPredicates: predicates,
 			InputResources: map[runtime.Object][]predicate.Predicate{
 				&v1.Secret{}: predicates,
 			},
+			OutputResources:        nil, // todo
+			ActivePrimaryResources: &request.MultiClusterRequests{},
+			ActiveWorkQueues:       queue,
 		}
 
 		err := opts.AddToManager(mgr)
@@ -86,7 +93,7 @@ var _ = Describe("EventSources", func() {
 			Namespace: namespace,
 			Labels:    labelMatch,
 		}}
-		recFunc = func(topLevelResource runtime.Object) (result reconcile.Result, e error) {
+		recFunc = func(primaryResource runtime.Object) (result reconcile.Result, e error) {
 			e = client.Get(context.TODO(), &cm)
 			return
 		}
@@ -98,14 +105,14 @@ var _ = Describe("EventSources", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(func() map[string]string {
 			return cm.Data
-		}, time.Second * 10).Should(Equal(data))
+		}, time.Second*10).Should(Equal(data))
 
 		sec := v1.Secret{ObjectMeta: metav1.ObjectMeta{
 			Name:      "input-resource",
 			Namespace: namespace,
 			Labels:    labelMatch,
 		}}
-		recFunc = func(topLevelResource runtime.Object) (result reconcile.Result, e error) {
+		recFunc = func(primaryResource runtime.Object) (result reconcile.Result, e error) {
 			e = client.Get(context.TODO(), &sec)
 			return
 		}
@@ -117,6 +124,6 @@ var _ = Describe("EventSources", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(func() map[string][]byte {
 			return sec.Data
-		}, time.Second * 10).Should(Equal(secData))
+		}, time.Second*10).Should(Equal(secData))
 	})
 })

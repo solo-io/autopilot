@@ -11,18 +11,21 @@ import (
 
 var _ predicate.Predicate = RequestTrackingPredicate{}
 
-// RequestTrackingPredicate adds a request on a Create event and removes it on a Delete event
+// RequestTrackingPredicate tracks reconcile requests across clusters
+// It is used to map requests for input resources (in any cluster)
+// back to the original
 type RequestTrackingPredicate struct {
-	Requests *request.SyncRequests
+	Cluster string
+	Requests *request.MultiClusterRequests
 }
 
 func (h RequestTrackingPredicate) Create(e event.CreateEvent) bool {
-	h.Requests.Append(RequestForObject(e.Meta))
+	h.Requests.Append(h.Cluster, RequestForObject(e.Meta))
 	return true
 }
 
 func (h RequestTrackingPredicate) Delete(e event.DeleteEvent) bool {
-	h.Requests.Remove(RequestForObject(e.Meta))
+	h.Requests.Remove(h.Cluster, ZRequestForObject(e.Meta))
 	return true
 }
 

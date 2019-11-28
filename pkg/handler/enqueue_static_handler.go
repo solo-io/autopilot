@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/solo-io/autopilot/pkg/request"
+	apqueue "github.com/solo-io/autopilot/pkg/workqueue"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -9,61 +10,73 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var enqueueStaticLog = log.Log.WithName("eventhandler").WithName("EnqueueStaticRequests")
+var enqueueMultiClusterLog = log.Log.WithName("eventhandler").WithName("EnqueueMultiCluster")
 
-var _ handler.EventHandler = &EnqueueStaticRequests{}
+var _ handler.EventHandler = &EnqueueMultiCluster{}
 
-// EnqueueStaticRequests enqueues a statically defined Request.
-// This is used by Autopilot to enqueue requests for a top level resource
-// whenever a watched input resource changes.
-type EnqueueStaticRequests struct {
-	RequestsToEnqueue *request.SyncRequests
+// EnqueueMultiCluster enqueues statically defined requests across clusters
+// whenever an event is received. Use this to propagate a list of requests
+// to queues shared across cluster managers.
+// This is used by Autopilot to enqueueRequestsAllClusters requests for a primary level resource
+// whenever a watched input resource changes, regardless of the cluster the primary resource lives in.
+type EnqueueMultiCluster struct {
+	// the set of all requests to enqueueRequestsAllClusters by the target cluster (where the primary resource lives)
+	RequestsToEnqueue *request.MultiClusterRequests
+
+	// use this to queue requests to controllers registered to another manager
+	WorkQueues *apqueue.MultiClusterQueues
 }
 
 // Create implements EventHandler
-func (e *EnqueueStaticRequests) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueMultiCluster) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	if evt.Meta == nil {
-		enqueueStaticLog.Error(nil, "CreateEvent received with no metadata", "event", evt)
+		enqueueMultiClusterLog.Error(nil, "CreateEvent received with no metadata", "event", evt)
 		return
 	}
-	e.enqueue(q)
+	e.enqueueRequestsAllClusters()
 }
 
 // Update implements EventHandler
-func (e *EnqueueStaticRequests) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueMultiCluster) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	if evt.MetaOld != nil {
-		e.enqueue(q)
+		e.enqueueRequestsAllClusters()
 	} else {
-		enqueueStaticLog.Error(nil, "UpdateEvent received with no old metadata", "event", evt)
+		enqueueMultiClusterLog.Error(nil, "UpdateEvent received with no old metadata", "event", evt)
 	}
 
 	if evt.MetaNew != nil {
-		e.enqueue(q)
+		e.enqueueRequestsAllClusters()
 	} else {
-		enqueueStaticLog.Error(nil, "UpdateEvent received with no new metadata", "event", evt)
+		enqueueMultiClusterLog.Error(nil, "UpdateEvent received with no new metadata", "event", evt)
 	}
 }
 
 // Delete implements EventHandler
-func (e *EnqueueStaticRequests) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueMultiCluster) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	if evt.Meta == nil {
-		enqueueStaticLog.Error(nil, "DeleteEvent received with no metadata", "event", evt)
+		enqueueMultiClusterLog.Error(nil, "DeleteEvent received with no metadata", "event", evt)
 		return
 	}
-	e.enqueue(q)
+	e.enqueueRequestsAllClusters()
 }
 
 // Generic implements EventHandler
-func (e *EnqueueStaticRequests) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *EnqueueMultiCluster) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	if evt.Meta == nil {
-		enqueueStaticLog.Error(nil, "GenericEvent received with no metadata", "event", evt)
+		enqueueMultiClusterLog.Error(nil, "GenericEvent received with no metadata", "event", evt)
 		return
 	}
-	e.enqueue(q)
+	e.enqueueRequestsAllClusters()
 }
 
-func (e *EnqueueStaticRequests) enqueue(q workqueue.RateLimitingInterface) {
-	e.RequestsToEnqueue.Each(func(i reconcile.Request) {
+//
+func (e *EnqueueMultiCluster) enqueueRequestsAllClusters() {
+	e.RequestsToEnqueue.Each(func(cluster string, i reconcile.Request) {
+		q := e.WorkQueues.Get(cluster)
+		if q == nil {
+			enqueueMultiClusterLog.Error(nil, "Cannot enqueue request, no queue registered for cluster", "request", i, "cluster", cluster)
+			return
+		}
 		q.Add(i)
 	})
 }
