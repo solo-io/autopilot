@@ -10,16 +10,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var enqueueMultiClusterLog = log.Log.WithName("eventhandler").WithName("EnqueueMultiCluster")
+var enqueueMultiClusterLog = log.Log.WithName("eventhandler").WithName("BroadcastRequests")
 
-var _ handler.EventHandler = &EnqueueMultiCluster{}
+var _ handler.EventHandler = &BroadcastRequests{}
 
-// EnqueueMultiCluster enqueues statically defined requests across clusters
+// BroadcastRequests enqueues statically defined requests across clusters
 // whenever an event is received. Use this to propagate a list of requests
 // to queues shared across cluster managers.
 // This is used by Autopilot to enqueueRequestsAllClusters requests for a primary level resource
 // whenever a watched input resource changes, regardless of the cluster the primary resource lives in.
-type EnqueueMultiCluster struct {
+type BroadcastRequests struct {
 	// the set of all requests to enqueueRequestsAllClusters by the target cluster (where the primary resource lives)
 	RequestsToEnqueue *request.MultiClusterRequests
 
@@ -28,7 +28,7 @@ type EnqueueMultiCluster struct {
 }
 
 // Create implements EventHandler
-func (e *EnqueueMultiCluster) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (e *BroadcastRequests) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
 	if evt.Meta == nil {
 		enqueueMultiClusterLog.Error(nil, "CreateEvent received with no metadata", "event", evt)
 		return
@@ -37,7 +37,7 @@ func (e *EnqueueMultiCluster) Create(evt event.CreateEvent, q workqueue.RateLimi
 }
 
 // Update implements EventHandler
-func (e *EnqueueMultiCluster) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (e *BroadcastRequests) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
 	if evt.MetaOld != nil {
 		e.enqueueRequestsAllClusters()
 	} else {
@@ -52,7 +52,7 @@ func (e *EnqueueMultiCluster) Update(evt event.UpdateEvent, q workqueue.RateLimi
 }
 
 // Delete implements EventHandler
-func (e *EnqueueMultiCluster) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (e *BroadcastRequests) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
 	if evt.Meta == nil {
 		enqueueMultiClusterLog.Error(nil, "DeleteEvent received with no metadata", "event", evt)
 		return
@@ -61,7 +61,7 @@ func (e *EnqueueMultiCluster) Delete(evt event.DeleteEvent, q workqueue.RateLimi
 }
 
 // Generic implements EventHandler
-func (e *EnqueueMultiCluster) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (e *BroadcastRequests) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	if evt.Meta == nil {
 		enqueueMultiClusterLog.Error(nil, "GenericEvent received with no metadata", "event", evt)
 		return
@@ -70,7 +70,7 @@ func (e *EnqueueMultiCluster) Generic(evt event.GenericEvent, q workqueue.RateLi
 }
 
 //
-func (e *EnqueueMultiCluster) enqueueRequestsAllClusters() {
+func (e *BroadcastRequests) enqueueRequestsAllClusters() {
 	e.RequestsToEnqueue.Each(func(cluster string, i reconcile.Request) {
 		q := e.WorkQueues.Get(cluster)
 		if q == nil {

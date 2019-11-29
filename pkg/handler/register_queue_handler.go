@@ -20,4 +20,3 @@ func QueueRegisteringHandler(cluster string, queues *apqueue.MultiClusterQueues)
 		},
 	}
 }
-

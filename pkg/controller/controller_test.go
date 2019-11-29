@@ -67,8 +67,6 @@ var _ = Describe("Controller", func() {
 			logger,
 		}
 
-		queue := &workqueue.MultiClusterQueues{}
-
 		opts := Controller{
 			Cluster: "",
 			Ctx:     context.Background(),
@@ -82,7 +80,7 @@ var _ = Describe("Controller", func() {
 			},
 			OutputResources:        nil, // todo
 			ActivePrimaryResources: &request.MultiClusterRequests{},
-			ActiveWorkQueues:       queue,
+			ActiveWorkQueues:       &workqueue.MultiClusterQueues{},
 		}
 
 		err := opts.AddToManager(mgr)

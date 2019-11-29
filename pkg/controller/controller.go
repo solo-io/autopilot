@@ -6,12 +6,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	aphandler "github.com/solo-io/autopilot/pkg/handler"
-	appredicate "github.com/solo-io/autopilot/pkg/predicate"
 	"github.com/solo-io/autopilot/pkg/request"
 	"github.com/solo-io/autopilot/pkg/workqueue"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -76,7 +76,9 @@ func (c *Controller) AddToManager(mgr manager.Manager) error {
 		return errors.Errorf("empty schema list found for %T", c.PrimaryResource)
 	}
 
-	name := fmt.Sprintf("%T,Cluster=%v", schemas[0].String(), c.Cluster)
+	name := fmt.Sprintf("%v,Cluster=%v", schemas[0].String(), c.Cluster)
+
+	logger := log.Log.WithName(name)
 
 	// instantiate the base controller.
 	// this will track our metrics
@@ -87,30 +89,34 @@ func (c *Controller) AddToManager(mgr manager.Manager) error {
 		return err
 	}
 
-
-	// add the predicate that tracks each live request (for existing instances of the top level resource) across clusters
-	multiClusterTracker := append(c.PrimaryPredicates, &appredicate.MultiClusterRequestTracker{
-		Cluster:  c.Cluster,
-		Requests: c.ActivePrimaryResources,
-	})
-
 	// start the top-level watch
+	logger.Info(fmt.Sprintf("starting primary watch for %T", c.PrimaryPredicates))
 	if err := ctl.Watch(&source.Kind{Type: c.PrimaryResource},
-	&aphandler.MultiHandler{
-		Handlers: []handler.EventHandler{
-			aphandler.QueueRegisteringHandler(c.Cluster, c.ActiveWorkQueues),
-			&handler.EnqueueRequestForObject{},
-		},
-	}, multiClusterTracker...); err != nil {
+		&aphandler.MultiHandler{
+			Handlers: []handler.EventHandler{
+				// register the queue for the controller to the queue registry
+				aphandler.QueueRegisteringHandler(c.Cluster, c.ActiveWorkQueues),
+
+				// track each live request (for existing instances of the top level resource) across clusters
+				&aphandler.MultiClusterRequestTracker{
+					Cluster:  c.Cluster,
+					Requests: c.ActivePrimaryResources,
+				},
+
+				// handle the request itself
+				&handler.EnqueueRequestForObject{},
+			},
+		}, c.PrimaryPredicates...); err != nil {
 		return err
 	}
 
 	// set up watches for input resources.
 	// will enqueue requests for all top-level resources
 	for input, predicates := range c.InputResources {
+		logger.Info(fmt.Sprintf("starting secondary watch for %T", input))
 		if err := ctl.Watch(
 			&source.Kind{Type: input},
-			&aphandler.EnqueueMultiCluster{
+			&aphandler.BroadcastRequests{
 				WorkQueues:        c.ActiveWorkQueues,
 				RequestsToEnqueue: c.ActivePrimaryResources,
 			},
@@ -122,6 +128,7 @@ func (c *Controller) AddToManager(mgr manager.Manager) error {
 
 	// set up watches for output resources with controller refs
 	for output, predicates := range c.OutputResources {
+		logger.Info(fmt.Sprintf("starting secondary watch for %T", output))
 		if err := ctl.Watch(
 			&source.Kind{Type: output},
 			&handler.EnqueueRequestForOwner{

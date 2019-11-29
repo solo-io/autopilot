@@ -35,10 +35,14 @@ func (s *MultiClusterRequests) Remove(cluster string, reqToDelete reconcile.Requ
 }
 
 // get the stored requests for the cluster
-func (s *MultiClusterRequests) Requests(cluster string) []reconcile.Request {
+func (s *MultiClusterRequests) Requests(cluster string) Requests {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
-	return s.requests[cluster].Requests()
+	requests, ok := s.requests[cluster]
+	if !ok {
+		return nil
+	}
+	return requests.requests
 }
 
 // convenience function for iterating over the stored requests, by cluster
@@ -51,4 +55,12 @@ func (s *MultiClusterRequests) Each(fn func(string, reconcile.Request)) {
 			fn(cluster, req)
 		}
 	}
+}
+
+func (s *MultiClusterRequests) All() Requests {
+	var r Requests
+	s.Each(func(_ string, request reconcile.Request) {
+		r = append(r, request)
+	})
+	return r
 }
