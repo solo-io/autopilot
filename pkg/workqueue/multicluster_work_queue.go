@@ -35,3 +35,14 @@ func (s *MultiClusterQueues) Get(cluster string) workqueue.RateLimitingInterface
 	defer s.lock.RUnlock()
 	return s.queues[cluster]
 }
+
+// currently unused, useful for debugging
+func (s *MultiClusterQueues) All() []workqueue.RateLimitingInterface {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	var queues []workqueue.RateLimitingInterface
+	for _, queue := range s.queues {
+		queues = append(queues, queue)
+	}
+	return queues
+}
