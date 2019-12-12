@@ -19,8 +19,7 @@ import (
 // TODO: modify this object and re-run the script in order to produce the output YAML file
 var ExampleCanaryDeployment = &v1.CanaryDeployment{
 	ObjectMeta: metav1.ObjectMeta{
-		Namespace: "default",
-		Name:      "example",
+		Name: "example",
 	},
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "CanaryDeployment",
@@ -32,7 +31,7 @@ var ExampleCanaryDeployment = &v1.CanaryDeployment{
 }
 
 // modify this string to change the output file path
-var OutputFile = filepath.Join(util.MustGetThisDir(), "..", "deploy", "example_canarydeployment.yaml")
+var OutputFile = filepath.Join(util.MustGetThisDir(), "..", "deploy", "canarydeployment_example.yaml")
 
 func main() {
 	yam, err := yaml.Marshal(ExampleCanaryDeployment)
