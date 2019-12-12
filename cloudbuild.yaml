@@ -6,7 +6,7 @@ steps:
 
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: 'bash'
-    args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/go-utils/go-utils-mod.tar.gz | tar -xzf -']
+    args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/autopilot/autopilot-mod.tar.gz | tar -xzf -']
     env:
     volumes: &vol
       - name: 'gopath'
@@ -17,11 +17,14 @@ steps:
     volumes: *vol
     args: ['go', 'build', './...']
     waitFor: ['untar-mod-cache']
+    env:
+      - 'GO111MODULE=on'
     id: 'build'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-ginkgo:0.1.5'
     volumes: *vol
     env:
+      - 'GO111MODULE=on'
     - 'KUBECONFIG=/builder/home/.kube/config'
     - 'BUILD_ID=$BUILD_ID'
     secretEnv: ['GITHUB_TOKEN']
@@ -32,6 +35,7 @@ steps:
   - name: 'gcr.io/$PROJECT_ID/go-make:0.1.12'
     args: ['upload-github-release-assets', '-B']
     env:
+      - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/autopilot'
       - 'GOPATH=/workspace/gopath'
