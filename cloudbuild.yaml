@@ -24,7 +24,7 @@ steps:
   - name: 'gcr.io/$PROJECT_ID/go-mod-ginkgo:0.1.5'
     volumes: *vol
     env:
-      - 'GO111MODULE=on'
+    - 'GO111MODULE=on'
     - 'KUBECONFIG=/builder/home/.kube/config'
     - 'BUILD_ID=$BUILD_ID'
     secretEnv: ['GITHUB_TOKEN']
