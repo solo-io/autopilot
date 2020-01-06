@@ -56,12 +56,16 @@ func Load(autoPilotYaml, operatorYaml string) (*model.ProjectData, error) {
 		return nil, err
 	}
 
-	// load templates from packr-boxed local directory
-	templates := packr.NewBox("./templates")
-
 	if err := os.Chdir(filepath.Dir(autoPilotYaml)); err != nil {
 		return nil, err
 	}
+
+	return LoadProject(project, operator)
+}
+
+func LoadProject(project v1.AutopilotProject, operator v1.AutopilotOperator) (*model.ProjectData, error) {
+	// load templates from packr-boxed local directory
+	templates := packr.NewBox("./templates")
 
 	return model.NewTemplateData(project, operator, templates)
 }

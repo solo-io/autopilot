@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	v1 "github.com/solo-io/autopilot/api/v1"
 	"io/ioutil"
 
 	"github.com/solo-io/autopilot/codegen/model"
@@ -15,11 +16,38 @@ import (
 	"strings"
 )
 
-func Run(dir string, forceOverwrite, deepcopyOnly bool) error {
+func
+Run(dir string, forceOverwrite, deepcopyOnly bool) error {
 	project := filepath.Join(dir, defaults.AutopilotFile)
 	operator := filepath.Join(dir, defaults.OperatorFile)
 
 	data, err := Load(project, operator)
+	if err != nil {
+		return err
+	}
+
+	if err := data.Validate(); err != nil {
+		return err
+	}
+
+	if !deepcopyOnly {
+		if err := genProjectFiles(data, forceOverwrite); err != nil {
+			return err
+		}
+	}
+
+	log.Printf("Generating Deepcopy types for %v", data.TypesImportPath)
+	if err := util.DeepcopyGen(model.TypesRelativePath(data.Kind, data.Version)); err != nil {
+		return err
+	}
+
+	log.Printf("Finished generating %v", data.ApiVersion+"."+data.Kind)
+
+	return nil
+}
+
+func GenerateProject(project v1.AutopilotProject, operator v1.AutopilotOperator, forceOverwrite, deepcopyOnly bool) error {
+	data, err := LoadProject(project, operator)
 	if err != nil {
 		return err
 	}
