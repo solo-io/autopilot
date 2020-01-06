@@ -18,9 +18,10 @@ var _ = Describe("SimpleClient", func() {
 	var (
 		mgr    manager.Manager
 		cancel context.CancelFunc
+		ns     = "default"
 	)
 	BeforeEach(func() {
-		mgr, cancel = test.MustManager()
+		mgr, cancel = test.MustManager(ns)
 	})
 	AfterEach(func() {
 		cancel()
@@ -30,7 +31,6 @@ var _ = Describe("SimpleClient", func() {
 		parentName := "parent-" + r
 		childName := "child-" + r
 
-		ns := "default"
 		parent := &v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: ns,
@@ -47,11 +47,11 @@ var _ = Describe("SimpleClient", func() {
 			Data: map[string]string{"smore": "data"},
 		}
 
-		client := NewClient(mgr)
+		client := NewRestClient(mgr)
 		err := client.Create(context.TODO(), parent)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = client.Ensure(context.TODO(), parent, child)
+		err = NewEnsurer(client).Ensure(context.TODO(), parent, child)
 		Expect(err).NotTo(HaveOccurred())
 
 		actualParent := &v1.ConfigMap{
@@ -89,8 +89,10 @@ var _ = Describe("SimpleClient", func() {
 		err = client.Delete(context.TODO(), actualParent)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = client.Get(context.TODO(), actualParent)
-		Expect(err).To(HaveOccurred())
+		Eventually(func() error {
+			err = client.Get(context.TODO(), actualParent)
+			return err
+		}).Should(HaveOccurred())
 		Expect(errors.IsNotFound(err)).To(BeTrue())
 
 		// child should get garbage collected
