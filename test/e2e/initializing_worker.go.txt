@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 
-	"github.com/solo-io/autopilot/test/e2e/canary/pkg/parameters"
+	"canary.examples.io/pkg/parameters"
 	istiov1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	appsv1 "k8s.io/api/apps/v1"
@@ -17,7 +17,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/solo-io/autopilot/pkg/ezkube"
 
-	v1 "github.com/solo-io/autopilot/test/e2e/canary/pkg/apis/canarydeployments/v1"
+	v1 "canary.examples.io/pkg/apis/canaries/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -27,7 +27,7 @@ type Worker struct {
 	Logger logr.Logger
 }
 
-func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs Inputs) (Outputs, v1.CanaryDeploymentPhase, *v1.CanaryDeploymentStatusInfo, error) {
+func (w *Worker) Sync(ctx context.Context, canary *v1.Canary, inputs Inputs) (Outputs, v1.CanaryPhase, *v1.CanaryStatusInfo, error) {
 
 	targetDeployment, ok := inputs.FindDeployment(canary.Name, canary.Namespace)
 	if !ok {
@@ -57,8 +57,8 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 	primaryDeployment := makeDeployment(primaryName, canary.Namespace, 1, targetDeployment.Spec, targetDeployment.Annotations, primaryLabels)
 	primaryService := makeService(primaryName, canary.Namespace, canary.Spec.Ports, primaryDeployment.Spec.Selector.MatchLabels)
 
-	canaryDeployment := makeDeployment(canaryName, canary.Namespace, 0, targetDeployment.Spec, targetDeployment.Annotations, canaryLabels)
-	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, canaryDeployment.Spec.Selector.MatchLabels)
+	canaryResource := makeDeployment(canaryName, canary.Namespace, 0, targetDeployment.Spec, targetDeployment.Annotations, canaryLabels)
+	canaryService := makeService(canaryName, canary.Namespace, canary.Spec.Ports, canaryResource.Spec.Selector.MatchLabels)
 
 	// frontService is used to match requests; traffic will be split between the primary and canary
 	frontService := makeService(canary.Name, canary.Namespace, canary.Spec.Ports, map[string]string{"canary": canary.Name})
@@ -113,7 +113,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 			Items: []appsv1.Deployment{
 				targetDeployment,
 				primaryDeployment,
-				canaryDeployment,
+				canaryResource,
 			},
 		},
 		Services: parameters.Services{
@@ -129,7 +129,7 @@ func (w *Worker) Sync(ctx context.Context, canary *v1.CanaryDeployment, inputs I
 			},
 		},
 	},
-		v1.CanaryDeploymentPhaseWaiting,
+		v1.CanaryPhaseWaiting,
 		nil,
 		nil
 }

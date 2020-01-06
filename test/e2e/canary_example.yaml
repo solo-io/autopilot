@@ -1,5 +1,5 @@
-apiVersion: autopilot.examples.io/v1
-kind: CanaryDeployment
+apiVersion: canary.examples.io/v1
+kind: Canary
 metadata:
   name: example
   namespace: e2etest

@@ -9,12 +9,12 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 // Important: Run "autopilot generate" to regenerate code after modifying this file
 
-// CanaryDeploymentSpec defines the desired state of CanaryDeployment
+// CanarySpec defines the desired state of Canary
 // +k8s:openapi-gen=true
-type CanaryDeploymentSpec struct {
+type CanarySpec struct {
 	// the deployment for which to deploy canaries
-	// every deployment created via CanaryDeployment will have 2 deployments made: a primary and a canary
-	// when the CanaryDeployment is created, only the primary deployment will be created.
+	// every deployment created via Canary will have 2 deployments made: a primary and a canary
+	// when the Canary is created, only the primary deployment will be created.
 	// whenever this spec changes, the changed spec will be applied to the canary and the canary will be scaled up
 	// if the promotion succeeds, the spec is applied to the primary deployment
 	// if the promotion fails, the spec is not applied to the primary deployment
@@ -34,9 +34,9 @@ type CanaryDeploymentSpec struct {
 	AnalysisPeriod metav1.Duration `json:"analysisPeriod,omitempty"`
 }
 
-// CanaryDeploymentStatusInfo defines an observed condition of CanaryDeployment
+// CanaryStatusInfo defines an observed condition of Canary
 // +k8s:openapi-gen=true
-type CanaryDeploymentStatusInfo struct {
+type CanaryStatusInfo struct {
 	// used to record the time processing started
 	TimeStarted metav1.Time `json:"timeStarted,omitempty"`
 
