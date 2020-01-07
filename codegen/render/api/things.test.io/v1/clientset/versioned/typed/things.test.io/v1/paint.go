@@ -39,6 +39,7 @@ type PaintsGetter interface {
 type PaintInterface interface {
 	Create(*v1.Paint) (*v1.Paint, error)
 	Update(*v1.Paint) (*v1.Paint, error)
+	UpdateStatus(*v1.Paint) (*v1.Paint, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
 	Get(name string, options metav1.GetOptions) (*v1.Paint, error)
@@ -126,6 +127,22 @@ func (c *paints) Update(paint *v1.Paint) (result *v1.Paint, err error) {
 		Namespace(c.ns).
 		Resource("paints").
 		Name(paint.Name).
+		Body(paint).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *paints) UpdateStatus(paint *v1.Paint) (result *v1.Paint, err error) {
+	result = &v1.Paint{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("paints").
+		Name(paint.Name).
+		SubResource("status").
 		Body(paint).
 		Do().
 		Into(result)

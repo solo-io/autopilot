@@ -27,7 +27,7 @@ func (in *PaintSpec) DeepCopyInto(out *PaintSpec) {
 }
 
 // DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *TubeStatus) DeepCopyInto(out *TubeStatus) {
-	p := proto.Clone(in).(*TubeStatus)
+func (in *PaintStatus) DeepCopyInto(out *PaintStatus) {
+	p := proto.Clone(in).(*PaintStatus)
 	*out = *p
 }

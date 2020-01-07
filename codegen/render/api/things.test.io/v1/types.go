@@ -15,20 +15,8 @@ type Paint struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec        PaintSpec   `json:"spec,omitempty"`
-	PaintStatus PaintStatus `json:"status,omitempty"`
-}
-
-// PaintStatus defines an observed condition of Paint
-// +k8s:openapi-gen=true
-type PaintStatus struct {
-	// ObservedGeneration was the last metadata.generation of the Paint
-	// observed by the operator. If this does not match the metadata.generation of the Paint,
-	// it means the operator has not yet reconciled the current generation of the operator
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-
-	// StatusInfo defines the observed state of the Paint in the cluster
-	TubeStatus
+	Spec   PaintSpec   `json:"spec,omitempty"`
+	Status PaintStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

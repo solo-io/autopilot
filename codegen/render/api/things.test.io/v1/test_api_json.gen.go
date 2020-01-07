@@ -60,14 +60,14 @@ func (this *OilType) UnmarshalJSON(b []byte) error {
 	return TestApiUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
-// MarshalJSON is a custom marshaler for TubeStatus
-func (this *TubeStatus) MarshalJSON() ([]byte, error) {
+// MarshalJSON is a custom marshaler for PaintStatus
+func (this *PaintStatus) MarshalJSON() ([]byte, error) {
 	str, err := TestApiMarshaler.MarshalToString(this)
 	return []byte(str), err
 }
 
-// UnmarshalJSON is a custom unmarshaler for TubeStatus
-func (this *TubeStatus) UnmarshalJSON(b []byte) error {
+// UnmarshalJSON is a custom unmarshaler for PaintStatus
+func (this *PaintStatus) UnmarshalJSON(b []byte) error {
 	return TestApiUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
