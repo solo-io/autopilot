@@ -25,20 +25,8 @@ type {{ $resource.Kind }} struct {
 
     Spec {{ $resource.Spec.Type }} `json:"spec,omitempty"`
 {{- if $resource.Status }}
-    {{ $resource.Kind}}Status {{ $resource.Kind }}Status `json:"status,omitempty"`
+    Status {{ $resource.Status.Type }} `json:"status,omitempty"`
 {{- end }}
-}
-
-// {{ $resource.Kind }}Status defines an observed condition of {{ $resource.Kind }}
-// +k8s:openapi-gen=true
-type {{ $resource.Kind }}Status struct {
-    // ObservedGeneration was the last metadata.generation of the {{ $resource.Kind }}
-    // observed by the operator. If this does not match the metadata.generation of the {{ $resource.Kind }},
-    // it means the operator has not yet reconciled the current generation of the operator
-    ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-
-    // StatusInfo defines the observed state of the {{ $resource.Kind }} in the cluster
-    {{ $resource.Status.Type }}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

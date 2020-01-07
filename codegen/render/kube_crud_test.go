@@ -5,12 +5,17 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 	"github.com/solo-io/autopilot/codegen/model"
+	. "github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1"
 	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/clientset/versioned"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/test"
+	"github.com/solo-io/go-utils/kubeutils"
+	"github.com/solo-io/go-utils/randutils"
+	kubehelp "github.com/solo-io/go-utils/testutils/kube"
 	"io/ioutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 	"path/filepath"
 )
 
@@ -43,19 +48,28 @@ var _ = Describe("Generated Clients", func() {
 				{
 					Kind:   "Paint",
 					Spec:   model.Field{Type: "PaintSpec"},
-					Status: &model.Field{Type: "TubeStatus"},
+					Status: &model.Field{Type: "PaintStatus"},
 				},
 			},
 		}
+
+		ns   string
+		kube kubernetes.Interface
 	)
 	BeforeEach(func() {
 		group.Init()
 		err := applyFile("things.test.io-v1-crds.yaml")
 		Expect(err).NotTo(HaveOccurred())
+		ns = randutils.RandString(4)
+		kube = kubehelp.MustKubeClient()
+		err = kubeutils.CreateNamespacesInParallel(kube, ns)
+		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
 		group.Init()
 		err := deleteFile("things.test.io-v1-crds.yaml")
+		Expect(err).NotTo(HaveOccurred())
+		err = kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -63,8 +77,42 @@ var _ = Describe("Generated Clients", func() {
 		clientset, err := versioned.NewForConfig(test.MustConfig())
 		Expect(err).NotTo(HaveOccurred())
 
-		things, err := clientset.ThingsV1().Paints("default").List(v1.ListOptions{})
+		paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "paint-1",
+			},
+			Spec: PaintSpec{
+				Color: &PaintColor{
+					Hue:   "prussian blue",
+					Value: 0.5,
+				},
+				PaintType: &PaintSpec_Acrylic{
+					Acrylic: &AcrylicType{
+						Body: AcrylicType_Heavy,
+					},
+				},
+			},
+		})
 		Expect(err).NotTo(HaveOccurred())
-		Expect(things.Items).To(HaveLen(1))
+
+		written, err := clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(written.Spec).To(Equal(paint.Spec))
+
+		status := PaintStatus{
+			ObservedGeneration: written.Generation,
+			PercentRemaining:   22,
+		}
+
+		written.Status = status
+
+		_, err = clientset.ThingsV1().Paints(ns).UpdateStatus(written)
+		Expect(err).NotTo(HaveOccurred())
+
+		written, err = clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(written.Status).To(Equal(status))
 	})
 })

@@ -22,7 +22,7 @@ var _ = Describe("Render", func() {
 				{
 					Kind:   "Paint",
 					Spec:   Field{Type: "PaintSpec"},
-					Status: &Field{Type: "TubeStatus"},
+					Status: &Field{Type: "PaintStatus"},
 				},
 			},
 		}

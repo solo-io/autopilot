@@ -31,6 +31,7 @@ message OilType {
     bool waterMixable = 1;
 }
 
-message TubeStatus {
-    int64 percentRemaining = 1;
+message PaintStatus {
+    int64 observedGeneration = 1;
+    int64 percentRemaining = 2;
 }
