@@ -1,6 +1,7 @@
-package codegen
+package writer
 
 import (
+	"github.com/solo-io/autopilot/codegen/render"
 	"golang.org/x/tools/imports"
 	"io/ioutil"
 	"log"
@@ -14,7 +15,7 @@ type Writer struct {
 	ForceOverwrite bool
 }
 
-func (w Writer) WriteFiles(files []OutFile) error {
+func (w Writer) WriteFiles(files []render.OutFile) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err

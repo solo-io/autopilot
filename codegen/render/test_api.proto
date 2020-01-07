@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package things.test.io;
+
+option go_package = "github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1";
+
+message PaintSpec {
+    PaintColor color = 1;
+
+    oneof paintType {
+        AcrylicType acrylic = 2;
+        OilType oil = 3;
+    };
+}
+
+message PaintColor {
+    string hue = 1;
+    float value = 2;
+}
+
+message AcrylicType {
+    enum Body {
+        Light = 0;
+        Medium = 1;
+        Heavy = 2;
+    }
+    Body body = 3;
+}
+
+message OilType {
+    bool waterMixable = 1;
+}
+
+message TubeStatus {
+    int64 percentRemaining = 1;
+}
