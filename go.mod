@@ -21,7 +21,7 @@ require (
 	github.com/rogpeppe/go-internal v1.5.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/go-utils v0.11.7
-	github.com/solo-io/solo-kit v0.6.3
+	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
@@ -90,7 +90,5 @@ replace (
 // Remove when controller-tools v0.2.2 is released
 // Required for the bugfix https://github.com/kubernetes-sigs/controller-tools/pull/322
 replace sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.2.2-0.20190919011008-6ed4ff330711
-
-replace github.com/solo-io/solo-kit => ../solo-kit
 
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309

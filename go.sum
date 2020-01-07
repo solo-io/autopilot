@@ -550,6 +550,9 @@ github.com/solo-io/go-utils v0.11.7 h1:ID4lnyxqphmwNJm5ruwemj2iFaIZ88HE5/ziF7i4Z
 github.com/solo-io/go-utils v0.11.7/go.mod h1:D5lbi4EyIMq+T5gzjJacu0Ou4Z1brL7g2YYYYgYBJso=
 github.com/solo-io/protoc-gen-ext v0.0.7 h1:s9uFGtAoSsXL7vukWKPgofkxzHUeje7m6+0C3rYA2fU=
 github.com/solo-io/protoc-gen-ext v0.0.7/go.mod h1:zZIFs9Ch3EU3uQgL2ZwCHlUGAtwiz4Cbw6tBcmaNsEk=
+github.com/solo-io/solo-kit v0.6.3/go.mod h1:oBaQ6tOwuO97u7w+s3TeI08YLHcbiWemInx0XkDfKFw=
+github.com/solo-io/solo-kit v0.12.2 h1:9TFo60400EDrsaovNEg09AA0bjFesUWU0dGnh7XsNyU=
+github.com/solo-io/solo-kit v0.12.2/go.mod h1:oNDT3CNTgdjNh5tgkr4Wj8tj+h0VtJjfT/ZaZ8e1/js=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=
 github.com/spf13/afero v1.2.2/go.mod h1:9ZxEEn6pIJ8Rxe320qSDBk6AsU0r9pR7Q4OcevTdifk=
@@ -830,6 +833,7 @@ istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0 h1:6DWOkG2XZQRAwthO71a0v+A
 istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0/go.mod h1:jdpC7NC/WdBGIxcIHPzlurKaCZb+8LnsJW4U4mbX6n0=
 istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a h1:w7zILua2dnYo9CxImhpNW4NE/8ZxEoc/wfBfHrhUhrE=
 istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a/go.mod h1:OzpAts7jljZceG4Vqi5/zXy/pOg1b209T3jb7Nv5wIs=
+istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998 h1:uvW88tRzT6wjR+SdqPoDjR0jjKTYWmjOp2Z1jXs1ZJQ=
 istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998/go.mod h1:OzpAts7jljZceG4Vqi5/zXy/pOg1b209T3jb7Nv5wIs=
 istio.io/tools v0.0.0-20200106183429-b82e12b2c42f h1:EubqOAkGTb4CqdyE9D35SU701BxGm6p9ruYrGYqcx7E=
 istio.io/tools v0.0.0-20200106183429-b82e12b2c42f/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
