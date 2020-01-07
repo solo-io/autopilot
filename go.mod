@@ -28,6 +28,7 @@ require (
 	golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5
 	istio.io/api v0.0.0-20191109011807-2629c6ac1513
 	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
+	istio.io/tools v0.0.0-20200106183429-b82e12b2c42f // indirect
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v0.0.0

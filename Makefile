@@ -35,6 +35,8 @@ GCR_REPO_PREFIX := gcr.io/$(GCLOUD_PROJECT_ID)
 .PHONY: generate-deps
 generate-deps:
 	go get -u github.com/gobuffalo/packr/packr
+	cd $(shell go list -f '{{ .Dir }}' -m istio.io/tools) && \
+	  go install -v ./cmd/protoc-gen-jsonshim)
 
 # Generated Code & Docs
 .PHONY: generated-code

@@ -26,6 +26,9 @@ func CompileProtos(dir string) error {
 		nil,
 		[]string{dir},
 		nil,
+		[]string{
+			"jsonshim",
+		},
 		protoOutDir,
 		func(file string) bool {
 			return true

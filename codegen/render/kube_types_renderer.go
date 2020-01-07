@@ -42,6 +42,9 @@ var defaultKubeTypesRenderer = KubeTypesRenderer{
 		"code/types/doc.gotmpl": {
 			Path: "doc.go",
 		},
+		"code/types/proto_deepcopy.gotmpl": {
+			Path: "proto_deepcopy.go",
+		},
 	},
 }
 
