@@ -42,6 +42,7 @@ func (r ManifestsRenderer) RenderManifests(grp Group) ([]OutFile, error) {
 			return nil, err
 		}
 		out.Content = content
+		out.Path = grp.Group + "-" + grp.Version + "-" + out.Path
 		renderedFiles = append(renderedFiles, out)
 	}
 	return renderedFiles, nil
