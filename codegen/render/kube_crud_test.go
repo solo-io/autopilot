@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
-	"github.com/solo-io/autopilot/codegen/model"
 	. "github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1"
 	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/clientset/versioned"
 	"github.com/solo-io/autopilot/codegen/util"
@@ -14,7 +13,6 @@ import (
 	kubehelp "github.com/solo-io/go-utils/testutils/kube"
 	"io/ioutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"path/filepath"
 )
@@ -39,25 +37,10 @@ func deleteFile(file string) error {
 
 var _ = Describe("Generated Clients", func() {
 	var (
-		group = model.Group{
-			GroupVersion: schema.GroupVersion{
-				Group:   "things.test.io",
-				Version: "v1",
-			},
-			Resources: []model.Resource{
-				{
-					Kind:   "Paint",
-					Spec:   model.Field{Type: "PaintSpec"},
-					Status: &model.Field{Type: "PaintStatus"},
-				},
-			},
-		}
-
 		ns   string
 		kube kubernetes.Interface
 	)
 	BeforeEach(func() {
-		group.Init()
 		err := applyFile("things.test.io-v1-crds.yaml")
 		Expect(err).NotTo(HaveOccurred())
 		ns = randutils.RandString(4)
@@ -66,7 +49,6 @@ var _ = Describe("Generated Clients", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
-		group.Init()
 		err := deleteFile("things.test.io-v1-crds.yaml")
 		Expect(err).NotTo(HaveOccurred())
 		err = kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)

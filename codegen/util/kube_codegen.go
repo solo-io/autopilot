@@ -7,6 +7,8 @@ import (
 )
 
 func KubeCodegen(group, version, apiDir string) error {
+	// TODO: replace these funcs with anyvendor
+
 	// path on disk
 	modulePath := GetModuleRoot()
 	// go module package
