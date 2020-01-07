@@ -1,8 +1,10 @@
 ---
-title: "Operator Architecture"
-description: "Overview of the Architecture of Operators built with Autopilot"
-weight: 3
+title: "Generated Code Structure"
+description: "Overvriew of the Architecture of Operators built with Autopilot"
+weight: 4
 ---
+
+TODO
 
 The architecture of Autopilot Operators is determined by Autopilot and enforced in generated code. While generated code can be manually modified to customize this architecture, it is not currently recommended.
 

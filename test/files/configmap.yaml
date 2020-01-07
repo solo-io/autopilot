@@ -1,0 +1,11 @@
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autopilot-reconciler-test
+  namespace: default
+  labels:
+    hi: there
+data:
+  foo: bar
+EOF

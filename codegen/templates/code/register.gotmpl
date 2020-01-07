@@ -6,9 +6,9 @@
 package {{.Version}}
 
 import (
+    "github.com/solo-io/autopilot/pkg/run"
     "k8s.io/apimachinery/pkg/runtime/schema"
     "sigs.k8s.io/controller-runtime/pkg/scheme"
-    "k8s.io/apimachinery/pkg/runtime"
 )
 
 // AddToSchemes may be used to add all resources defined in the project to a Scheme
@@ -24,6 +24,7 @@ var (
 
 )
 
-func AddToScheme(s *runtime.Scheme) error {
-    return SchemeBuilder.AddToScheme(s)
+// add these objects to to the local scheme
+func init () {
+	run.RegisterAddToScheme(SchemeBuilder.AddToScheme(s))
 }

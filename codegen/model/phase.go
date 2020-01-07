@@ -66,3 +66,24 @@ func paramsFromNames(names []string) ([]Parameter, error) {
 	}
 	return params, nil
 }
+
+func paramsFromInputs(inputs []*v1.Input) ([]Parameter, error) {
+	getParam := func(name string) *Parameter {
+		for _, p := range Parameters {
+			if p.LowerName == name {
+				return &p
+			}
+		}
+		return nil
+	}
+
+	var params []Parameter
+	for _, n := range names {
+		p := getParam(n)
+		if p == nil {
+			return nil, errors.Errorf("no parameter named %v", n)
+		}
+		params = append(params, *p)
+	}
+	return params, nil
+}

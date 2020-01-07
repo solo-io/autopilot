@@ -1,21 +1,11 @@
 package model
 
 import (
-	"reflect"
-
 	"github.com/sirupsen/logrus"
 	v1 "github.com/solo-io/autopilot/api/v1"
 )
 
-type Parameter v1.Parameter
-
-func (p Parameter) String() string {
-	return string(p.LowerName)
-}
-
-func (p Parameter) Equals(parameter Parameter) bool {
-	return reflect.DeepEqual(p, parameter)
-}
+type Parameter v1.ThirdPartyResource
 
 // registered parameters
 var Parameters []Parameter

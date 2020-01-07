@@ -1,0 +1,2 @@
+kubectl create deployment grpcstore-demo --image=docker.io/soloio/grpcstore-demo
+kubectl expose deployment grpcstore-demo --port 80 --target-port=8080

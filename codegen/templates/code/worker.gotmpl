@@ -1,32 +1,37 @@
-package {{worker_import_prefix $}}
+{{-/* This file is meant to be generated once for each resource in the AutopilotProject
+with `enableController: true` (default) */-}}
+
+{{ $resource := $ }}
+
+package {{worker_import_prefix $resource }}
 
 import (
 	"context"
-    "github.com/go-logr/logr"
-    "github.com/solo-io/autopilot/pkg/ezkube"
 
-    {{.Project.Version}} "{{.Project.TypesImportPath}}"
+{{- if $resource.enableController }}
+{{-if $resource.enableFinalizer }}
+	{{ type_import_prefix $resource }} "{{ type_import_path $resource }}"
+{{- end }}
+{{- end }}
+
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// This file defines the interface for the {{$resource.Kind}}Worker
 
-type Worker struct {
-    Client ezkube.Client
-    Logger logr.Logger
-}
+{{- if $resource.enableController }}
+// The {{ $resource.Kind }}Worker processes {{ $resource.Kind }}Worker instances
+type {{$resource.Kind}}Worker interface {
+    {{- range $resource := $.Resources -}}
+    {{- range $phase := $.Resources }}
 
-{{- if has_inputs $ }}
-    {{- if has_outputs $ }}
-func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}, inputs Inputs) (Outputs, {{$.Project.Version}}.{{$.Project.Kind}}Phase, *{{$.Project.Version}}.{{$.Project.Kind}}StatusInfo, error) {
-    {{- else}}
-func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}, inputs Inputs) ({{$.Project.Version}}.{{$.Project.Kind}}Phase, *{{$.Project.Version}}.{{$.Project.Kind}}StatusInfo, error) {
-    {{- end}}
-{{- else}}
-    {{- if has_outputs $ }}
-func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}) (Outputs, {{$.Project.Version}}.{{$.Project.Kind}}Phase, *{{$.Project.Version}}.{{$.Project.Kind}}StatusInfo, error) {
-    {{- else}}
-func (w *Worker) Sync(ctx context.Context, {{$.Project.KindLowerCamel}} *{{.Project.Version}}.{{.Project.Kind}}) ({{$.Project.Version}}.{{$.Project.Kind}}Phase, *{{$.Project.Version}}.{{$.Project.Kind}}StatusInfo, error) {
-    {{- end}}
-{{- end}}
-    panic("implement me!")
+    // Process a {{ $resource.Kind }} in phase {{$phase.Name}}
+    Handle{{$resource.Kind}}Phase{{$phase.Name}}(ctx context.Context, inputs *{{$phase.Name}}Inputs) (*{{ worker_import_prefix $resource }}.{{$phase.Name}}Inputs, error)
+    {{- end }}
+    {{- end }}
+
+    {{-if $resource.enableFinalizer }}
+    // Finalize {{ pluralize $resource.Kind }} that has been marked for deletion
+    Finalize{{$resource.Kind}}(ctx context.Context, {{ lower_camel $resource.Kind }} *{{ type_import_prefix $resource }}.{{ $resource.Kind }}) error
+    {{- end }}
 }
+{{- end }}

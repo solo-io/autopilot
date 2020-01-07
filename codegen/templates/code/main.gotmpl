@@ -1,21 +1,73 @@
+{{-/* This file is meant to be generated once for the AutopilotProject */-}}
 package main
 
 import (
+	"context"
 	"os"
 
-	scheduler "{{.SchedulerImportPath}}"
-	{{.Version}} "{{.TypesImportPath}}"
+{{- range $resource := $.Resources }}
+{{- if $resource.enableController }}
+	{{ worker_import_prefix $resource }} "{{ worker_import_path $resource }}"
+
+{{-if $resource.enableFinalizer }}
+	{{ type_import_prefix $resource }} "{{ type_import_path $resource }}"
+{{- end }}
+
+{{- end }}
+{{- end }}
 
 	"github.com/solo-io/autopilot/pkg/run"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// main is the generated entrypoint to the Autopilot Run function which runs the
-// operator
+// main contains the entrypoint to the Autopilot Run function which runs the controller for each resource
 func main() {
-	run.RegisterAddToScheme({{.Version}}.AddToScheme)
-	if err := run.Run(scheduler.AddToManager); err != nil {
-		logf.Log.Error(err, "fatal error")
+	{{- range $resource := $.Resources }}
+	{{- if $resource.enableController }}
+	// initialize your worker for {{ pluralize $resource.Kind }}.
+	// edit this code as needed:
+	{{ lower_camel $resource.Kind }}W := &{{ lower_camel $resource.Kind }}Worker{}
+	{{- end }}
+	{{- end }}
+
+	if err := run.Run(
+{{- range $resource := $.Resources }}
+{{- if $resource.enableController }}
+		//  add the controller for {{ pluralize $resource.Kind }}
+		{{ worker_import_prefix $resource }}.NewController({{ lower_camel $resource.Kind }}W),
+{{- end }}
+{{- end }}
+	); err != nil {
+		log.Log.Error(err, "operator fatal err")
 		os.Exit(1)
 	}
 }
+
+{{- range $resource := $.Resources }}
+{{- if $resource.enableController }}
+
+
+// TODO: Fill in the {{ lower_camel $resource.Kind }}Worker,
+// or replace with your own implementation of {{ worker_import_prefix $resource }}.{{$resource.Kind}}Worker
+type {{ lower_camel $resource.Kind }}Worker struct {}
+
+	{{- range $phase := $.Resources }}
+// Handle{{$resource.Kind}}Phase{{$phase.Name}} defines how the worker should handle {{ pluralize $resource.Kind }} in phase {{$phase.Name}}
+func (w *{{ lower_camel $resource.Kind }}Worker) Handle{{$resource.Kind}}Phase{{$phase.Name}}(ctx context.Context, inputs *{{ worker_import_prefix $resource }}.{{$phase.Name}}Inputs) (*{{ worker_import_prefix $resource }}.{{$phase.Name}}Inputs, error) {
+	panic("implement me!")
+}
+	{{- end }}
+
+
+	{{-if $resource.enableFinalizer }}
+// Finalize {{ pluralize $resource.Kind }} that has been marked for deletion
+func (w *{{ lower_camel $resource.Kind }}Worker) Finalize{{$resource.Kind}}(ctx context.Context, {{ lower_camel $resource.Kind }} *{{ type_import_prefix $resource }}.{{ $resource.Kind }}) error {
+	panic("implement me!")
+}
+	{{- end }}
+
+// {{ lower_camel $resource.Kind }}Worker  implements {{ worker_import_prefix $resource }}.{{$resource.Kind}}Worker
+var _ {{ worker_import_prefix $resource }}.{{$resource.Kind}}Worker = &{{ lower_camel $resource.Kind }}Worker{}
+
+{{- end }}
+{{- end }}

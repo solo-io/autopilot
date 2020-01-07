@@ -1,16 +1,21 @@
-// the parameters package makes it easy to interact with input/output types for your phases
-// it also handles registering the types with the kubernetes runtime.Scheme
-package parameters
+{{-/* This file is meant to be generated once for each resource in the AutopilotProject
+with `enableController: true` (default) */-}}
+
+{{ $resource := $ }}
+
+package {{worker_import_prefix $resource }}
 
 import (
-{{- range $param := unique_params }}
+{{- range $input := unique_params }}
     {{- if not (is_metrics $param) }}
-    {{ $param.ImportPrefix }} "{{ $param.Package }}"
+    {{ input_import_prefix $param.ImportPrefix }} "{{ $param.Package }}"
     {{- end}}
 {{- end}}
 
     "github.com/solo-io/autopilot/pkg/run"
 )
+
+// This file defines the I/O Parameters for each phase of the {{$resource.Kind}}Worker
 
 type (
 {{- range $param := unique_params }}
