@@ -7,7 +7,6 @@ import (
 	"github.com/solo-io/autopilot/codegen/model"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/pkg/defaults"
 	"golang.org/x/tools/imports"
 
@@ -37,9 +36,9 @@ Run(dir string, forceOverwrite, deepcopyOnly bool) error {
 	}
 
 	log.Printf("Generating Deepcopy types for %v", data.TypesImportPath)
-	if err := util.DeepcopyGen(model.TypesRelativePath(data.Kind, data.Version)); err != nil {
-		return err
-	}
+	//if err := util.DeepcopyGen(model.TypesRelativePath(data.Kind, data.Version)); err != nil {
+	//	return err
+	//}
 
 	log.Printf("Finished generating %v", data.ApiVersion+"."+data.Kind)
 
@@ -62,10 +61,10 @@ func GenerateProject(project v1.AutopilotProject, operator v1.AutopilotOperator,
 		}
 	}
 
-	log.Printf("Generating Deepcopy types for %v", data.TypesImportPath)
-	if err := util.DeepcopyGen(model.TypesRelativePath(data.Kind, data.Version)); err != nil {
-		return err
-	}
+	//log.Printf("Generating Deepcopy types for %v", data.TypesImortPath)
+	//if err := util.DeepcopyGen(model.TypesRelativePath(data.Kind, data.Version)); err != nil {
+	//	return err
+	//}
 
 	log.Printf("Finished generating %v", data.ApiVersion+"."+data.Kind)
 

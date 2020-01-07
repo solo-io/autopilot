@@ -34,6 +34,7 @@ if err != nil {
 	return err
 }
 
+	// make sure this matches the go_package option in the proto
 	pkg := util.GetGoPkg()
 
 	// copy the files generated for our package into our repo from the

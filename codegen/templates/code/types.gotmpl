@@ -27,7 +27,7 @@ type {{.Kind}}Status struct {
     // ObservedGeneration was the last metadata.generation of the {{$.Kind}}
     // observed by the operator. If this does not match the metadata.generation of the {{$.Kind}},
     // it means the operator has not yet reconciled the current generation of the operator
-    ObservedGeneration int64 `json:"observedGeneration",omitempty`
+    ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
     // StatusInfo defines the observed state of the {{$.Kind}} in the cluster
     {{$.Kind}}StatusInfo

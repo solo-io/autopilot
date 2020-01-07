@@ -174,7 +174,7 @@ func projectFiles(data *model.ProjectData) []*GenFile {
 		{OutPath: filepath.Join("build", "bin", "entrypoint"), TemplatePath: "build/entrypoint.tmpl", Permission: 0777},
 
 		// deploy
-		{OutPath: filepath.Join("deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
+		//{OutPath: filepath.Join("deploy", "crd.yaml"), TemplateFunc: deploy.CustomResourceDefinition},
 		{OutPath: filepath.Join("deploy", "deployment-single-namespace.yaml"), TemplateFunc: deploy.SingleNamespaceOperator},
 		{OutPath: filepath.Join("deploy", "deployment-all-namespaces.yaml"), TemplateFunc: deploy.AllNamespacesOperator},
 		{OutPath: filepath.Join("deploy", "configmap.yaml"), TemplateFunc: deploy.ConfigMap},
