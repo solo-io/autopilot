@@ -1,0 +1,56 @@
+// Definitions for the Kubernetes types
+package {{ .Version }}
+
+import (
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+{{- range $resource := $.Resources }}
+
+{{- $kindLowerCamel := lower_camel $resource.Kind }}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// {{ $resource.Kind }} is the Schema for the {{ $kindLowerCamel }} API
+// +k8s:openapi-gen=true
+{{- if $resource.Status }}
+// +kubebuilder:subresource:status
+{{- end }}
+// +kubebuilder:resource:path={{ $kindLowerCamel }},scope=Namespaced
+type {{ $resource.Kind }} struct {
+    metav1.TypeMeta   `json:",inline"`
+    metav1.ObjectMeta `json:"metadata,omitempty"`
+
+    Spec {{ $resource.Spec.Type }} `json:"spec,omitempty"`
+{{- if $resource.Status }}
+    {{ $resource.Kind}}Status {{ $resource.Kind }}Status `json:"status,omitempty"`
+{{- end }}
+}
+
+// {{ $resource.Kind }}Status defines an observed condition of {{ $resource.Kind }}
+// +k8s:openapi-gen=true
+type {{ $resource.Kind }}Status struct {
+    // ObservedGeneration was the last metadata.generation of the {{ $resource.Kind }}
+    // observed by the operator. If this does not match the metadata.generation of the {{ $resource.Kind }},
+    // it means the operator has not yet reconciled the current generation of the operator
+    ObservedGeneration int64 `json:"observedGeneration",omitempty`
+
+    // StatusInfo defines the observed state of the {{ $resource.Kind }} in the cluster
+    {{ $resource.Status.Type }}
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// {{ $resource.Kind}}List contains a list of {{ $resource.Kind}}
+type {{ $resource.Kind}}List struct {
+    metav1.TypeMeta `json:",inline"`
+    metav1.ListMeta `json:"metadata,omitempty"`
+    Items           []{{ $resource.Kind }} `json:"items"`
+}
+{{- end }}
+
+func init() {
+{{- range $resource := $.Resources }}
+    SchemeBuilder.Register(&{{ $resource.Kind }}{}, &{{ $resource.Kind }}List{})
+{{- end }}
+}

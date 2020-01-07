@@ -16,13 +16,11 @@ package util
 
 import (
 	"flag"
-	"path/filepath"
-	"strings"
-
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	generatorargs "k8s.io/code-generator/cmd/deepcopy-gen/args"
 	"k8s.io/gengo/examples/deepcopy-gen/generators"
+	"path/filepath"
 )
 
 var BoilerPlateRelativePath = "hack/boilerplate/boilerplate.go.txt"
@@ -31,13 +29,11 @@ func DeepcopyGen(api string) error {
 	_ = flag.Set("logtostderr", "true")
 	api = filepath.FromSlash(api)
 	// Use relative API path so the generator writes to the correct path.
-	apiPath := "." + string(filepath.Separator) + api[strings.Index(api, "pkg/apis"):]
 	args, cargs := generatorargs.NewDefaults()
-	args.InputDirs = []string{apiPath}
-	args.OutputPackagePath = apiPath
+	args.InputDirs = []string{api}
+	args.OutputPackagePath = api
 	args.OutputFileBaseName = "zz_generated.deepcopy"
-	args.GoHeaderFilePath = BoilerPlateRelativePath
-	cargs.BoundingDirs = []string{apiPath}
+	cargs.BoundingDirs = []string{api}
 
 	if err := generatorargs.Validate(args); err != nil {
 		return errors.Wrap(err, "deepcopy-gen argument validation error")
