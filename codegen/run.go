@@ -15,8 +15,7 @@ import (
 	"strings"
 )
 
-func
-Run(dir string, forceOverwrite, deepcopyOnly bool) error {
+func Run(dir string, forceOverwrite, deepcopyOnly bool) error {
 	project := filepath.Join(dir, defaults.AutopilotFile)
 	operator := filepath.Join(dir, defaults.OperatorFile)
 

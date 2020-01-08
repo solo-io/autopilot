@@ -35,12 +35,11 @@ var _ = Describe("Render", func() {
 	})
 
 	It("renders the files for the group", func() {
-		files, err := RenderKubeTypes(group)
+		files, err := RenderApiTypes(group)
 		Expect(err).NotTo(HaveOccurred())
 
-		w := writer.Writer{
+		w := &writer.DefaultWriter{
 			Root:           "api",
-			ForceOverwrite: false,
 		}
 
 		err = w.WriteFiles(files)
@@ -59,7 +58,7 @@ var _ = Describe("Render", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 
-		w := writer.Writer{
+		w := &writer.DefaultWriter{
 			Root: "deploy",
 		}
 

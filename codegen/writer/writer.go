@@ -10,12 +10,16 @@ import (
 	"strings"
 )
 
-type Writer struct {
-	Root           string
-	ForceOverwrite bool
+type Writer interface {
+	WriteFiles(files []render.OutFile) error
 }
 
-func (w Writer) WriteFiles(files []render.OutFile) error {
+// writes to the filesystem
+type DefaultWriter struct {
+	Root string
+}
+
+func (w *DefaultWriter) WriteFiles(files []render.OutFile) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -25,13 +29,6 @@ func (w Writer) WriteFiles(files []render.OutFile) error {
 	for _, file := range files {
 		name := filepath.Join(w.Root, file.Path)
 		content := file.Content
-
-		if !w.ForceOverwrite && file.SkipOverwrite {
-			if _, err := os.Stat(name); err == nil {
-				log.Printf("skippinng file %v because it exists", name)
-				continue
-			}
-		}
 
 		if err := os.MkdirAll(filepath.Dir(name), 0777); err != nil {
 			return err

@@ -59,17 +59,16 @@ func copyFiles(srcDir, destDir string) error {
 		destFile := strings.TrimPrefix(srcFile, srcDir)
 		destFile = strings.TrimPrefix(destFile, "/")
 
-		dir := filepath.Dir(filepath.Join(destDir, destFile))
-		if err := os.MkdirAll(dir, 0755); err != nil{
-			return err
-		}
-
 		// copy
 		srcReader, err := os.Open(srcFile)
 		if err != nil {
 			return err
 		}
 		defer srcReader.Close()
+
+		if err := os.MkdirAll(filepath.Dir(destFile), 0755); err != nil{
+			return err
+		}
 
 		dstFile, err := os.Create(destFile)
 		if err != nil {

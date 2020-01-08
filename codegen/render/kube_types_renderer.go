@@ -3,24 +3,9 @@ package render
 import (
 	"bytes"
 	"github.com/gobuffalo/packr"
-	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/autopilot/codegen/templates"
-	"os"
 	"text/template"
 )
-
-type Group = model.Group
-
-type Resource = model.Resource
-
-type Field = model.Field
-
-type OutFile struct {
-	Path          string
-	SkipOverwrite bool
-	Permission    os.FileMode
-	Content       string // set by KubeTypesRenderer
-}
 
 // renders kubernetes from templates
 type KubeTypesRenderer struct {
@@ -48,7 +33,7 @@ var defaultKubeTypesRenderer = KubeTypesRenderer{
 	},
 }
 
-func RenderKubeTypes(grp Group) ([]OutFile, error) {
+func RenderApiTypes(grp Group) ([]OutFile, error) {
 	return defaultKubeTypesRenderer.RenderKubeTypes(grp)
 }
 
