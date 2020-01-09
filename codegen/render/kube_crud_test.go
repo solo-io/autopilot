@@ -18,7 +18,7 @@ import (
 )
 
 func applyFile(file string) error {
-	path := filepath.Join(util.MustGetThisDir(), "deploy", file)
+	path := filepath.Join(util.MustGetThisDir(), "manifests", file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -27,7 +27,7 @@ func applyFile(file string) error {
 }
 
 func deleteFile(file string) error {
-	path := filepath.Join(util.MustGetThisDir(), "deploy", file)
+	path := filepath.Join(util.MustGetThisDir(), "manifests", file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ var _ = Describe("Generated Clients", func() {
 		kube kubernetes.Interface
 	)
 	BeforeEach(func() {
-		err := applyFile("things.test.io-v1-crds.yaml")
+		err := applyFile("things.test.io_v1_crds.yaml")
 		Expect(err).NotTo(HaveOccurred())
 		ns = randutils.RandString(4)
 		kube = kubehelp.MustKubeClient()
@@ -49,7 +49,7 @@ var _ = Describe("Generated Clients", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
-		err := deleteFile("things.test.io-v1-crds.yaml")
+		err := deleteFile("things.test.io_v1_crds.yaml")
 		Expect(err).NotTo(HaveOccurred())
 		err = kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
