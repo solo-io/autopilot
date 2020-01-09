@@ -19,6 +19,8 @@ var _ = Describe("Render", func() {
 				Version: "v1",
 			},
 			RenderTypes:      true,
+			RenderManifests:  true,
+			RenderClients:    true,
 			RenderController: true,
 			Resources: []Resource{
 				{
@@ -30,25 +32,25 @@ var _ = Describe("Render", func() {
 		}
 
 		goModule = util.GetGoModule()
-		apiRoot = "codegen/render/api"
+		apiDir   = "codegen/render/api"
 	)
 	group.Init()
 
-	FIt("compiles protos", func() {
+	It("compiles protos", func() {
 		err := proto.CompileProtos(
 			goModule,
-			apiRoot,
-			apiRoot,
+			apiDir,
+			apiDir,
 		)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	FIt("renders the files for the group", func() {
-		files, err := RenderApiTypes(goModule, apiRoot, group)
+	It("renders the files for the group", func() {
+		files, err := RenderApiTypes(goModule, apiDir, group)
 		Expect(err).NotTo(HaveOccurred())
 
 		w := &writer.DefaultWriter{
-			Root: "api",
+			Root: util.GetModuleRoot(),
 		}
 
 		err = w.WriteFiles(files)
@@ -56,17 +58,17 @@ var _ = Describe("Render", func() {
 	})
 	It("generates kube clientset", func() {
 		err := KubeCodegen(
-			"codegen/render/api",
+			apiDir,
 			group)
 		Expect(err).NotTo(HaveOccurred())
 	})
 	It("generates the CRD manifest", func() {
 
-		files, err := RenderManifests(group)
+		files, err := RenderManifests("painting", "./manifests", group)
 		Expect(err).NotTo(HaveOccurred())
 
 		w := &writer.DefaultWriter{
-			Root: "deploy",
+			Root: "./codegen/render",
 		}
 
 		err = w.WriteFiles(files)

@@ -15,18 +15,19 @@ type MakeResourceFunc func(group Group) []metav1.Object
 type ManifestsRenderer struct {
 	AppName       string // used for labeling
 	ResourceFuncs map[OutFile]MakeResourceFunc
+	ManifestDir   string
 }
 
-var defaultManifestsRenderer = ManifestsRenderer{
-	AppName: "autopilot-default-appname",
-	ResourceFuncs: map[OutFile]MakeResourceFunc{
-		{
-			Path: "crds.yaml",
-		}: deploy.CustomResourceDefinitions,
-	},
-}
-
-func RenderManifests(grp Group) ([]OutFile, error) {
+func RenderManifests(appName, manifestDir string, grp Group) ([]OutFile, error) {
+	defaultManifestsRenderer := ManifestsRenderer{
+		AppName:     appName,
+		ManifestDir: manifestDir,
+		ResourceFuncs: map[OutFile]MakeResourceFunc{
+			{
+				Path: "crds.yaml",
+			}: deploy.CustomResourceDefinitions,
+		},
+	}
 	return defaultManifestsRenderer.RenderManifests(grp)
 }
 
@@ -38,7 +39,7 @@ func (r ManifestsRenderer) RenderManifests(grp Group) ([]OutFile, error) {
 			return nil, err
 		}
 		out.Content = content
-		out.Path = grp.Group + "-" + grp.Version + "-" + out.Path
+		out.Path = r.ManifestDir + "/" + grp.Group + "_" + grp.Version + "_" + out.Path
 		renderedFiles = append(renderedFiles, out)
 	}
 	return renderedFiles, nil

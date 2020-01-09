@@ -95,7 +95,7 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 		}
 		out.Content = content
 		// prepend with version dir
-		out.Path = grp.Group + "/" + grp.Version + "/" + out.Path
+		out.Path = r.ApiRoot + "/" + grp.Group + "/" + grp.Version + "/" + out.Path
 		renderedFiles = append(renderedFiles, out)
 	}
 	return renderedFiles, nil

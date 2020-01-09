@@ -10,6 +10,10 @@ import (
 
 // runs the codegen compilation for the current Go module
 type Command struct {
+	// the name of the app or component
+	// used to label k8s manifests
+	AppName string
+
 	// search protos recursively starting from this directory
 	// TODO: use anyvendor to support external imports
 	ProtoDir string
@@ -60,7 +64,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 
 	manifestWriter := &writer.DefaultWriter{Root: c.ManifestRoot}
 
-	manifests, err := render.RenderManifests(grp)
+	manifests, err := render.RenderManifests(c.AppName, c.ManifestRoot, grp)
 	if err != nil {
 		return err
 	}
