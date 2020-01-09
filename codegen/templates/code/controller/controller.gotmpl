@@ -83,6 +83,10 @@ func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) (*{{ $r
 }
 
 func (c *{{ $resource.Kind }}Controller) AddEventHandler(h *{{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+    if err := AddToScheme(mgr.GetScheme()); err != nil{
+        return nil, err
+    }
+    
     if err := c.watcher.Watch(&{{ $resource.Kind }}{}, h, predicates...); err != nil{
         return err
     }

@@ -6,6 +6,7 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 	. "github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1"
 	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/clientset/versioned"
+	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/controller"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
@@ -15,6 +16,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"path/filepath"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 func applyFile(file string) error {
@@ -35,10 +37,11 @@ func deleteFile(file string) error {
 	return utils.KubectlDelete(b)
 }
 
-var _ = Describe("Generated Clients", func() {
+var _ = Describe("Generated Code", func() {
 	var (
-		ns   string
-		kube kubernetes.Interface
+		ns        string
+		kube      kubernetes.Interface
+		clientset versioned.Interface
 	)
 	BeforeEach(func() {
 		err := applyFile("things.test.io_v1_crds.yaml")
@@ -46,6 +49,8 @@ var _ = Describe("Generated Clients", func() {
 		ns = randutils.RandString(4)
 		kube = kubehelp.MustKubeClient()
 		err = kubeutils.CreateNamespacesInParallel(kube, ns)
+		Expect(err).NotTo(HaveOccurred())
+		clientset, err = versioned.NewForConfig(test.MustConfig())
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
@@ -55,46 +60,124 @@ var _ = Describe("Generated Clients", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("uses the generated clientsets to crud", func() {
-		clientset, err := versioned.NewForConfig(test.MustConfig())
-		Expect(err).NotTo(HaveOccurred())
+	Context("kube clientsests", func() {
+		It("uses the generated clientsets to crud", func() {
+			clientset, err := versioned.NewForConfig(test.MustConfig())
+			Expect(err).NotTo(HaveOccurred())
 
-		paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
-			ObjectMeta: v1.ObjectMeta{
-				Name: "paint-1",
-			},
-			Spec: PaintSpec{
-				Color: &PaintColor{
-					Hue:   "prussian blue",
-					Value: 0.5,
+			paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "paint-1",
 				},
-				PaintType: &PaintSpec_Acrylic{
-					Acrylic: &AcrylicType{
-						Body: AcrylicType_Heavy,
+				Spec: PaintSpec{
+					Color: &PaintColor{
+						Hue:   "prussian blue",
+						Value: 0.5,
+					},
+					PaintType: &PaintSpec_Acrylic{
+						Acrylic: &AcrylicType{
+							Body: AcrylicType_Heavy,
+						},
 					},
 				},
-			},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			written, err := clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(written.Spec).To(Equal(paint.Spec))
+
+			status := PaintStatus{
+				ObservedGeneration: written.Generation,
+				PercentRemaining:   22,
+			}
+
+			written.Status = status
+
+			_, err = clientset.ThingsV1().Paints(ns).UpdateStatus(written)
+			Expect(err).NotTo(HaveOccurred())
+
+			written, err = clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(written.Status).To(Equal(status))
 		})
-		Expect(err).NotTo(HaveOccurred())
+	})
 
-		written, err := clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred())
+	Context("kube controllers", func() {
+		var (
+			mgr    manager.Manager
+			cancel = func() {}
+		)
+		BeforeEach(func() {
+			mgr, cancel = test.MustManager(ns)
+		})
+		AfterEach(cancel)
 
-		Expect(written.Spec).To(Equal(paint.Spec))
+		It("uses the generated controller to reconcile", func() {
 
-		status := PaintStatus{
-			ObservedGeneration: written.Generation,
-			PercentRemaining:   22,
-		}
+			ctl, err := controller.NewPaintController("blick", mgr)
+			Expect(err).NotTo(HaveOccurred())
 
-		written.Status = status
+			var created, updated, deleted *Paint
+			handler := &controller.PaintEventHandler{
+				OnCreate: func(obj *Paint) error {
+					created = obj
+					return nil
+				},
+				OnUpdate: func(_, new *Paint) error {
+					updated = new
+					return nil
+				},
+				OnDelete: func(obj *Paint) error {
+					deleted = obj
+					return nil
+				},
+			}
 
-		_, err = clientset.ThingsV1().Paints(ns).UpdateStatus(written)
-		Expect(err).NotTo(HaveOccurred())
+			err = ctl.AddEventHandler(handler)
+			Expect(err).NotTo(HaveOccurred())
 
-		written, err = clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred())
+			paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "paint-1",
+				},
+				Spec: PaintSpec{
+					Color: &PaintColor{
+						Hue:   "prussian blue",
+						Value: 0.5,
+					},
+					PaintType: &PaintSpec_Acrylic{
+						Acrylic: &AcrylicType{
+							Body: AcrylicType_Heavy,
+						},
+					},
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
 
-		Expect(written.Status).To(Equal(status))
+			Eventually(func() *Paint {
+				return created
+			}).ShouldNot(BeNil())
+
+			// update
+			paint.Spec.Color = &PaintColor{Value: 0.7}
+
+			paint, err = clientset.ThingsV1().Paints(ns).Update(paint)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() *Paint {
+				return updated
+			}).ShouldNot(BeNil())
+
+			// delete
+			err = clientset.ThingsV1().Paints(ns).Delete(paint.Name, nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() *Paint {
+				return deleted
+			}).ShouldNot(BeNil())
+		})
 	})
 })

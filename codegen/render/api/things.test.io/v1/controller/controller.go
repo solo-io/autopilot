@@ -71,6 +71,10 @@ type PaintController struct {
 }
 
 func NewPaintController(name string, mgr manager.Manager) (*PaintController, error) {
+	if err := AddToScheme(mgr.GetScheme()); err != nil{
+		return nil, err
+	}
+
 	w, err := events.NewWatcher(name, mgr)
 	if err != nil {
 		return nil, err
