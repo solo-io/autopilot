@@ -1,12 +1,10 @@
 package render
 
 import (
-	"github.com/solo-io/autopilot/codegen/templates"
 	"github.com/solo-io/autopilot/codegen/templates/deploy"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 	"strings"
-	"text/template"
 )
 
 // creates a k8s resource for a group
@@ -16,13 +14,11 @@ type MakeResourceFunc func(group Group) []metav1.Object
 // renders kubernetes from templates
 type ManifestsRenderer struct {
 	AppName       string // used for labeling
-	Funcs         template.FuncMap
 	ResourceFuncs map[OutFile]MakeResourceFunc
 }
 
 var defaultManifestsRenderer = ManifestsRenderer{
 	AppName: "autopilot-default-appname",
-	Funcs:   templates.Funcs,
 	ResourceFuncs: map[OutFile]MakeResourceFunc{
 		{
 			Path: "crds.yaml",

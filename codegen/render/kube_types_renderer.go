@@ -3,43 +3,92 @@ package render
 import (
 	"bytes"
 	"github.com/gobuffalo/packr"
-	"github.com/solo-io/autopilot/codegen/templates"
 	"text/template"
 )
 
-// renders kubernetes from templates
-type KubeTypesRenderer struct {
-	Templates     packr.Box
-	Funcs         template.FuncMap
-	ResourcePaths map[string]OutFile
+// map of template files to the file they render to
+type resourceTemplates map[string]OutFile
+
+func (r *resourceTemplates) add(file string, out OutFile) {
+	if *r == nil {
+		*r = make(map[string]OutFile)
+	}
+	(*r)[file] = out
 }
 
-var defaultKubeTypesRenderer = KubeTypesRenderer{
-	Templates: packr.NewBox("../templates"),
-	Funcs:     templates.Funcs,
-	ResourcePaths: map[string]OutFile{
-		"code/types/types.gotmpl": {
-			Path: "types.go",
-		},
-		"code/types/register.gotmpl": {
-			Path: "register.go",
-		},
-		"code/types/doc.gotmpl": {
-			Path: "doc.go",
-		},
-		"code/types/proto_deepcopy.gotmpl": {
-			Path: "proto_deepcopy.go",
-		},
+// a packr.Box for reading the conents of ../templates
+// note that this code uses relative path
+// and will need to be updated if the relative
+// path from this file to the templates dir changes
+var templateBox = packr.NewBox("../templates")
+
+// renders kubernetes from templates
+type KubeCodeRenderer struct {
+	// templates baked into the binary
+	templates packr.Box
+
+	// the templates to use for rendering kube kypes
+	TypesTemplates resourceTemplates
+	// the templates to use for rendering kube controllers
+	ControllerTemplates resourceTemplates
+
+	// the go module of the project
+	GoModule string
+
+	// the relative path to the api dir
+	// types will render in the package <module>/<apiRoot>/<group>/<version>
+	ApiRoot string
+}
+
+var typesTemplates = resourceTemplates{
+	"code/types/types.gotmpl": {
+		Path: "types.go",
+	},
+	"code/types/register.gotmpl": {
+		Path: "register.go",
+	},
+	"code/types/doc.gotmpl": {
+		Path: "doc.go",
+	},
+	"code/types/proto_deepcopy.gotmpl": {
+		Path: "proto_deepcopy.go",
 	},
 }
 
-func RenderApiTypes(grp Group) ([]OutFile, error) {
-	return defaultKubeTypesRenderer.RenderKubeTypes(grp)
+var controllerTemplates = resourceTemplates{
+	"code/controller/controller.gotmpl": {
+		Path: "controller/controller.go",
+	},
 }
 
-func (r KubeTypesRenderer) RenderKubeTypes(grp Group) ([]OutFile, error) {
+func RenderApiTypes(goModule, apiRoot string, grp Group) ([]OutFile, error) {
+	defaultKubeCodeRenderer := KubeCodeRenderer{
+		templates:           templateBox,
+		TypesTemplates:      typesTemplates,
+		ControllerTemplates: controllerTemplates,
+		GoModule:            goModule,
+		ApiRoot:             apiRoot,
+	}
+
+	return defaultKubeCodeRenderer.RenderKubeCode(grp)
+}
+
+func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
+	templatesToRender := make(resourceTemplates)
+	if grp.RenderTypes {
+		for tmplPath, out := range r.TypesTemplates {
+			templatesToRender.add(tmplPath, out)
+		}
+	}
+	if grp.RenderController {
+		for tmplPath, out := range r.ControllerTemplates {
+			templatesToRender.add(tmplPath, out)
+		}
+	}
+
 	var renderedFiles []OutFile
-	for tmplPath, out := range r.ResourcePaths {
+	for tmplPath, out := range templatesToRender {
+
 		content, err := r.renderFile(tmplPath, grp)
 		if err != nil {
 			return nil, err
@@ -52,18 +101,20 @@ func (r KubeTypesRenderer) RenderKubeTypes(grp Group) ([]OutFile, error) {
 	return renderedFiles, nil
 }
 
-func (r KubeTypesRenderer) renderFile(path string, data interface{}) (string, error) {
-	templateText, err := r.Templates.FindString(path)
+func (r KubeCodeRenderer) renderFile(path string, data interface{}) (string, error) {
+	templateText, err := r.templates.FindString(path)
 	if err != nil {
 		return "", err
 	}
 
-	tmpl, err := template.New(path).Funcs(r.Funcs).Parse(templateText)
+	funcs := makeTemplateFuncs(r.GoModule, r.ApiRoot)
+
+	tmpl, err := template.New(path).Funcs(funcs).Parse(templateText)
 	if err != nil {
 		return "", err
 	}
 	buf := &bytes.Buffer{}
-	if err := tmpl.Funcs(r.Funcs).Execute(buf, data); err != nil {
+	if err := tmpl.Funcs(funcs).Execute(buf, data); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

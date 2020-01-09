@@ -8,5 +8,8 @@ import (
 // cannot be used to write output to memory
 // also generates deecopy code
 func KubeCodegen(apiDir string, group Group) error {
+	if !group.RenderClients {
+		return nil
+	}
 	return util.KubeCodegen(group.Group, group.Version, apiDir)
 }

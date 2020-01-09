@@ -14,5 +14,5 @@ type Field = model.Field
 type OutFile struct {
 	Path       string
 	Permission os.FileMode
-	Content    string // set by KubeTypesRenderer
+	Content    string // set by Renderer
 }

@@ -1,0 +1,92 @@
+// Definitions for the Kubernetes Controllers
+package controller
+
+import (
+    . "{{ group_import_path $ }}"
+
+    "github.com/pkg/errors"
+    "github.com/solo-io/autopilot/pkg/events"
+    "k8s.io/apimachinery/pkg/runtime"
+    "sigs.k8s.io/controller-runtime/pkg/manager"
+    "sigs.k8s.io/controller-runtime/pkg/predicate"
+)
+
+{{- range $resource := $.Resources }}
+
+type {{ $resource.Kind }}EventHandler struct {
+    OnCreate  func(obj *{{ $resource.Kind }}) error
+    OnUpdate  func(old, new *{{ $resource.Kind }}) error
+    OnDelete  func(obj *{{ $resource.Kind }}) error
+    OnGeneric func(obj *{{ $resource.Kind }}) error
+}
+
+func (f *{{ $resource.Kind }}EventHandler) Create(object runtime.Object) error {
+    obj, ok := object.(*{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T")
+    }
+    if f.OnCreate == nil {
+        return nil
+    }
+    return f.OnCreate(obj)
+}
+
+func (f *{{ $resource.Kind }}EventHandler) Delete(object runtime.Object) error {
+    obj, ok := object.(*{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T")
+    }
+    if f.OnDelete == nil {
+        return nil
+    }
+    return f.OnDelete(obj)
+}
+
+func (f *{{ $resource.Kind }}EventHandler) Update(old, new runtime.Object) error {
+    objOld, ok := old.(*{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T")
+    }
+    objNew, ok := new.(*{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T")
+    }
+    if f.OnUpdate == nil {
+        return nil
+    }
+    return f.OnUpdate(objOld, objNew)
+}
+
+func (f *{{ $resource.Kind }}EventHandler) Generic(object runtime.Object) error {
+    obj, ok := object.(*{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T")
+    }
+    if f.OnGeneric == nil {
+        return nil
+    }
+    return f.OnGeneric(obj)
+}
+
+type {{ $resource.Kind }}Controller struct {
+    watcher events.EventWatcher
+}
+
+func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) (*{{ $resource.Kind }}Controller, error) {
+    w, err := events.NewWatcher(name, mgr)
+    if err != nil {
+        return nil, err
+    }
+    return &{{ $resource.Kind }}Controller{
+        watcher: w,
+    }, nil
+}
+
+func (c *{{ $resource.Kind }}Controller) AddEventHandler(h *{{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+    if err := c.watcher.Watch(&{{ $resource.Kind }}{}, h, predicates...); err != nil{
+        return err
+    }
+    return nil
+}
+
+{{- end }}

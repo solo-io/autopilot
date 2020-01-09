@@ -12,7 +12,7 @@ func KubeCodegen(group, version, apiDir string) error {
 	// path on disk
 	modulePath := GetModuleRoot()
 	// go module package
-	modulePkg := GetModulePkg()
+	modulePkg := GetGoModule()
 
 	// input dir
 	apiPkg := filepath.Join(modulePkg, apiDir)
