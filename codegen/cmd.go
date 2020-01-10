@@ -30,11 +30,15 @@ type Command struct {
 	// the go module of the project
 	// set by Execute()
 	goModule string
+
+	// the path to the root dir of the module on disk
+	moduleRoot string
 }
 
 // function to execute Autopilot code gen from another repository
 func (c Command) Execute() error {
 	c.goModule = util.GetGoModule()
+	c.moduleRoot = util.GetModuleRoot()
 	for _, group := range c.Groups {
 		// init connects children to their parents
 		group.Init()
@@ -51,25 +55,23 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 		return err
 	}
 
-	apiWriter := &writer.DefaultWriter{Root: c.ApiRoot}
+	writer := &writer.DefaultWriter{Root: c.moduleRoot}
 
 	apiTypes, err := render.RenderApiTypes(c.goModule, c.ApiRoot, grp)
 	if err != nil {
 		return err
 	}
 
-	if err := apiWriter.WriteFiles(apiTypes); err != nil {
+	if err := writer.WriteFiles(apiTypes); err != nil {
 		return err
 	}
-
-	manifestWriter := &writer.DefaultWriter{Root: c.ManifestRoot}
 
 	manifests, err := render.RenderManifests(c.AppName, c.ManifestRoot, grp)
 	if err != nil {
 		return err
 	}
 
-	if err := manifestWriter.WriteFiles(manifests); err != nil {
+	if err := writer.WriteFiles(manifests); err != nil {
 		return err
 	}
 
