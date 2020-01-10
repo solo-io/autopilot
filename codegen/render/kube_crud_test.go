@@ -12,12 +12,18 @@ import (
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
 	kubehelp "github.com/solo-io/go-utils/testutils/kube"
+	"go.uber.org/zap"
 	"io/ioutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"path/filepath"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	zaputil "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"time"
 )
+
+var logf = log.SetLogger
 
 func applyFile(file string) error {
 	path := filepath.Join(util.MustGetThisDir(), "manifests", file)
@@ -42,8 +48,14 @@ var _ = Describe("Generated Code", func() {
 		ns        string
 		kube      kubernetes.Interface
 		clientset versioned.Interface
+		logLevel  = zap.NewAtomicLevel()
 	)
 	BeforeEach(func() {
+		logLevel.SetLevel(zap.DebugLevel)
+		log.SetLogger(zaputil.New(
+			zaputil.Level(&logLevel),
+		))
+		log.Log.Info("test")
 		err := applyFile("things.test.io_v1_crds.yaml")
 		Expect(err).NotTo(HaveOccurred())
 		ns = randutils.RandString(4)
@@ -121,7 +133,7 @@ var _ = Describe("Generated Code", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var created, updated, deleted *Paint
-			handler := &controller.PaintEventHandler{
+			handler := &controller.PaintEventHandlerFuncs{
 				OnCreate: func(obj *Paint) error {
 					created = obj
 					return nil
@@ -136,8 +148,6 @@ var _ = Describe("Generated Code", func() {
 				},
 			}
 
-			err = ctl.AddEventHandler(handler)
-			Expect(err).NotTo(HaveOccurred())
 
 			paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
 				ObjectMeta: v1.ObjectMeta{
@@ -157,9 +167,14 @@ var _ = Describe("Generated Code", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
+			paint.GetObjectKind().GroupVersionKind()
+
+			err = ctl.AddEventHandler(handler)
+			Expect(err).NotTo(HaveOccurred())
+
 			Eventually(func() *Paint {
 				return created
-			}).ShouldNot(BeNil())
+			}, time.Second).ShouldNot(BeNil())
 
 			// update
 			paint.Spec.Color = &PaintColor{Value: 0.7}
@@ -169,7 +184,7 @@ var _ = Describe("Generated Code", func() {
 
 			Eventually(func() *Paint {
 				return updated
-			}).ShouldNot(BeNil())
+			}, time.Second).ShouldNot(BeNil())
 
 			// delete
 			err = clientset.ThingsV1().Paints(ns).Delete(paint.Name, nil)
@@ -177,7 +192,7 @@ var _ = Describe("Generated Code", func() {
 
 			Eventually(func() *Paint {
 				return deleted
-			}).ShouldNot(BeNil())
+			}, time.Second).ShouldNot(BeNil())
 		})
 	})
 })

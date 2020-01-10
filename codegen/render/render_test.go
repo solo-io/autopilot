@@ -11,7 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-var _ = Describe("Render", func() {
+// this test deprecated in favor of codegen/cmd_test
+
+var _ = XDescribe("Render", func() {
 	var (
 		group = Group{
 			GroupVersion: schema.GroupVersion{

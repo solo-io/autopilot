@@ -6,6 +6,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sync"
 )
@@ -40,12 +41,15 @@ type Cache interface {
 	// handler that receives events from controller-runtime
 	handler.EventHandler
 
-	// retrieve (and remove) an event from the cache
-	Pop(key string) *Event
+	// retrieve an event from the cache
+	Get(key string) *Event
+
+	// remove an event from the cache
+	Forget(key string)
 }
 
 type cache struct {
-	lock sync.Mutex
+	lock sync.RWMutex
 
 	// cache keys will be mapped to the reconcile.Request.Name
 	cache map[string]*Event
@@ -61,10 +65,13 @@ func (c *cache) handleEvent(evt *Event, q workqueue.RateLimitingInterface) {
 	// the reconcile request
 	key := uuid.New()
 
+	log.Log.V(1).Info("storing event", "key", key, "event", evt)
 	c.lock.Lock()
 	c.cache[key] = evt
 	c.lock.Unlock()
 
+	// add a request the event to the queue
+	// the controller will Pop() it when the request reaches the reconcile function
 	q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 		Name:      key,
 		Namespace: "", // no namespace required
@@ -89,10 +96,15 @@ func (c *cache) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterfac
 }
 
 // pops the event with the key
-func (c *cache) Pop(key string) *Event {
-	c.lock.Lock()
+func (c *cache) Get(key string) *Event {
+	c.lock.RLock()
 	evt := c.cache[key]
+	c.lock.RUnlock()
+	return evt
+}
+
+func (c *cache) Forget(key string) {
+	c.lock.Lock()
 	delete(c.cache, key)
 	c.lock.Unlock()
-	return evt
 }

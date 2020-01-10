@@ -20,12 +20,6 @@ type DefaultWriter struct {
 }
 
 func (w *DefaultWriter) WriteFiles(files []render.OutFile) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	log.Printf("wd: %v", wd)
-
 	for _, file := range files {
 		name := filepath.Join(w.Root, file.Path)
 		content := file.Content
