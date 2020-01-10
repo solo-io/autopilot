@@ -48,7 +48,7 @@ func GetModuleRoot() string {
 }
 
 // the project root pkg (based on gomod location)
-func GetModulePkg() string {
+func GetGoModule() string {
 	return ParseGoMod().Module.Mod.Path
 }
 

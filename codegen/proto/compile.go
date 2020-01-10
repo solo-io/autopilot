@@ -11,8 +11,15 @@ import (
 	"strings"
 )
 
-func CompileProtos(dir string) error {
-	dir, err := filepath.Abs(dir)
+// make sure the pkg matches the go_package option in the proto
+// TODO: validate this
+func CompileProtos(goModule, apiRoot, protoDir string) error {
+	// need to be in module root so protoc runs on the expected apiRoot
+	if err := os.Chdir(util.GetModuleRoot()); err != nil {
+		return err
+	}
+
+	protoDir, err := filepath.Abs(protoDir)
 	if err != nil {
 		return err
 	}
@@ -24,7 +31,7 @@ func CompileProtos(dir string) error {
 
 	_, err = collector.NewCollector(
 		nil,
-		[]string{dir},
+		[]string{protoDir}, // import the inputs dir
 		nil,
 		[]string{
 			"jsonshim",
@@ -32,19 +39,14 @@ func CompileProtos(dir string) error {
 		protoOutDir,
 		func(file string) bool {
 			return true
-		}).CollectDescriptorsFromRoot(dir, nil)
-if err != nil {
-	return err
-}
-
-	// make sure this matches the go_package option in the proto
-	pkg := util.GetGoPkg()
+		}).CollectDescriptorsFromRoot(protoDir, nil)
+	if err != nil {
+		return err
+	}
 
 	// copy the files generated for our package into our repo from the
 	// tmp dir
-	err = copyFiles(filepath.Join(protoOutDir, pkg), dir)
-
-	return err
+	return copyFiles(filepath.Join(protoOutDir, goModule, apiRoot), apiRoot)
 }
 
 func copyFiles(srcDir, destDir string) error {
@@ -56,13 +58,8 @@ func copyFiles(srcDir, destDir string) error {
 			return nil
 		}
 
-		destFile := strings.TrimPrefix(srcFile, srcDir)
+		destFile := filepath.Join(destDir, strings.TrimPrefix(srcFile, srcDir))
 		destFile = strings.TrimPrefix(destFile, "/")
-
-		dir := filepath.Dir(filepath.Join(destDir, destFile))
-		if err := os.MkdirAll(dir, 0755); err != nil{
-			return err
-		}
 
 		// copy
 		srcReader, err := os.Open(srcFile)
@@ -70,6 +67,10 @@ func copyFiles(srcDir, destDir string) error {
 			return err
 		}
 		defer srcReader.Close()
+
+		if err := os.MkdirAll(filepath.Dir(destFile), 0755); err != nil {
+			return err
+		}
 
 		dstFile, err := os.Create(destFile)
 		if err != nil {
