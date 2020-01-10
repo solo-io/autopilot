@@ -1,0 +1,46 @@
+// Definitions for the Kubernetes types
+package {{ .Version }}
+
+import (
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+{{- range $resource := $.Resources }}
+
+{{- $kindLowerCamel := lower_camel $resource.Kind }}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+{{- if $resource.Status }}
+// +kubebuilder:subresource:status
+{{- else }}
+// +genclient:noStatus
+{{- end }}
+
+// {{ $resource.Kind }} is the Schema for the {{ $kindLowerCamel }} API
+type {{ $resource.Kind }} struct {
+    metav1.TypeMeta   `json:",inline"`
+    metav1.ObjectMeta `json:"metadata,omitempty"`
+
+    Spec {{ $resource.Spec.Type }} `json:"spec,omitempty"`
+{{- if $resource.Status }}
+    Status {{ $resource.Status.Type }} `json:"status,omitempty"`
+{{- end }}
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// {{ $resource.Kind}}List contains a list of {{ $resource.Kind}}
+type {{ $resource.Kind}}List struct {
+    metav1.TypeMeta `json:",inline"`
+    metav1.ListMeta `json:"metadata,omitempty"`
+    Items           []{{ $resource.Kind }} `json:"items"`
+}
+{{- end }}
+
+func init() {
+{{- range $resource := $.Resources }}
+    SchemeBuilder.Register(&{{ $resource.Kind }}{}, &{{ $resource.Kind }}List{})
+{{- end }}
+}

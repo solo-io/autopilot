@@ -11,7 +11,6 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	v1 "github.com/solo-io/autopilot/api/v1"
-	"github.com/solo-io/autopilot/codegen/util"
 )
 
 // ProjectData is used for rendering templates and generating files
@@ -52,7 +51,8 @@ type ProjectData struct {
 }
 
 func NewTemplateData(project v1.AutopilotProject, operator v1.AutopilotOperator, templates packr.Box) (*ProjectData, error) {
-	projectGoPkg := util.GetGoPkg()
+	//projectGoPkg := util.GetGoPkg()
+	projectGoPkg := "not implemented"
 
 	for _, q := range DefaultQueries {
 		q := q // Go!!

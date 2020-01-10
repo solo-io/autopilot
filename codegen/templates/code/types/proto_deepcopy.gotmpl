@@ -1,0 +1,34 @@
+// This file contains generated Deepcopy methods for
+// Spec and Status protobuf types
+
+package {{.Version}}
+
+import proto "github.com/gogo/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import _ "github.com/gogo/protobuf/gogoproto"
+import _ "github.com/gogo/protobuf/types"
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
+
+{{ range $resource := $.Resources -}}
+
+// DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
+func (in *{{ $resource.Spec.Type }}) DeepCopyInto(out *{{ $resource.Spec.Type }}) {
+    p := proto.Clone(in).(*{{ $resource.Spec.Type }})
+    *out = *p
+}
+
+{{- if $resource.Status }}
+// DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
+func (in *{{ $resource.Status.Type }}) DeepCopyInto(out *{{ $resource.Status.Type }}) {
+    p := proto.Clone(in).(*{{ $resource.Status.Type }})
+    *out = *p
+}
+{{- end }}
+
+{{- end }}
+

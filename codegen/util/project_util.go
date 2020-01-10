@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -30,6 +31,92 @@ const (
 	helmChartsDir = "helm-charts"
 	goModFile     = "go.mod"
 )
+
+
+// absolute path to go.mod file for current dir
+func GoModPath() string {
+	out, err := exec.Command("go", "env", "GOMOD").CombinedOutput()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// the project root dir (based on gomod location)
+func GetModuleRoot() string {
+	return filepath.Dir(GoModPath())
+}
+
+// the project root pkg (based on gomod location)
+func GetGoModule() string {
+	return ParseGoMod().Module.Mod.Path
+}
+
+func ParseGoMod() *modfile.File {
+	goModFile := GoModPath()
+	b, err := ioutil.ReadFile(goModFile)
+	if err != nil {
+		log.Fatalf("Read go.mod: %v", err)
+	}
+	mf, err := modfile.Parse(goModFile, b, nil)
+	if err != nil {
+		log.Fatalf("Parse go.mod: %v", err)
+	}
+	return mf
+}
+
+// GetGoPkg returns the current directory's import path by parsing it from
+// wd if this project's repository path is rooted under $GOPATH/src, or
+// from go.mod the project uses Go modules to manage dependencies.
+//
+// Example: "github.com/example-inc/app-operator"
+func GetGoPkg() string {
+	// Default to reading from go.mod, as it should usually have the (correct)
+	// package path, and no further processing need be done on it if so.
+	if _, err := os.Stat(goModFile); err != nil && !os.IsNotExist(err) {
+		log.Fatalf("Failed to read go.mod: %v", err)
+	} else if err == nil {
+		b, err := ioutil.ReadFile(goModFile)
+		if err != nil {
+			log.Fatalf("Read go.mod: %v", err)
+		}
+		mf, err := modfile.Parse(goModFile, b, nil)
+		if err != nil {
+			log.Fatalf("Parse go.mod: %v", err)
+		}
+		if mf.Module != nil && mf.Module.Mod.Path != "" {
+			return mf.Module.Mod.Path
+		}
+	}
+
+	// Then try parsing package path from $GOPATH (set env or default).
+	goPath, ok := os.LookupEnv(GoPathEnv)
+	if !ok || goPath == "" {
+		hd, err := getHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		goPath = filepath.Join(hd, "go", "src")
+	} else {
+		// MustSetWdGopath is necessary here because the user has set GOPATH,
+		// which could be a path list.
+		goPath = MustSetWdGopath(goPath)
+	}
+	if !strings.HasPrefix(MustGetwd(), goPath) {
+		log.Fatal("Could not determine project repository path: $GOPATH not set, wd in default $HOME/go/src, or wd does not contain a go.mod")
+	}
+	return parseGoPkg(goPath)
+}
+
+func parseGoPkg(gopath string) string {
+	goSrc := filepath.Join(gopath, SrcDir)
+	wd := MustGetwd()
+	pathedPkg := strings.Replace(wd, goSrc, "", 1)
+	// Make sure package only contains the "/" separator and no others, and
+	// trim any leading/trailing "/".
+	return strings.Trim(filepath.ToSlash(pathedPkg), "/")
+}
+
 
 // MustInProjectRoot checks if the current dir is the project root, and exits
 // if not.
@@ -98,58 +185,6 @@ func getHomeDir() (string, error) {
 		return "", err
 	}
 	return homedir.Expand(hd)
-}
-
-// GetGoPkg returns the current directory's import path by parsing it from
-// wd if this project's repository path is rooted under $GOPATH/src, or
-// from go.mod the project uses Go modules to manage dependencies.
-//
-// Example: "github.com/example-inc/app-operator"
-func GetGoPkg() string {
-	// Default to reading from go.mod, as it should usually have the (correct)
-	// package path, and no further processing need be done on it if so.
-	if _, err := os.Stat(goModFile); err != nil && !os.IsNotExist(err) {
-		log.Fatalf("Failed to read go.mod: %v", err)
-	} else if err == nil {
-		b, err := ioutil.ReadFile(goModFile)
-		if err != nil {
-			log.Fatalf("Read go.mod: %v", err)
-		}
-		mf, err := modfile.Parse(goModFile, b, nil)
-		if err != nil {
-			log.Fatalf("Parse go.mod: %v", err)
-		}
-		if mf.Module != nil && mf.Module.Mod.Path != "" {
-			return mf.Module.Mod.Path
-		}
-	}
-
-	// Then try parsing package path from $GOPATH (set env or default).
-	goPath, ok := os.LookupEnv(GoPathEnv)
-	if !ok || goPath == "" {
-		hd, err := getHomeDir()
-		if err != nil {
-			log.Fatal(err)
-		}
-		goPath = filepath.Join(hd, "go", "src")
-	} else {
-		// MustSetWdGopath is necessary here because the user has set GOPATH,
-		// which could be a path list.
-		goPath = MustSetWdGopath(goPath)
-	}
-	if !strings.HasPrefix(MustGetwd(), goPath) {
-		log.Fatal("Could not determine project repository path: $GOPATH not set, wd in default $HOME/go/src, or wd does not contain a go.mod")
-	}
-	return parseGoPkg(goPath)
-}
-
-func parseGoPkg(gopath string) string {
-	goSrc := filepath.Join(gopath, SrcDir)
-	wd := MustGetwd()
-	pathedPkg := strings.Replace(wd, goSrc, "", 1)
-	// Make sure package only contains the "/" separator and no others, and
-	// trim any leading/trailing "/".
-	return strings.Trim(filepath.ToSlash(pathedPkg), "/")
 }
 
 // MustSetWdGopath sets GOPATH to the first element of the path list in

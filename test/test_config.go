@@ -17,11 +17,15 @@ func MustConfig() *rest.Config {
 	return cfg
 }
 
-func MustManager() (manager.Manager, func()) {
+func MustManager(ns string) (manager.Manager, func()) {
+	cfg := MustConfig()
+	return ManagerWithOpts(cfg, manager.Options{Namespace: ns})
+}
+
+func ManagerWithOpts(cfg *rest.Config, opts manager.Options) (manager.Manager, func()) {
 	ctx, cancel := context.WithCancel(context.TODO())
 
-	cfg := MustConfig()
-	mgr, err := manager.New(cfg, manager.Options{})
+	mgr, err := manager.New(cfg, opts)
 	Expect(err).NotTo(HaveOccurred())
 
 	go func() {
