@@ -39,9 +39,12 @@ function generate_traffic {
 }
 
 function cleanup {
+    set -x
     kubectl delete ns canary-operator
     kubectl delete ns e2etest
     kubectl delete crd canarydeployments.autopilot.examples.io
+    set +x
+    echo cleaned up!
 }
 
 set -e
