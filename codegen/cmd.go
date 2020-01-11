@@ -3,6 +3,7 @@ package codegen
 import (
 	"context"
 
+	"github.com/solo-io/anyvendor/anyvendor"
 	"github.com/solo-io/anyvendor/pkg/manager"
 	"github.com/solo-io/autopilot/codegen/ap_anyvendor"
 	"github.com/solo-io/autopilot/codegen/model"
@@ -94,6 +95,10 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 func (c Command) compileProtos() error {
 	if !c.RenderProtos {
 		return nil
+	}
+
+	if c.ProtoDir == "" {
+		c.ProtoDir = anyvendor.DefaultDepDir
 	}
 
 	mgr, err := manager.NewManager(context.TODO(), c.moduleRoot)
