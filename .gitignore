@@ -1,5 +1,6 @@
 # build artifacts
 _output/
 
+.idea/
 # ignore packr files
 *-packr.go
