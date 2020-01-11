@@ -23,8 +23,6 @@ import (
 	"time"
 )
 
-var logf = log.SetLogger
-
 func applyFile(file string) error {
 	path := filepath.Join(util.MustGetThisDir(), "manifests", file)
 	b, err := ioutil.ReadFile(path)
