@@ -10,16 +10,16 @@ import (
 	"strings"
 )
 
-type Writer interface {
+type FileWriter interface {
 	WriteFiles(files []render.OutFile) error
 }
 
 // writes to the filesystem
-type DefaultWriter struct {
+type DefaultFileWriter struct {
 	Root string
 }
 
-func (w *DefaultWriter) WriteFiles(files []render.OutFile) error {
+func (w *DefaultFileWriter) WriteFiles(files []render.OutFile) error {
 	for _, file := range files {
 		name := filepath.Join(w.Root, file.Path)
 		content := file.Content

@@ -55,7 +55,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 		return err
 	}
 
-	writer := &writer.DefaultWriter{Root: c.moduleRoot}
+	writer := &writer.DefaultFileWriter{Root: c.moduleRoot}
 
 	apiTypes, err := render.RenderApiTypes(c.goModule, c.ApiRoot, grp)
 	if err != nil {
