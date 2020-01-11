@@ -1,0 +1,6 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Generate Kubernetes controller code.
+
+  - type: NON_USER_FACING
+    description: fix cloudbuild

@@ -15,6 +15,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
+	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/common v0.7.0
@@ -26,9 +27,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
 	golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5
-	istio.io/api v0.0.0-20191109011807-2629c6ac1513
-	istio.io/client-go v0.0.0-20191104174404-7b65e62d85b0
-	istio.io/tools v0.0.0-20200106183429-b82e12b2c42f // indirect
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v0.0.0
@@ -36,7 +34,6 @@ require (
 	k8s.io/code-generator v0.0.0
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
 	k8s.io/utils v0.0.0-20191010214722-8d271d903fe4
-	knative.dev/pkg v0.0.0-20191111150521-6d806b998379
 	sigs.k8s.io/controller-runtime v0.4.0
 	sigs.k8s.io/yaml v1.1.0
 )
