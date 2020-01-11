@@ -1,0 +1,3 @@
+changelog:
+- type: NEW_FEATURE
+  description: add support for anyvendor to vendor protos.
