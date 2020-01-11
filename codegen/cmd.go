@@ -1,6 +1,10 @@
 package codegen
 
 import (
+	"context"
+
+	"github.com/solo-io/anyvendor/pkg/manager"
+	"github.com/solo-io/autopilot/codegen/ap_anyvendor"
 	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/autopilot/codegen/proto"
 	"github.com/solo-io/autopilot/codegen/render"
@@ -15,8 +19,11 @@ type Command struct {
 	AppName string
 
 	// search protos recursively starting from this directory
-	// TODO: use anyvendor to support external imports
+	// if left empty will default to vendor_any
 	ProtoDir string
+
+	// settings to configure anyvendor for easier proto imports
+	AnyVendorConfig *ap_anyvendor.Imports
 
 	// the k8s api groups for which to compile
 	Groups []render.Group
@@ -26,6 +33,9 @@ type Command struct {
 
 	// the root directory for generated Kube manfiests
 	ManifestRoot string
+
+	// Should we compile protos?
+	RenderProtos bool
 
 	// the go module of the project
 	// set by Execute()
@@ -39,6 +49,9 @@ type Command struct {
 func (c Command) Execute() error {
 	c.goModule = util.GetGoModule()
 	c.moduleRoot = util.GetModuleRoot()
+	if err := c.compileProtos(); err != nil {
+		return err
+	}
 	for _, group := range c.Groups {
 		// init connects children to their parents
 		group.Init()
@@ -51,10 +64,6 @@ func (c Command) Execute() error {
 }
 
 func (c Command) writeGeneratedFiles(grp model.Group) error {
-	if err := c.compileProtos(grp); err != nil {
-		return err
-	}
-
 	writer := &writer.DefaultFileWriter{Root: c.moduleRoot}
 
 	apiTypes, err := render.RenderApiTypes(c.goModule, c.ApiRoot, grp)
@@ -82,9 +91,18 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 	return nil
 }
 
-func (c Command) compileProtos(grp render.Group) error {
-	if !grp.RenderProtos {
+func (c Command) compileProtos() error {
+	if !c.RenderProtos {
 		return nil
+	}
+
+	mgr, err := manager.NewManager(context.TODO(), c.moduleRoot)
+	if err != nil {
+		return err
+	}
+
+	if err := mgr.Ensure(context.TODO(), c.AnyVendorConfig.ToAnyvendorConfig()); err != nil {
+		return err
 	}
 
 	if err := proto.CompileProtos(

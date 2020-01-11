@@ -12,9 +12,6 @@ type Group struct {
 	// the kinds in the group
 	Resources []Resource
 
-	// Should we compile protos?
-	RenderProtos bool
-
 	// Should we generate kubernetes manifests?
 	RenderManifests bool
 
