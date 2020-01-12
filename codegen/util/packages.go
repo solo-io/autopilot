@@ -8,9 +8,9 @@ import (
 
 // gets the go package for the group
 func GoPackage(grp model.Group) string {
-	//if grp.ImportPath != "" {
-	//	return grp.ImportPath
-	//}
+	if grp.CustomTypesImportPath != "" {
+		return grp.CustomTypesImportPath
+	}
 
 	grp.ApiRoot = strings.Trim(grp.ApiRoot, "/")
 

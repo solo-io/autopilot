@@ -25,7 +25,9 @@ var _ = Describe("Cmd", func() {
 							Kind: "Secret",
 						},
 					},
-					RenderController: true,
+					RenderController:      true,
+					CustomTypesImportPath: "k8s.io/api/core/v1",
+					ApiRoot:               "codegen/render/api",
 				},
 
 				{
