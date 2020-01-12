@@ -1,8 +1,9 @@
 package codegen
 
 import (
-	v1 "github.com/solo-io/autopilot/api/v1"
 	"io/ioutil"
+
+	v1 "github.com/solo-io/autopilot/api/v1"
 
 	"github.com/solo-io/autopilot/codegen/model"
 

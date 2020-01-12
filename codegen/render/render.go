@@ -1,8 +1,9 @@
 package render
 
 import (
-	"github.com/solo-io/autopilot/codegen/model"
 	"os"
+
+	"github.com/solo-io/autopilot/codegen/model"
 )
 
 type Group = model.Group

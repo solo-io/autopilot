@@ -3,8 +3,7 @@ package codegen_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/autopilot/codegen/model"
-	. "github.com/solo-io/autopilot/codegen/render"
+	. "github.com/solo-io/autopilot/codegen/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	. "github.com/solo-io/autopilot/codegen"
@@ -14,16 +13,28 @@ var _ = Describe("Cmd", func() {
 	It("generates controller code and manifests for a proto file", func() {
 
 		cmd := &Command{
-			AppName:  "painting-app",
-			ProtoDir: "codegen/render/api",
-			Groups: []model.Group{
+			Groups: []Group{
+				{
+					GroupVersion: schema.GroupVersion{
+						Group:   "core",
+						Version: "v1",
+					},
+					Module: "k8s.io/api",
+					Resources: []Resource{
+						{
+							Kind: "Secret",
+						},
+					},
+					RenderController: true,
+				},
+
 				{
 					GroupVersion: schema.GroupVersion{
 						Group:   "things.test.io",
 						Version: "v1",
 					},
-					Module: "github.com/solo-io/wasme",
-					Resources: []model.Resource{
+					Module: "github.com/solo-io/autopilot",
+					Resources: []Resource{
 						{
 							Kind:   "Paint",
 							Spec:   Field{Type: "PaintSpec"},
@@ -35,10 +46,9 @@ var _ = Describe("Cmd", func() {
 					RenderTypes:      true,
 					RenderClients:    true,
 					RenderController: true,
+					ApiRoot:          "codegen/render/api",
 				},
 			},
-			ApiRoot:      "codegen/render/api",
-			ManifestRoot: "codegen/render",
 		}
 
 		err := cmd.Execute()

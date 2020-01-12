@@ -9,6 +9,9 @@ type Group struct {
 	// the go module this group belongs to
 	Module string
 
+	// the root directory for generated API code
+	ApiRoot string
+
 	// the kinds in the group
 	Resources []Resource
 

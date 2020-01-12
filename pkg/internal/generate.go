@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	generatorargs "k8s.io/code-generator/cmd/deepcopy-gen/args"

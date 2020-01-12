@@ -32,7 +32,6 @@ const (
 	goModFile     = "go.mod"
 )
 
-
 // absolute path to go.mod file for current dir
 func GoModPath() string {
 	out, err := exec.Command("go", "env", "GOMOD").CombinedOutput()
@@ -116,7 +115,6 @@ func parseGoPkg(gopath string) string {
 	// trim any leading/trailing "/".
 	return strings.Trim(filepath.ToSlash(pathedPkg), "/")
 }
-
 
 // MustInProjectRoot checks if the current dir is the project root, and exits
 // if not.

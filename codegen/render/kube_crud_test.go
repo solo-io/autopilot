@@ -1,6 +1,10 @@
 package render_test
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
@@ -13,14 +17,11 @@ import (
 	"github.com/solo-io/go-utils/randutils"
 	kubehelp "github.com/solo-io/go-utils/testutils/kube"
 	"go.uber.org/zap"
-	"io/ioutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"path/filepath"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	zaputil "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"time"
 )
 
 func applyFile(file string) error {
@@ -145,7 +146,6 @@ var _ = Describe("Generated Code", func() {
 					return nil
 				},
 			}
-
 
 			paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
 				ObjectMeta: v1.ObjectMeta{

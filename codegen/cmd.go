@@ -21,23 +21,18 @@ type Command struct {
 	// the k8s api groups for which to compile
 	Groups []render.Group
 
-	// the root directory for generated API code
-	ApiRoot string
-
 	// the root directory for generated Kube manfiests
 	ManifestRoot string
 
-	// the go module of the project
-	// set by Execute()
-	goModule string
-
 	// the path to the root dir of the module on disk
+	// files will be written relative to this dir,
+	// except kube clientsets which
+	// will generate to the module of the group
 	moduleRoot string
 }
 
 // function to execute Autopilot code gen from another repository
 func (c Command) Execute() error {
-	c.goModule = util.GetGoModule()
 	c.moduleRoot = util.GetModuleRoot()
 	for _, group := range c.Groups {
 		// init connects children to their parents
@@ -57,7 +52,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 
 	writer := &writer.DefaultFileWriter{Root: c.moduleRoot}
 
-	apiTypes, err := render.RenderApiTypes(c.goModule, c.ApiRoot, grp)
+	apiTypes, err := render.RenderApiTypes(grp)
 	if err != nil {
 		return err
 	}
@@ -75,7 +70,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 		return err
 	}
 
-	if err := render.KubeCodegen(c.ApiRoot, grp); err != nil {
+	if err := render.KubeCodegen(grp); err != nil {
 		return err
 	}
 
@@ -88,8 +83,8 @@ func (c Command) compileProtos(grp render.Group) error {
 	}
 
 	if err := proto.CompileProtos(
-		c.goModule,
-		c.ApiRoot,
+		grp.Module,
+		grp.ApiRoot,
 		c.ProtoDir,
 	); err != nil {
 		return err

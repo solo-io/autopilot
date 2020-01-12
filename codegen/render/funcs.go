@@ -1,10 +1,11 @@
 package render
 
 import (
-	"github.com/iancoleman/strcase"
-	"github.com/solo-io/autopilot/codegen/util"
 	"strings"
 	"text/template"
+
+	"github.com/iancoleman/strcase"
+	"github.com/solo-io/autopilot/codegen/util"
 )
 
 func makeTemplateFuncs(module, apiRoot string) template.FuncMap {
@@ -20,7 +21,7 @@ func makeTemplateFuncs(module, apiRoot string) template.FuncMap {
 
 		// code template funcs
 		"group_import_path": func(grp Group) string {
-			return util.GoPackage(grp, module, apiRoot)
+			return util.GoPackage(grp)
 		},
 	}
 

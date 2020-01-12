@@ -2,13 +2,14 @@ package source
 
 import (
 	"context"
+	"sync"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"sync"
 )
 
 // Stoppable is a stoppable source
