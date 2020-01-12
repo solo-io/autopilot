@@ -2,8 +2,9 @@ package render
 
 import (
 	"bytes"
-	"github.com/gobuffalo/packr"
 	"text/template"
+
+	"github.com/gobuffalo/packr"
 )
 
 // map of template files to the file they render to
@@ -61,13 +62,13 @@ var controllerTemplates = resourceTemplates{
 	},
 }
 
-func RenderApiTypes(goModule, apiRoot string, grp Group) ([]OutFile, error) {
+func RenderApiTypes(grp Group) ([]OutFile, error) {
 	defaultKubeCodeRenderer := KubeCodeRenderer{
 		templates:           templateBox,
 		TypesTemplates:      typesTemplates,
 		ControllerTemplates: controllerTemplates,
-		GoModule:            goModule,
-		ApiRoot:             apiRoot,
+		GoModule:            grp.Module,
+		ApiRoot:             grp.ApiRoot,
 	}
 
 	return defaultKubeCodeRenderer.RenderKubeCode(grp)

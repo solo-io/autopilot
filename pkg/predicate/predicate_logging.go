@@ -2,6 +2,7 @@ package predicate
 
 import (
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"

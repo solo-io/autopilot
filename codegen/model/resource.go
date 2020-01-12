@@ -9,6 +9,9 @@ type Group struct {
 	// the go module this group belongs to
 	Module string
 
+	// the root directory for generated API code
+	ApiRoot string
+
 	// the kinds in the group
 	Resources []Resource
 
@@ -26,6 +29,12 @@ type Group struct {
 
 	// Should we generate kubernetes Go controllers?
 	RenderController bool
+
+	// custom import path to the package
+	// containing the Go types
+	// use this if you are generating controllers
+	// for types in an external project
+	CustomTypesImportPath string
 }
 
 // ensures the resources point to this group

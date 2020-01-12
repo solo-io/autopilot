@@ -16,4 +16,3 @@ func UpdateResourceVersion(c RestClient, ctx context.Context, obj Object) error 
 	obj.SetResourceVersion(clone.GetResourceVersion())
 	return nil
 }
-
