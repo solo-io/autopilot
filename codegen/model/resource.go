@@ -15,6 +15,10 @@ type Group struct {
 	// the root directory for generated API code
 	ApiRoot string
 
+	// search protos recursively starting from this directory.
+	// will default vendor_any if empty
+	ProtoDir string
+
 	// the kinds in the group
 	Resources []Resource
 
