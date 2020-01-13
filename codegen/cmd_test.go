@@ -29,7 +29,6 @@ var _ = Describe("Cmd", func() {
 					CustomTypesImportPath: "k8s.io/api/core/v1",
 					ApiRoot:               "codegen/render/api",
 				},
-
 				{
 					GroupVersion: schema.GroupVersion{
 						Group:   "things.test.io",
@@ -51,6 +50,7 @@ var _ = Describe("Cmd", func() {
 					ApiRoot:          "codegen/render/api",
 				},
 			},
+			ProtoDir: "codegen/render/api",
 		}
 
 		err := cmd.Execute()

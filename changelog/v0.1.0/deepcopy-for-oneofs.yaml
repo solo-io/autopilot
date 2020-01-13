@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Generate working deepcopy methods for proto structs with oneofs
+    issueLink: https://github.com/solo-io/autopilot/issues/22

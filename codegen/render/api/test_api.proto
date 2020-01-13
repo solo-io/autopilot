@@ -29,6 +29,11 @@ message AcrylicType {
 
 message OilType {
     bool waterMixable = 1;
+
+    oneof pigmentType {
+        string powder = 2;
+        string fluid = 3;
+    };
 }
 
 message PaintStatus {

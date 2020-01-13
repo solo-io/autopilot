@@ -8,29 +8,31 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/solo-io/solo-kit/pkg/code-generator/model"
+
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
 )
 
 // make sure the pkg matches the go_package option in the proto
 // TODO: validate this
-func CompileProtos(goModule, apiRoot, protoDir string) error {
+func CompileProtos(goModule, apiRoot, protoDir string) ([]*model.DescriptorWithPath, error) {
 	// need to be in module root so protoc runs on the expected apiRoot
 	if err := os.Chdir(util.GetModuleRoot()); err != nil {
-		return err
+		return nil, err
 	}
 
 	protoDir, err := filepath.Abs(protoDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	protoOutDir, err := ioutil.TempDir("", "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer os.Remove(protoOutDir)
 
-	_, err = collector.NewCollector(
+	descriptors, err := collector.NewCollector(
 		nil,
 		[]string{protoDir}, // import the inputs dir
 		nil,
@@ -42,12 +44,12 @@ func CompileProtos(goModule, apiRoot, protoDir string) error {
 			return true
 		}).CollectDescriptorsFromRoot(protoDir, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// copy the files generated for our package into our repo from the
 	// tmp dir
-	return copyFiles(filepath.Join(protoOutDir, goModule, apiRoot), apiRoot)
+	return descriptors, copyFiles(filepath.Join(protoOutDir, goModule, apiRoot), apiRoot)
 }
 
 func copyFiles(srcDir, destDir string) error {
