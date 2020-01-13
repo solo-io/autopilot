@@ -40,12 +40,16 @@ type Command struct {
 
 	// the path to the root dir of the module on disk
 	moduleRoot string
+
+	// context for autopilot command
+	ctx context.Context
 }
 
 // function to execute Autopilot code gen from another repository
 func (c Command) Execute() error {
 	c.goModule = util.GetGoModule()
 	c.moduleRoot = util.GetModuleRoot()
+	c.ctx = context.Background()
 	for _, group := range c.Groups {
 		// init connects children to their parents
 		group.Init()
@@ -64,7 +68,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 
 	writer := &writer.DefaultFileWriter{Root: c.moduleRoot}
 
-	apiTypes, err := render.RenderApiTypes(c.goModule, c.ApiRoot, grp)
+	apiTypes, err := render.RenderApiTypes(grp)
 	if err != nil {
 		return err
 	}
