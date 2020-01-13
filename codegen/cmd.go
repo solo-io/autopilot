@@ -5,12 +5,12 @@ import (
 
 	"github.com/solo-io/anyvendor/anyvendor"
 	"github.com/solo-io/anyvendor/pkg/manager"
-	"github.com/solo-io/autopilot/codegen/ap_anyvendor"
 	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/autopilot/codegen/proto"
 	"github.com/solo-io/autopilot/codegen/render"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/codegen/writer"
+	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
 )
 
 // runs the codegen compilation for the current Go module
@@ -21,7 +21,7 @@ type Command struct {
 
 	// config to vendor protos and other non-go files
 	// Optional: If nil will not be used
-	AnyVendorConfig *ap_anyvendor.Imports
+	AnyVendorConfig *sk_anyvendor.Imports
 
 	// the k8s api groups for which to compile
 	Groups []render.Group
