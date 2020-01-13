@@ -1,8 +1,9 @@
 package workqueue
 
 import (
-	"k8s.io/client-go/util/workqueue"
 	"sync"
+
+	"k8s.io/client-go/util/workqueue"
 )
 
 // MultiClusterQueues multiplexes queues across

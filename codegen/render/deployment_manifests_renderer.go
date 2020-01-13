@@ -1,10 +1,11 @@
 package render
 
 import (
+	"strings"
+
 	"github.com/solo-io/autopilot/codegen/templates/deploy"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
 
 // creates a k8s resource for a group
@@ -32,6 +33,9 @@ func RenderManifests(appName, manifestDir string, grp Group) ([]OutFile, error) 
 }
 
 func (r ManifestsRenderer) RenderManifests(grp Group) ([]OutFile, error) {
+	if !grp.RenderManifests {
+		return nil, nil
+	}
 	var renderedFiles []OutFile
 	for out, mkFunc := range r.ResourceFuncs {
 		content, err := r.renderManifest(mkFunc, grp)

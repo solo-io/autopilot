@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"sync"
+
 	apqueue "github.com/solo-io/autopilot/pkg/workqueue"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sync"
 )
 
 // QueueRegisteringHandler registers the queue on the first create event

@@ -1,13 +1,14 @@
 package writer
 
 import (
-	"github.com/solo-io/autopilot/codegen/render"
-	"golang.org/x/tools/imports"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/solo-io/autopilot/codegen/render"
+	"golang.org/x/tools/imports"
 )
 
 type FileWriter interface {

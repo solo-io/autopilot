@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+
 	"github.com/prometheus/common/model"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -1,8 +1,9 @@
 package request
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sync"
+
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // MultiClusterRequests multiplexes reconcile Requests

@@ -1,14 +1,15 @@
 package proto
 
 import (
-	"github.com/solo-io/autopilot/codegen/util"
-	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
 )
 
 // make sure the pkg matches the go_package option in the proto
