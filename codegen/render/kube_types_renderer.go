@@ -102,7 +102,7 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 	return renderedFiles, nil
 }
 
-func (r KubeCodeRenderer) renderFile(path string, data interface{}) (string, error) {
+func (r KubeCodeRenderer) renderFile(path string, data Group) (string, error) {
 	templateText, err := r.templates.FindString(path)
 	if err != nil {
 		return "", err

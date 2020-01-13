@@ -14,21 +14,19 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-{{ range $resource := $.Resources -}}
+{{- range $file := $.Descriptors -}}
+{{- range $message := $file.MessageType -}}
+
+{{- if gt (len $message.OneofDecl) 0 }}
 
 // DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *{{ $resource.Spec.Type }}) DeepCopyInto(out *{{ $resource.Spec.Type }}) {
-    p := proto.Clone(in).(*{{ $resource.Spec.Type }})
+func (in *{{ $message.Name }}) DeepCopyInto(out *{{ $message.Name }}) {
+    p := proto.Clone(in).(*{{ $message.Name }})
     *out = *p
 }
 
-{{- if $resource.Status }}
-// DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *{{ $resource.Status.Type }}) DeepCopyInto(out *{{ $resource.Status.Type }}) {
-    p := proto.Clone(in).(*{{ $resource.Status.Type }})
-    *out = *p
-}
 {{- end }}
 
+{{- end }}
 {{- end }}
 
