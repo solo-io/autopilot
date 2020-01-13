@@ -49,6 +49,7 @@ var _ = Describe("Cmd", func() {
 					RenderClients:    true,
 					RenderController: true,
 					ApiRoot:          "codegen/render/api",
+					ProtoDir:         "codegen/render/api",
 				},
 			},
 		}

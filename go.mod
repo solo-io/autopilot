@@ -21,6 +21,7 @@ require (
 	github.com/prometheus/common v0.7.0
 	github.com/rogpeppe/go-internal v1.5.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/solo-io/anyvendor v0.0.1
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5

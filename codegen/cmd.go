@@ -19,37 +19,29 @@ type Command struct {
 	// used to label k8s manifests
 	AppName string
 
-	// search protos recursively starting from this directory
-	ProtoDir string
-
-	// config to vendor protos, and other non-go files
+	// config to vendor protos and other non-go files
 	AnyVendorConfig *ap_anyvendor.Imports
 
 	// the k8s api groups for which to compile
 	Groups []render.Group
 
-	// the root directory for generated API code
-	ApiRoot string
-
 	// the root directory for generated Kube manfiests
 	ManifestRoot string
 
-	// the go module of the project
-	// set by Execute()
-	goModule string
-
 	// the path to the root dir of the module on disk
+	// files will be written relative to this dir,
+	// except kube clientsets which
+	// will generate to the module of the group
 	moduleRoot string
 
-	// context for autopilot command
+	// context of the command
 	ctx context.Context
 }
 
 // function to execute Autopilot code gen from another repository
 func (c Command) Execute() error {
-	c.goModule = util.GetGoModule()
-	c.moduleRoot = util.GetModuleRoot()
 	c.ctx = context.Background()
+	c.moduleRoot = util.GetModuleRoot()
 	for _, group := range c.Groups {
 		// init connects children to their parents
 		group.Init()
@@ -86,7 +78,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 		return err
 	}
 
-	if err := render.KubeCodegen(c.ApiRoot, grp); err != nil {
+	if err := render.KubeCodegen(grp); err != nil {
 		return err
 	}
 
@@ -98,23 +90,25 @@ func (c Command) compileProtos(grp render.Group) error {
 		return nil
 	}
 
-	if c.ProtoDir == "" {
-		c.ProtoDir = anyvendor.DefaultDepDir
+	if grp.ProtoDir == "" {
+		grp.ProtoDir = anyvendor.DefaultDepDir
 	}
 
-	mgr, err := manager.NewManager(context.TODO(), c.moduleRoot)
-	if err != nil {
-		return err
-	}
+	if c.AnyVendorConfig != nil {
+		mgr, err := manager.NewManager(c.ctx, c.moduleRoot)
+		if err != nil {
+			return err
+		}
 
-	if err := mgr.Ensure(context.TODO(), c.AnyVendorConfig.ToAnyvendorConfig()); err != nil {
-		return err
+		if err := mgr.Ensure(c.ctx, c.AnyVendorConfig.ToAnyvendorConfig()); err != nil {
+			return err
+		}
 	}
 
 	if err := proto.CompileProtos(
-		c.goModule,
-		c.ApiRoot,
-		c.ProtoDir,
+		grp.Module,
+		grp.ApiRoot,
+		grp.ProtoDir,
 	); err != nil {
 		return err
 	}
