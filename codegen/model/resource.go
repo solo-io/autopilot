@@ -1,6 +1,9 @@
 package model
 
-import "k8s.io/apimachinery/pkg/runtime/schema"
+import (
+	"github.com/solo-io/solo-kit/pkg/code-generator/model"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
 
 type Group struct {
 	// the group version of the group
@@ -39,6 +42,9 @@ type Group struct {
 	// use this if you are generating controllers
 	// for types in an external project
 	CustomTypesImportPath string
+
+	// proto descriptors will be available to the templates if the group was compiled with them.
+	Descriptors []*model.DescriptorWithPath
 }
 
 // ensures the resources point to this group

@@ -55,7 +55,7 @@ func (c Command) Execute() error {
 }
 
 func (c Command) writeGeneratedFiles(grp model.Group) error {
-	if err := c.compileProtos(grp); err != nil {
+	if err := c.compileProtos(&grp); err != nil {
 		return err
 	}
 
@@ -86,7 +86,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 	return nil
 }
 
-func (c Command) compileProtos(grp render.Group) error {
+func (c Command) compileProtos(grp *render.Group) error {
 	if !grp.RenderProtos {
 		return nil
 	}
@@ -105,14 +105,17 @@ func (c Command) compileProtos(grp render.Group) error {
 			return err
 		}
 	}
-
-	if err := proto.CompileProtos(
+	descriptors, err := proto.CompileProtos(
 		grp.Module,
 		grp.ApiRoot,
 		grp.ProtoDir,
-	); err != nil {
+	)
+	if err != nil {
 		return err
 	}
+
+	// set the descriptors on the group for compilation
+	grp.Descriptors = descriptors
 
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	. "github.com/solo-io/autopilot/codegen"
@@ -29,7 +30,6 @@ var _ = Describe("Cmd", func() {
 					CustomTypesImportPath: "k8s.io/api/core/v1",
 					ApiRoot:               "codegen/render/api",
 				},
-
 				{
 					GroupVersion: schema.GroupVersion{
 						Group:   "things.test.io",
@@ -49,8 +49,10 @@ var _ = Describe("Cmd", func() {
 					RenderClients:    true,
 					RenderController: true,
 					ApiRoot:          "codegen/render/api",
-					ProtoDir:         "codegen/render/api",
 				},
+			},
+			AnyVendorConfig: &sk_anyvendor.Imports{
+				Local: []string{"codegen/render/api/*.proto"},
 			},
 		}
 
