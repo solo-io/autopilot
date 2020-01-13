@@ -20,6 +20,7 @@ type Command struct {
 	AppName string
 
 	// config to vendor protos and other non-go files
+	// Optional: If nil will not be used
 	AnyVendorConfig *ap_anyvendor.Imports
 
 	// the k8s api groups for which to compile
