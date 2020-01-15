@@ -1,0 +1,69 @@
+[[/*
+This template contains the core components for the Operator deployment.
+Expressions evaluating Helm Values use "{{" and "}}"
+Expressions evaluating Autopilot Config use [[ "[[" ]] and [[ "]]" ]]
+*/]]
+
+[[- range $operator := $.Operators -]]
+# Deployment manifest for [[ $operator.Name ]]
+
+{{- $[[ $operator.Name ]] := $.Values.[[ $operator.Name ]]}}
+{{- $image := $[[ $operator.Name ]].image }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: [[ $operator.Name ]]
+  name: [[ $operator.Name ]]
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: [[ $operator.Name ]]
+  template:
+    metadata:
+      labels:
+        app: [[ $operator.Name ]]
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: [[ $operator.Name ]]
+      containers:
+      - image: {{ $image.repository }}:{{ $image.tag }}
+[[- if $operator.Args ]]
+        args:
+[[ toYaml $operator.Args | indent 8 ]]
+[[- end ]]
+        imagePullPolicy: {{ $image.pullPolicy }}
+        name: [[ $operator.Name ]]
+{{- if $[[ $operator.Name ]].resources }}
+        resources:
+{{ toYaml $[[ $operator.Name ]].resources | indent 10}}
+{{- else}}
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+{{- end}}
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          {{- /* set floatingUserId to true in the helm install to let the pod be assigned a dynamic user ID */ -}}
+          {{- /* see https://github.com/helm/helm/issues/1707#issuecomment-520357573 */ -}}
+          {{- /* the user id may be set quite high -- openshift wants userids that may get printed as scientific notation */}}
+          {{- if not $[[ $operator.Name ]].floatingUserId }}
+          runAsUser: {{ printf "%.0f" $[[ $operator.Name ]].runAsUser -}}
+          {{- end }}
+          capabilities:
+            drop:
+            - ALL
+      {{- if $image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ $image.pullSecret }}
+      {{- end}}
+
+[[- end ]]

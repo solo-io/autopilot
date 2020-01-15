@@ -1,0 +1,9 @@
+
+painter:
+  floatingUserId: false
+  image:
+    pullPolicy: IfNotPresent
+    registry: quay.io/solo-io
+    repository: painter
+    tag: v0.0.0
+  runAsUser: 0

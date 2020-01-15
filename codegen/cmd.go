@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"context"
+	"path/filepath"
 
 	"github.com/solo-io/anyvendor/anyvendor"
 	"github.com/solo-io/anyvendor/pkg/manager"
@@ -25,6 +26,9 @@ type Command struct {
 
 	// the k8s api groups for which to compile
 	Groups []render.Group
+
+	// optinal helm chart to render
+	Chart *model.Chart
 
 	// the root directory for generated Kube manfiests
 	ManifestRoot string
@@ -51,6 +55,20 @@ func (c Command) Execute() error {
 			return err
 		}
 	}
+
+	if c.Chart != nil {
+		files, err := render.RenderChart(*c.Chart)
+		if err != nil {
+			return err
+		}
+
+		writer := &writer.DefaultFileWriter{Root: filepath.Join(c.moduleRoot, c.ManifestRoot, c.AppName)}
+
+		if err := writer.WriteFiles(files); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -70,7 +88,7 @@ func (c Command) writeGeneratedFiles(grp model.Group) error {
 		return err
 	}
 
-	manifests, err := render.RenderManifests(c.AppName, c.ManifestRoot, grp)
+	manifests, err := render.RenderManifests(c.AppName, filepath.Join(c.ManifestRoot, c.AppName), grp)
 	if err != nil {
 		return err
 	}
