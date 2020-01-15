@@ -25,7 +25,7 @@ func RenderManifests(appName, manifestDir string, grp Group) ([]OutFile, error) 
 		ManifestDir: manifestDir,
 		ResourceFuncs: map[OutFile]MakeResourceFunc{
 			{
-				Path: "crds.yaml",
+				Path: manifestDir + "/crds/" + grp.Group + "_" + grp.Version + "_" + "crds.yaml",
 			}: deploy.CustomResourceDefinitions,
 		},
 	}
@@ -38,23 +38,22 @@ func (r ManifestsRenderer) RenderManifests(grp Group) ([]OutFile, error) {
 	}
 	var renderedFiles []OutFile
 	for out, mkFunc := range r.ResourceFuncs {
-		content, err := r.renderManifest(mkFunc, grp)
+		content, err := renderManifest(r.AppName, mkFunc, grp)
 		if err != nil {
 			return nil, err
 		}
 		out.Content = content
-		out.Path = r.ManifestDir + "/" + grp.Group + "_" + grp.Version + "_" + out.Path
 		renderedFiles = append(renderedFiles, out)
 	}
 	return renderedFiles, nil
 }
 
-func (r ManifestsRenderer) renderManifest(mk MakeResourceFunc, group Group) (string, error) {
+func renderManifest(appName string, mk MakeResourceFunc, group Group) (string, error) {
 	objs := mk(group)
 
 	var objManifests []string
 	for _, obj := range objs {
-		manifest, err := r.marshalObjToYaml(obj)
+		manifest, err := marshalObjToYaml(appName, obj)
 		if err != nil {
 			return "", err
 		}
@@ -64,14 +63,14 @@ func (r ManifestsRenderer) renderManifest(mk MakeResourceFunc, group Group) (str
 	return strings.Join(objManifests, "\n---\n"), nil
 }
 
-func (r ManifestsRenderer) marshalObjToYaml(obj metav1.Object) (string, error) {
+func marshalObjToYaml(appName string, obj metav1.Object) (string, error) {
 	labels := obj.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
 	}
 
-	labels["app"] = r.AppName
-	labels["app.kubernetes.io/name"] = r.AppName
+	labels["app"] = appName
+	labels["app.kubernetes.io/name"] = appName
 
 	obj.SetLabels(labels)
 
