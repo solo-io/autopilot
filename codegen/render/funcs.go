@@ -4,15 +4,13 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/iancoleman/strcase"
-	"github.com/solo-io/autopilot/codegen/util"
-)
-
-import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
+	"github.com/iancoleman/strcase"
+	"github.com/solo-io/autopilot/codegen/util"
 	"sigs.k8s.io/yaml"
 )
 

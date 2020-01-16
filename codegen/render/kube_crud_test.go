@@ -1,6 +1,7 @@
 package render_test
 
 import (
+	"context"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -167,7 +168,7 @@ var _ = Describe("Generated Code", func() {
 
 			paint.GetObjectKind().GroupVersionKind()
 
-			err = ctl.AddEventHandler(handler)
+			err = ctl.AddEventHandler(context.TODO(), handler)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() *Paint {

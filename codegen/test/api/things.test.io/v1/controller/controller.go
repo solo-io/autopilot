@@ -2,6 +2,8 @@
 package controller
 
 import (
+	"context"
+
 	. "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
 
 	"github.com/pkg/errors"
@@ -71,9 +73,9 @@ func NewPaintController(name string, mgr manager.Manager) (*PaintController, err
 	}, nil
 }
 
-func (c *PaintController) AddEventHandler(h PaintEventHandler, predicates ...predicate.Predicate) error {
+func (c *PaintController) AddEventHandler(ctx context.Context, h PaintEventHandler, predicates ...predicate.Predicate) error {
 	handler := genericPaintHandler{handler: h}
-	if err := c.watcher.Watch(&Paint{}, handler, predicates...); err != nil {
+	if err := c.watcher.Watch(ctx, &Paint{}, handler, predicates...); err != nil {
 		return err
 	}
 	return nil

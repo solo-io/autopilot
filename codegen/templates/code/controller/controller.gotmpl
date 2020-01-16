@@ -2,6 +2,8 @@
 package controller
 
 import (
+	"context"
+
     . "{{ group_import_path $ }}"
 
     "github.com/pkg/errors"
@@ -73,9 +75,9 @@ func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) (*{{ $r
     }, nil
 }
 
-func (c *{{ $resource.Kind }}Controller) AddEventHandler(h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+func (c *{{ $resource.Kind }}Controller) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
 	handler := generic{{ $resource.Kind }}Handler{handler: h}
-    if err := c.watcher.Watch(&{{ $resource.Kind }}{}, handler, predicates...); err != nil{
+    if err := c.watcher.Watch(ctx, &{{ $resource.Kind }}{}, handler, predicates...); err != nil{
         return err
     }
     return nil

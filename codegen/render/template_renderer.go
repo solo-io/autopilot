@@ -2,8 +2,9 @@ package render
 
 import (
 	"bytes"
-	"github.com/gobuffalo/packr"
 	"text/template"
+
+	"github.com/gobuffalo/packr"
 )
 
 // map of template files to the file they render to
