@@ -3,15 +3,22 @@ This template contains the core components for the Operator deployment.
 Expressions evaluating Helm Values use "{{" and "}}"
 Expressions evaluating Autopilot Config use [[ "[[" ]] and [[ "]]" ]]
 */]]
-
 [[- range $operator := $.Operators -]]
-# Deployment manifest for [[ $operator.Name ]]
+---
 
-{{- $[[ $operator.Name ]] := $.Values.[[ $operator.Name ]]}}
-{{- $image := $[[ $operator.Name ]].image }}
+[[/* Support DaemonSet */]]
+  [[- $workloadKind := "Deployment" ]]
+  [[- if $operator.Deployment.UseDaemonSet ]]
+  [[- $workloadKind = "DaemonSet" ]]
+  [[- end -]]
+[[- $operatorVar := (lower_camel $operator.Name) -]]
+
+# [[ $workloadKind ]] manifest for [[ $operator.Name ]]
+{{- $[[ $operatorVar ]] := $.Values.[[ $operatorVar ]]}}
+{{- $[[ $operatorVar ]]Image := $[[ $operatorVar ]].image }}
 
 apiVersion: apps/v1
-kind: Deployment
+kind: [[ $workloadKind ]]
 metadata:
   labels:
     app: [[ $operator.Name ]]
@@ -31,17 +38,25 @@ spec:
         prometheus.io/scrape: "true"
     spec:
       serviceAccountName: [[ $operator.Name ]]
+[[- if $operator.Volumes ]]
+      volumes:
+[[ toYaml $operator.Volumes | indent 6 ]]
+[[- end ]]
       containers:
-      - image: {{ $image.registry }}/{{ $image.repository }}:{{ $image.tag }}
+      - image: {{ $[[ $operatorVar ]]Image.registry }}/{{ $[[ $operatorVar ]]Image.repository }}:{{ $[[ $operatorVar ]]Image.tag }}
 [[- if $operator.Args ]]
         args:
 [[ toYaml $operator.Args | indent 8 ]]
 [[- end ]]
-        imagePullPolicy: {{ $image.pullPolicy }}
+[[- if $operator.VolumeMounts ]]
+        volumeMounts:
+[[ toYaml $operator.VolumeMounts | indent 8 ]]
+[[- end ]]
+        imagePullPolicy: {{ $[[ $operatorVar ]]Image.pullPolicy }}
         name: [[ $operator.Name ]]
-{{- if $[[ $operator.Name ]].resources }}
+{{- if $[[ $operatorVar ]].resources }}
         resources:
-{{ toYaml $[[ $operator.Name ]].resources | indent 10}}
+{{ toYaml $[[ $operatorVar ]].resources | indent 10}}
 {{- else}}
         resources:
           requests:
@@ -54,9 +69,21 @@ spec:
           capabilities:
             drop:
             - ALL
-      {{- if $image.pullSecret }}
+      {{- if $[[ $operatorVar ]]Image.pullSecret }}
       imagePullSecrets:
-        - name: {{ $image.pullSecret }}
+        - name: {{ $[[ $operatorVar ]]Image.pullSecret }}
       {{- end}}
 
-[[- end ]]
+
+---
+
+# Service account for [[ $operator.Name ]]
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: [[ $operator.Name ]]
+  name: [[ $operator.Name ]]
+  namespace: {{ $.Release.Namespace }}
+[[ end ]]

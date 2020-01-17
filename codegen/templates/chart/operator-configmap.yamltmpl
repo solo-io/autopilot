@@ -1,0 +1,17 @@
+[[- range $operator := $.Operators -]]
+[[- range $configmap := $operator.ConfigMaps -]]
+---
+# ConfigMap [[ $configmap.Name ]]
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: [[ $operator.Name ]]
+    configmap: [[ $configmap.Name ]]
+  name: [[ $configmap.Name ]]
+  namespace: {{ .Release.Namespace }}
+data:
+[[ toYaml $configmap.Data | indent 2 ]]
+
+[[- end ]]
+[[- end ]]

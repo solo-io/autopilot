@@ -1,6 +1,9 @@
 package model
 
-import v1 "k8s.io/api/core/v1"
+import (
+	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+)
 
 type Chart struct {
 	Operators []Operator
@@ -12,15 +15,29 @@ type Chart struct {
 }
 
 type Operator struct {
-	Name       string
+	Name string
+
+	// deployment config
 	Deployment Deployment
-	Args       []string
+	// these populate the generated ClusterRole for the operator
+	Rbac []rbacv1.PolicyRule
+	// these populate the generated ClusterRole for the operator
+	Volumes []v1.Volume
+	// mount these volumes to the operator container
+	VolumeMounts []v1.VolumeMount
+	// add a manifest for each configmap
+	ConfigMaps []v1.ConfigMap
+
+	// args for the container
+	Args []string
 }
 
 // values for Deployment template
 type Deployment struct {
-	Image     Image                    `json:"image,omitempty"`
-	Resources *v1.ResourceRequirements `json:"resources,omitempty"`
+	// use a DaemonSet instead of a Deployment
+	UseDaemonSet bool                     `json:"-"`
+	Image        Image                    `json:"image,omitempty"`
+	Resources    *v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type Image struct {

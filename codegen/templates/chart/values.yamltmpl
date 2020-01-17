@@ -3,6 +3,6 @@
 [[- end ]]
 
 [[- range $operator := $.Operators ]]
-[[ $operator.Name ]]:
+[[ lower_camel $operator.Name ]]:
 [[ toYaml $operator.Deployment | indent 2 ]]
 [[- end ]]

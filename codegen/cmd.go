@@ -189,7 +189,7 @@ func (c Command) buildPushImage(operator model.Operator) error {
 		return nil
 	}
 
-	ldFlags := fmt.Sprintf("-X %v/pkg//pkg/version.Version=%v", c.moduleRoot, image.Tag)
+	ldFlags := fmt.Sprintf("-X %v/pkg/version.Version=%v", c.moduleRoot, image.Tag)
 
 	// get the main package from the main directory
 	// assumes package == module name + main dir path
@@ -208,6 +208,7 @@ func (c Command) buildPushImage(operator model.Operator) error {
 			"GO111MODULE=on",
 			"CGO_ENABLED=0",
 			"GOARCH=amd64",
+			"GOOS=linux",
 		},
 	})
 	if err != nil {

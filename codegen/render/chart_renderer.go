@@ -9,8 +9,17 @@ type ChartRenderer struct {
 }
 
 var defaultChartInputs = inputTemplates{
+	"chart/namespace.yamltmpl": {
+		Path: "templates/namespace.yaml",
+	},
 	"chart/operator-deployment.yamltmpl": {
 		Path: "templates/deployment.yaml",
+	},
+	"chart/operator-configmap.yamltmpl": {
+		Path: "templates/configmap.yaml",
+	},
+	"chart/operator-rbac.yamltmpl": {
+		Path: "templates/rbac.yaml",
 	},
 	"chart/values.yamltmpl": {
 		Path: "values.yaml",
