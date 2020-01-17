@@ -66,9 +66,7 @@ var _ = Describe("Generated Code", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
-		err := deleteFile("things.test.io_v1_crds.yaml")
-		Expect(err).NotTo(HaveOccurred())
-		err = kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
+		err := kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
