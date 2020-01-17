@@ -122,4 +122,73 @@ func (h generic{{ $resource.Kind }}Handler) Generic(object runtime.Object) error
     return h.handler.Generic(obj)
 }
 
+type MultiCluster{{ $resource.Kind }}EventHandler interface {
+    Create(cluster string, obj *{{ $resource.Kind }}) error
+	  Update(cluster string, old, new *{{ $resource.Kind }}) error
+	  Delete(cluster string, obj *{{ $resource.Kind }}) error
+	  Generic(cluster string, obj *{{ $resource.Kind }}) error
+}
+
+type Managed{{ $resource.Kind }}Controller struct {
+	  mgr  *cluster.ContextualManager
+	  ctrl *{{ $resource.Kind }}Controller
+}
+
+type MultiCluster{{ $resource.Kind }}Controller struct {
+	  handler           MultiCluster{{ $resource.Kind }}EventHandler
+
+	  ctx         context.Context
+	  ctrlLock    sync.RWMutex
+	  controllers map[string]*Managed{{ $resource.Kind }}Controller
+}
+
+func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterAdded(cfg *rest.Config, name string) error {
+	  mgr, err := cluster.NewContextualManager(m.ctx, cfg, "")
+	  if err != nil {
+		  return err
+	  }
+	  ctrl, err := New{{ $resource.Kind }}Controller(name, mgr.Manager())
+	  if err != nil {
+		    return err
+	  }
+	  if err := ctrl.AddEventHandler(&{{ $resource.Kind }}EventHandlerFuncs{
+		    OnCreate: func(obj *{{ $resource.Kind }}) error {
+			    return m.handler.Create(name, obj)
+		    },
+		    OnUpdate: func(old, new *{{ $resource.Kind }}) error {
+			    return m.handler.Update(name, old, new)
+		    },
+		    OnDelete: func(obj *{{ $resource.Kind }}) error {
+			    return m.handler.Delete(name, obj)
+		    },
+		    OnGeneric: func(obj *{{ $resource.Kind }}) error {
+			    return m.handler.Generic(name, obj)
+		    },
+	  }); err != nil {
+		  return err
+	  }
+	  if err := mgr.Manager().Start(mgr.Context().Done()); err != nil {
+		    return err
+	  }
+	  m.ctrlLock.Lock()
+	  defer m.ctrlLock.Unlock()
+	  m.controllers[name] = &Managed{{ $resource.Kind }}Controller{
+		    mgr:  mgr,
+		    ctrl: ctrl,
+	  }
+	  return nil
+}
+
+func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterRemoved(name string) error {
+	  m.ctrlLock.Lock()
+	  defer m.ctrlLock.Unlock()
+	  mgr, ok := m.controllers[name]
+	  if !ok {
+		    return eris.Errorf("could not find controller for cluster %s", name)
+	  }
+	  go mgr.mgr.Stop()
+	  delete(m.controllers, name)
+	  return nil
+}
+
 {{- end }}
