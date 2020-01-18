@@ -5,15 +5,19 @@ go 1.13
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Masterminds/sprig/v3 v3.0.0
+	github.com/coreos/go-systemd/v22 v22.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gertd/go-pluralize v0.1.1
 	github.com/go-logr/logr v0.1.0
-	github.com/gobuffalo/envy v1.7.1 // indirect
+	github.com/gobuffalo/envy v1.8.1 // indirect
+	github.com/gobuffalo/logger v1.0.3 // indirect
 	github.com/gobuffalo/packr v1.30.1
+	github.com/gobuffalo/packr/v2 v2.7.1 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gophercloud/gophercloud v0.2.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
+	github.com/karrick/godirwalk v1.14.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
@@ -21,7 +25,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/common v0.7.0
-	github.com/rogpeppe/go-internal v1.5.0
+	github.com/rogpeppe/go-internal v1.5.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/anyvendor v0.0.1
 	github.com/solo-io/go-utils v0.11.7
@@ -29,7 +33,10 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
+	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
+	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
 	golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5
+	istio.io/tools v0.0.0-20200117200958-8b2f24232142 // indirect
 	k8s.io/api v0.0.0
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v0.0.0
