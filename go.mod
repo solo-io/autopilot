@@ -41,7 +41,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/code-generator v0.0.0
+	k8s.io/code-generator v0.17.1
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f
 	k8s.io/utils v0.0.0-20191010214722-8d271d903fe4
 	sigs.k8s.io/controller-runtime v0.4.0
