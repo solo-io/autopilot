@@ -42,22 +42,29 @@ type EventWatcher interface {
 }
 
 type watcher struct {
-	events Cache
-	ctl    controller.Controller
-	scheme *runtime.Scheme
+	events  Cache
+	ctl     controller.Controller
+	scheme  *runtime.Scheme
+	cluster string
 
 	lock     sync.RWMutex
 	handlers map[schema.GroupVersionKind][]EventHandler
 }
 
-func NewWatcher(name string, mgr manager.Manager) (EventWatcher, error) {
+type WatcherOpts struct {
+	Name    string
+	Cluster string
+}
+
+func NewWatcher(mgr manager.Manager, opts WatcherOpts) (EventWatcher, error) {
 	w := &watcher{
 		events:   NewCache(),
 		handlers: make(map[schema.GroupVersionKind][]EventHandler),
 		scheme:   mgr.GetScheme(),
+		cluster:  opts.Cluster,
 	}
 
-	ctl, err := controller.New(name, mgr, controller.Options{
+	ctl, err := controller.New(opts.Name, mgr, controller.Options{
 		Reconciler: w,
 	})
 
@@ -145,6 +152,7 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		event.CreateEvent.Meta.SetClusterName(w.cluster)
 		for _, h := range handlers {
 			err := h.Create(obj)
 			if err != nil {
@@ -152,13 +160,15 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			}
 		}
 	case EventTypeUpdate:
-		obj := event.UpdateEvent.ObjectNew
-		handlers, err := w.getHandlers(obj)
+		objNew := event.UpdateEvent.ObjectNew
+		handlers, err := w.getHandlers(objNew)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		event.UpdateEvent.MetaOld.SetClusterName(w.cluster)
+		event.UpdateEvent.MetaNew.SetClusterName(w.cluster)
 		for _, h := range handlers {
-			err := h.Update(event.UpdateEvent.ObjectOld, obj)
+			err := h.Update(event.UpdateEvent.ObjectOld, objNew)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -169,6 +179,7 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		event.DeleteEvent.Meta.SetClusterName(w.cluster)
 		for _, h := range handlers {
 			err := h.Delete(event.DeleteEvent.Object)
 			if err != nil {
@@ -181,6 +192,7 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		event.GenericEvent.Meta.SetClusterName(w.cluster)
 		for _, h := range handlers {
 			err := h.Generic(event.GenericEvent.Object)
 			if err != nil {

@@ -59,12 +59,12 @@ type {{ $resource.Kind }}Controller struct {
     watcher events.EventWatcher
 }
 
-func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) (*{{ $resource.Kind }}Controller, error) {
+func New{{ $resource.Kind }}Controller(mgr manager.Manager, opts events.WatcherOpts) (*{{ $resource.Kind }}Controller, error) {
     if err := AddToScheme(mgr.GetScheme()); err != nil{
         return nil, err
     }
 
-    w, err := events.NewWatcher(name, mgr)
+    w, err := events.NewWatcher(mgr, opts)
     if err != nil {
         return nil, err
     }
@@ -122,12 +122,6 @@ func (h generic{{ $resource.Kind }}Handler) Generic(object runtime.Object) error
     return h.handler.Generic(obj)
 }
 
-type MultiCluster{{ $resource.Kind }}EventHandler interface {
-    Create(cluster string, obj *{{ $resource.Kind }}) error
-	  Update(cluster string, old, new *{{ $resource.Kind }}) error
-	  Delete(cluster string, obj *{{ $resource.Kind }}) error
-	  Generic(cluster string, obj *{{ $resource.Kind }}) error
-}
 
 type Managed{{ $resource.Kind }}Controller struct {
 	  mgr  *cluster.ContextualManager
@@ -135,60 +129,83 @@ type Managed{{ $resource.Kind }}Controller struct {
 }
 
 type MultiCluster{{ $resource.Kind }}Controller struct {
-	  handler           MultiCluster{{ $resource.Kind }}EventHandler
+	  handler {{ $resource.Kind }}EventHandler
 
-	  ctx         context.Context
-	  ctrlLock    sync.RWMutex
-	  controllers map[string]*Managed{{ $resource.Kind }}Controller
+    ctx         context.Context
+    ctrlLock    sync.RWMutex
+    controllers map[string]*Managed{{ $resource.Kind }}Controller
 }
 
 func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterAdded(cfg *rest.Config, name string) error {
-	  mgr, err := cluster.NewContextualManager(m.ctx, cfg, "")
-	  if err != nil {
-		  return err
-	  }
-	  ctrl, err := New{{ $resource.Kind }}Controller(name, mgr.Manager())
-	  if err != nil {
-		    return err
-	  }
-	  if err := ctrl.AddEventHandler(&{{ $resource.Kind }}EventHandlerFuncs{
-		    OnCreate: func(obj *{{ $resource.Kind }}) error {
-			    return m.handler.Create(name, obj)
-		    },
-		    OnUpdate: func(old, new *{{ $resource.Kind }}) error {
-			    return m.handler.Update(name, old, new)
-		    },
-		    OnDelete: func(obj *{{ $resource.Kind }}) error {
-			    return m.handler.Delete(name, obj)
-		    },
-		    OnGeneric: func(obj *{{ $resource.Kind }}) error {
-			    return m.handler.Generic(name, obj)
-		    },
-	  }); err != nil {
-		  return err
-	  }
-	  if err := mgr.Manager().Start(mgr.Context().Done()); err != nil {
-		    return err
-	  }
-	  m.ctrlLock.Lock()
-	  defer m.ctrlLock.Unlock()
-	  m.controllers[name] = &Managed{{ $resource.Kind }}Controller{
-		    mgr:  mgr,
-		    ctrl: ctrl,
-	  }
-	  return nil
+    mcCtrl, err := m.addCluster(cfg, name)
+    if err != nil {
+        return err
+    }
+
+    m.ctrlLock.Lock()
+    defer m.ctrlLock.Unlock()
+    m.controllers[name] = &Managed{{ $resource.Kind }}Controller{
+        mgr:  mcCtrl.mgr,
+        ctrl: mcCtrl.ctrl,
+    }
+    return nil
+}
+
+func (m *MultiCluster{{ $resource.Kind }}Controller) addCluster(cfg *rest.Config,
+    name string) (*Managed{{ $resource.Kind }}Controller, error) {
+
+    mgr, err := cluster.NewContextualManager(m.ctx, cfg, "")
+    if err != nil {
+        return nil, err
+    }
+    ctrl, err := New{{ $resource.Kind }}Controller(mgr.Manager(), events.WatcherOpts{
+        Name:    name,
+        Cluster: name,
+    })
+    if err != nil {
+        return nil, err
+    }
+    if err := ctrl.AddEventHandler(m.handler); err != nil {
+        return nil, err
+    }
+    if err := mgr.Manager().Start(mgr.Context().Done()); err != nil {
+       return nil, err
+    }
+
+    return &Managed{{ $resource.Kind }}Controller{
+        mgr:  mgr,
+        ctrl: ctrl,
+    }, nil
 }
 
 func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterRemoved(name string) error {
-	  m.ctrlLock.Lock()
-	  defer m.ctrlLock.Unlock()
-	  mgr, ok := m.controllers[name]
-	  if !ok {
-		    return eris.Errorf("could not find controller for cluster %s", name)
-	  }
-	  go mgr.mgr.Stop()
-	  delete(m.controllers, name)
-	  return nil
+    m.ctrlLock.Lock()
+    defer m.ctrlLock.Unlock()
+    mgr, ok := m.controllers[name]
+    if !ok {
+        return eris.Errorf("could not find controller for cluster %s", name)
+    }
+    go mgr.mgr.Stop()
+    delete(m.controllers, name)
+    return nil
 }
 
+func NewMultiCluster{{ $resource.Kind }}Controller(ctx context.Context, cfg *rest.Config,
+  handler {{ $resource.Kind }}EventHandler) (*MultiCluster{{ $resource.Kind }}Controller, error) {
+
+	mcCtrl := &MultiCluster{{ $resource.Kind }}Controller{
+      handler:     handler,
+      ctx:         ctx,
+      ctrlLock:    sync.RWMutex{},
+      controllers: make(map[string]*Managed{{ $resource.Kind }}Controller),
+	}
+
+	// empty string as it is local
+	localManaged{{ $resource.Kind }}Controller, err := mcCtrl.addCluster(cfg, "")
+	if err != nil {
+		  return nil, err
+	}
+	mcCtrl.controllers[""] = localManaged{{ $resource.Kind }}Controller
+	return nil, nil
+}
 {{- end }}
