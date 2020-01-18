@@ -13,14 +13,12 @@ steps:
     args: ['generate-deps']
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'GOPATH=/workspace/gopath'
     secretEnv: ['GITHUB_TOKEN']
     id: 'install dependencies'
 
   - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-ginkgo:0.2.1'
     env:
     - 'TAGGED_VERSION=$TAG_NAME'
-    - 'GOPATH=/workspace/gopath'
     args: ['-r', '-failFast', '-trace', '-progress', 'codegen']
     secretEnv: ['GITHUB_TOKEN']
     id: 'codegen-tests'
@@ -29,7 +27,6 @@ steps:
     args: ['upload-github-release-assets', '-B']
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'GOPATH=/workspace/gopath'
     secretEnv: ['GITHUB_TOKEN']
     id: 'release-assets'
 
@@ -43,3 +40,6 @@ timeout: 1200s
 tags: ['autopilot']
 options:
   machineType: 'N1_HIGHCPU_32'
+  volumes:
+  - name: 'gopath'
+    path: '/go'
