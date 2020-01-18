@@ -38,8 +38,8 @@ GCR_REPO_PREFIX := gcr.io/$(GCLOUD_PROJECT_ID)
 mod-download:
 	go mod download
 
-.PHONY: generate-deps
-generate-deps: mod-download
+.PHONY: install-deps
+install-deps: mod-download
 	go get -v github.com/gobuffalo/packr/packr
 	go get -v istio.io/tools/cmd/protoc-gen-jsonshim
 	go get -v github.com/gogo/protobuf/protoc-gen-gogo

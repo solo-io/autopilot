@@ -1,8 +1,8 @@
 steps:
+
   - name: gcr.io/cloud-builders/gcloud
-    args: ['config', 'set', 'compute/zone', 'us-central1-b']
-  - name: gcr.io/cloud-builders/gcloud
-    args: ['container', 'clusters', 'get-credentials', 'autopilot-ci-cluster']
+    args: ['container', 'clusters', 'get-credentials', 'autopilot-ci-cluster', '--zone', 'us-central1-b']
+    id: 'get-kubeconfig'
 
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: 'bash'
@@ -10,7 +10,7 @@ steps:
     id: 'untar-mod-cache'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
-    args: ['generate-deps']
+    args: ['install-deps']
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
     secretEnv: ['GITHUB_TOKEN']
@@ -21,7 +21,7 @@ steps:
     - 'TAGGED_VERSION=$TAG_NAME'
     args: ['-r', '-failFast', '-trace', '-progress', 'codegen']
     secretEnv: ['GITHUB_TOKEN']
-    id: 'codegen-tests'
+    id: 'run-tests'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['upload-github-release-assets', '-B']
