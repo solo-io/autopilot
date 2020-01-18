@@ -3,7 +3,9 @@ package codegen
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/solo-io/anyvendor/anyvendor"
@@ -13,7 +15,6 @@ import (
 	"github.com/solo-io/autopilot/codegen/render"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/codegen/writer"
-	"github.com/solo-io/go-utils/docker"
 	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
 )
 
@@ -197,6 +198,8 @@ func (c Command) buildPushImage(operator model.Operator) error {
 
 	binName := filepath.Join(c.BuildRoot, operator.Name)
 
+	log.Printf("Building main package at %v ...", mainkPkg)
+
 	err := util.GoBuild(util.GoCmdOptions{
 		BinName: binName,
 		Args: []string{
@@ -219,9 +222,8 @@ func (c Command) buildPushImage(operator model.Operator) error {
 
 	fullImageName := fmt.Sprintf("%v/%v:%v", image.Registry, image.Repository, image.Tag)
 
-	buildCmd := docker.Command("build", "-t", fullImageName, c.BuildRoot)
-
-	if err := buildCmd.Run(); err != nil {
+	log.Printf("Building docker image %v ...", fullImageName)
+	if err := dockerCommand("build", "-t", fullImageName, c.BuildRoot); err != nil {
 		return err
 	}
 
@@ -229,7 +231,15 @@ func (c Command) buildPushImage(operator model.Operator) error {
 		return nil
 	}
 
-	pushCmd := docker.Command("push", fullImageName)
+	log.Printf("Pushing docker image %v ...", fullImageName)
 
-	return pushCmd.Run()
+	return dockerCommand("push", fullImageName)
+}
+
+func dockerCommand(args ...string) error {
+	cmd := exec.Command("docker", args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Env = os.Environ()
+	return cmd.Run()
 }
