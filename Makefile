@@ -20,7 +20,7 @@ LDFLAGS := "-X github.com/solo-io/autopilot/pkg/version.Version=$(VERSION)"
 GCFLAGS := all="-N -l"
 
 # Passed by cloudbuild
-GCLOUD_PROJECT_ID := $(GCLOUD_PROJECT_ID)
+GCLOUD_PROJECT_ID := $(PROJECT_ID)
 BUILD_ID := $(BUILD_ID)
 
 TEST_IMAGE_TAG := test-$(BUILD_ID)
@@ -34,15 +34,15 @@ GCR_REPO_PREFIX := gcr.io/$(GCLOUD_PROJECT_ID)
 # Build dependencies
 .PHONY: generate-deps
 generate-deps:
-	go get -u github.com/gobuffalo/packr/packr
-	cd $(shell go list -f '{{ .Dir }}' -m istio.io/tools) && \
-	  go install -v ./cmd/protoc-gen-jsonshim)
+	go get -v github.com/gobuffalo/packr/packr
+	go get -v istio.io/tools/cmd/protoc-gen-jsonshim
+	go get -v github.com/gogo/protobuf/protoc-gen-gogo
+	go get -v github.com/solo-io/protoc-gen-ext
 
 # Generated Code & Docs
 .PHONY: generated-code
 generated-code:
 	go generate ./...
-
 
 # CLI
 CLI_DIR=cli
