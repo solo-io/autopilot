@@ -33,7 +33,6 @@ GCR_REPO_PREFIX := gcr.io/$(GCLOUD_PROJECT_ID)
 
 # Build dependencies
 
-# must be a seperate target so that make waits for it to complete before moving on
 .PHONY: mod-download
 mod-download:
 	go mod download

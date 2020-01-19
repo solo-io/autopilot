@@ -34,6 +34,9 @@ type Command struct {
 	// optinal helm chart to render
 	Chart *model.Chart
 
+	// optional Go/Docker images to build
+	Builds []model.Build
+
 	// the root directory for generated Kube manfiests
 	ManifestRoot string
 
@@ -72,14 +75,12 @@ func (c Command) Execute() error {
 		}
 	}
 
-	if c.Chart != nil {
-		for _, operator := range c.Chart.Operators {
-			if err := c.generateBuild(operator); err != nil {
-				return err
-			}
-			if err := c.buildPushImage(operator); err != nil {
-				return err
-			}
+	for _, build := range c.Builds {
+		if err := c.generateBuild(build); err != nil {
+			return err
+		}
+		if err := c.buildPushImage(build); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -168,8 +169,8 @@ func (c Command) compileProtos(grp *render.Group) error {
 	return nil
 }
 
-func (c Command) generateBuild(operator model.Operator) error {
-	buildFiles, err := render.RenderBuild(operator)
+func (c Command) generateBuild(build model.Build) error {
+	buildFiles, err := render.RenderBuild(build)
 	if err != nil {
 		return err
 	}
@@ -183,20 +184,16 @@ func (c Command) generateBuild(operator model.Operator) error {
 	return nil
 }
 
-func (c Command) buildPushImage(operator model.Operator) error {
-	image := operator.Deployment.Image
-	build := image.Build
-	if build == nil {
-		return nil
-	}
-
-	ldFlags := fmt.Sprintf("-X %v/pkg/version.Version=%v", c.moduleRoot, image.Tag)
+func (c Command) buildPushImage(build model.Build) error {
+	ldFlags := fmt.Sprintf("-X %v/pkg/version.Version=%v", c.moduleRoot, build.Tag)
 
 	// get the main package from the main directory
 	// assumes package == module name + main dir path
 	mainkPkg := filepath.Join(c.moduleName, filepath.Dir(build.MainFile))
 
-	binName := filepath.Join(c.BuildRoot, operator.Name)
+	buildDir := filepath.Join(c.BuildRoot, build.Repository)
+
+	binName := filepath.Join(buildDir, build.Repository + "-linux-amd64")
 
 	log.Printf("Building main package at %v ...", mainkPkg)
 
@@ -220,10 +217,10 @@ func (c Command) buildPushImage(operator model.Operator) error {
 
 	defer os.Remove(binName)
 
-	fullImageName := fmt.Sprintf("%v/%v:%v", image.Registry, image.Repository, image.Tag)
+	fullImageName := fmt.Sprintf("%v/%v:%v", build.Registry, build.Repository, build.Tag)
 
 	log.Printf("Building docker image %v ...", fullImageName)
-	if err := dockerCommand("build", "-t", fullImageName, c.BuildRoot); err != nil {
+	if err := dockerCommand("build", "-t", fullImageName, buildDir); err != nil {
 		return err
 	}
 

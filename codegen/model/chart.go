@@ -46,17 +46,6 @@ type Image struct {
 	Registry   string        `json:"registry,omitempty" desc:"image prefix/registry e.g. (quay.io/solo-io)"`
 	PullPolicy v1.PullPolicy `json:"pullPolicy,omitempty"  desc:"image pull policy for the container"`
 	PullSecret string        `json:"pullSecret,omitempty" desc:"image pull policy for the container "`
-
-	// options for building the image
-	Build *BuildOptions `json:"-"`
-}
-
-type BuildOptions struct {
-	// path to the main.go file
-	MainFile string
-
-	// push image after  build
-	Push bool
 }
 
 type Data struct {

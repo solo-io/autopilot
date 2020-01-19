@@ -7,23 +7,25 @@ type BuildRenderer struct {
 	templateRenderer
 }
 
-var defaultBuildInputs = inputTemplates{
-	"build/Dockerfile.tmpl": {
-		Path: "Dockerfile",
-	},
+var defaultBuildInputs = func(build model.Build) inputTemplates {
+	return inputTemplates{
+		"build/Dockerfile.tmpl": {
+			Path: build.Repository + "/Dockerfile",
+		},
+	}
 }
 
-func RenderBuild(operator model.Operator) ([]OutFile, error) {
+func RenderBuild(build model.Build) ([]OutFile, error) {
 	defaultBuildRenderer := BuildRenderer{
 		templateRenderer: defaultTemplateRenderer,
 	}
-	return defaultBuildRenderer.Render(operator)
+	return defaultBuildRenderer.Render(build)
 }
 
-func (r BuildRenderer) Render(operator model.Operator) ([]OutFile, error) {
-	templatesToRender := defaultBuildInputs
+func (r BuildRenderer) Render(build model.Build) ([]OutFile, error) {
+	templatesToRender := defaultBuildInputs(build)
 
-	files, err := r.renderInputs(templatesToRender, operator)
+	files, err := r.renderInputs(templatesToRender, build)
 	if err != nil {
 		return nil, err
 	}
