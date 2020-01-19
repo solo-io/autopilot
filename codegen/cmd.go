@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/solo-io/anyvendor/anyvendor"
 	"github.com/solo-io/anyvendor/pkg/manager"
+	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
+
+	"github.com/solo-io/autopilot/builder"
 	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/autopilot/codegen/proto"
 	"github.com/solo-io/autopilot/codegen/render"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/codegen/writer"
-	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
 )
 
 // runs the codegen compilation for the current Go module
@@ -34,14 +35,19 @@ type Command struct {
 	// optinal helm chart to render
 	Chart *model.Chart
 
-	// optional Go/Docker images to build
-	Builds []model.Build
-
 	// the root directory for generated Kube manfiests
 	ManifestRoot string
 
+	// optional Go/Docker images to build
+	Builds []model.Build
+
 	// the root directory for Build files (Dockerfile, entrypoint script, etc.)
 	BuildRoot string
+
+	// custom builder to shim Go Build and Docker Build commands (for testing)
+	// If not provided, Autopilot will exec
+	// go and docker commands
+	Builder builder.Builder
 
 	// the path to the root dir of the module on disk
 	// files will be written relative to this dir,
@@ -61,6 +67,9 @@ func (c Command) Execute() error {
 	c.ctx = context.Background()
 	c.moduleRoot = util.GetModuleRoot()
 	c.moduleName = util.GetGoModule()
+	if c.Builder == nil {
+		c.Builder = builder.NewBuilder()
+	}
 
 	if err := c.generateChart(); err != nil {
 		return err
@@ -193,11 +202,11 @@ func (c Command) buildPushImage(build model.Build) error {
 
 	buildDir := filepath.Join(c.BuildRoot, build.Repository)
 
-	binName := filepath.Join(buildDir, build.Repository + "-linux-amd64")
+	binName := filepath.Join(buildDir, build.Repository+"-linux-amd64")
 
 	log.Printf("Building main package at %v ...", mainkPkg)
 
-	err := util.GoBuild(util.GoCmdOptions{
+	err := c.Builder.GoBuild(util.GoCmdOptions{
 		BinName: binName,
 		Args: []string{
 			"-ldflags=" + ldFlags,
@@ -220,7 +229,7 @@ func (c Command) buildPushImage(build model.Build) error {
 	fullImageName := fmt.Sprintf("%v/%v:%v", build.Registry, build.Repository, build.Tag)
 
 	log.Printf("Building docker image %v ...", fullImageName)
-	if err := dockerCommand("build", "-t", fullImageName, buildDir); err != nil {
+	if err := c.Builder.Docker("build", "-t", fullImageName, buildDir); err != nil {
 		return err
 	}
 
@@ -230,13 +239,5 @@ func (c Command) buildPushImage(build model.Build) error {
 
 	log.Printf("Pushing docker image %v ...", fullImageName)
 
-	return dockerCommand("push", fullImageName)
-}
-
-func dockerCommand(args ...string) error {
-	cmd := exec.Command("docker", args...)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	cmd.Env = os.Environ()
-	return cmd.Run()
+	return c.Builder.Docker("push", fullImageName)
 }
