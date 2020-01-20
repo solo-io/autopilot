@@ -1,3 +1,5 @@
+// +build ignore
+
 package metrics
 
 import "github.com/prometheus/common/model"

@@ -4,8 +4,8 @@ package controller
 import (
     "context"
     "sync"
-    . "{{ group_import_path $ }}"
 
+    . "{{ group_import_path $ }}"
     "github.com/pkg/errors"
     "github.com/solo-io/autopilot/pkg/events"
     "github.com/solo-io/autopilot/pkg/mutlicluster"
@@ -76,9 +76,9 @@ func New{{ $resource.Kind }}Controller(mgr manager.Manager, opts events.WatcherO
     }, nil
 }
 
-func (c *{{ $resource.Kind }}Controller) AddEventHandler(h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+func (c *{{ $resource.Kind }}Controller) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
 	handler := generic{{ $resource.Kind }}Handler{handler: h}
-    if err := c.watcher.Watch(&{{ $resource.Kind }}{}, handler, predicates...); err != nil{
+    if err := c.watcher.Watch(ctx, &{{ $resource.Kind }}{}, handler, predicates...); err != nil{
         return err
     }
     return nil
@@ -166,7 +166,7 @@ func (m *MultiCluster{{ $resource.Kind }}Controller) addCluster(mgr *multicluste
     if err != nil {
         return nil, err
     }
-    if err := ctrl.AddEventHandler(m.handler); err != nil {
+    if err := ctrl.AddEventHandler(m.ctx, m.handler); err != nil {
         return nil, err
     }
 

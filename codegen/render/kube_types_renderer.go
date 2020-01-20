@@ -1,37 +1,14 @@
 package render
 
-import (
-	"bytes"
-	"text/template"
-
-	"github.com/gobuffalo/packr"
-)
-
-// map of template files to the file they render to
-type resourceTemplates map[string]OutFile
-
-func (r *resourceTemplates) add(file string, out OutFile) {
-	if *r == nil {
-		*r = make(map[string]OutFile)
-	}
-	(*r)[file] = out
-}
-
-// a packr.Box for reading the conents of ../templates
-// note that this code uses relative path
-// and will need to be updated if the relative
-// path from this file to the templates dir changes
-var templateBox = packr.NewBox("../templates")
-
 // renders kubernetes from templates
 type KubeCodeRenderer struct {
-	// templates baked into the binary
-	templates packr.Box
+	templateRenderer
 
 	// the templates to use for rendering kube kypes
-	TypesTemplates resourceTemplates
+	TypesTemplates inputTemplates
+
 	// the templates to use for rendering kube controllers
-	ControllerTemplates resourceTemplates
+	ControllerTemplates inputTemplates
 
 	// the go module of the project
 	GoModule string
@@ -41,7 +18,7 @@ type KubeCodeRenderer struct {
 	ApiRoot string
 }
 
-var typesTemplates = resourceTemplates{
+var typesTemplates = inputTemplates{
 	"code/types/types.gotmpl": {
 		Path: "types.go",
 	},
@@ -56,7 +33,7 @@ var typesTemplates = resourceTemplates{
 	},
 }
 
-var controllerTemplates = resourceTemplates{
+var controllerTemplates = inputTemplates{
 	"code/controller/controller.gotmpl": {
 		Path: "controller/controller.go",
 	},
@@ -64,7 +41,7 @@ var controllerTemplates = resourceTemplates{
 
 func RenderApiTypes(grp Group) ([]OutFile, error) {
 	defaultKubeCodeRenderer := KubeCodeRenderer{
-		templates:           templateBox,
+		templateRenderer:    defaultTemplateRenderer,
 		TypesTemplates:      typesTemplates,
 		ControllerTemplates: controllerTemplates,
 		GoModule:            grp.Module,
@@ -75,48 +52,24 @@ func RenderApiTypes(grp Group) ([]OutFile, error) {
 }
 
 func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
-	templatesToRender := make(resourceTemplates)
+	templatesToRender := make(inputTemplates)
 	if grp.RenderTypes {
-		for tmplPath, out := range r.TypesTemplates {
-			templatesToRender.add(tmplPath, out)
-		}
+		templatesToRender.add(r.TypesTemplates)
 	}
 	if grp.RenderController {
-		for tmplPath, out := range r.ControllerTemplates {
-			templatesToRender.add(tmplPath, out)
-		}
+		templatesToRender.add(r.ControllerTemplates)
 	}
 
-	var renderedFiles []OutFile
-	for tmplPath, out := range templatesToRender {
+	files, err := r.renderInputs(templatesToRender, grp)
+	if err != nil {
+		return nil, err
+	}
 
-		content, err := r.renderFile(tmplPath, grp)
-		if err != nil {
-			return nil, err
-		}
-		out.Content = content
-		// prepend with version dir
+	// prepend output file paths with path to api dir
+	for i, out := range files {
 		out.Path = r.ApiRoot + "/" + grp.Group + "/" + grp.Version + "/" + out.Path
-		renderedFiles = append(renderedFiles, out)
-	}
-	return renderedFiles, nil
-}
-
-func (r KubeCodeRenderer) renderFile(path string, data Group) (string, error) {
-	templateText, err := r.templates.FindString(path)
-	if err != nil {
-		return "", err
+		files[i] = out
 	}
 
-	funcs := makeTemplateFuncs(r.GoModule, r.ApiRoot)
-
-	tmpl, err := template.New(path).Funcs(funcs).Parse(templateText)
-	if err != nil {
-		return "", err
-	}
-	buf := &bytes.Buffer{}
-	if err := tmpl.Funcs(funcs).Execute(buf, data); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return files, nil
 }

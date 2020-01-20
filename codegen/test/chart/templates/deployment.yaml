@@ -1,0 +1,66 @@
+---
+
+# Deployment manifest for painter
+{{- $painter := $.Values.painter}}
+{{- $painterImage := $painter.image }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: painter
+  name: painter
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: painter
+  template:
+    metadata:
+      labels:
+        app: painter
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: painter
+      containers:
+      - image: {{ $painterImage.registry }}/{{ $painterImage.repository }}:{{ $painterImage.tag }}
+        args:
+        - foo
+        imagePullPolicy: {{ $painterImage.pullPolicy }}
+        name: painter
+{{- if $painter.resources }}
+        resources:
+{{ toYaml $painter.resources | indent 10}}
+{{- else}}
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+{{- end}}
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      {{- if $painterImage.pullSecret }}
+      imagePullSecrets:
+        - name: {{ $painterImage.pullSecret }}
+      {{- end}}
+
+
+---
+
+# Service account for painter
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: painter
+  name: painter
+  namespace: {{ $.Release.Namespace }}
+

@@ -1,7 +1,10 @@
 package events
 
 import (
+	"context"
 	"sync"
+
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,7 +41,7 @@ type EventWatcher interface {
 	// register a watch with the watcher
 	// watches cannot currently be disabled / removed except by
 	// terminating the parent controller
-	Watch(resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error
+	Watch(ctx context.Context, resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error
 }
 
 type watcher struct {
@@ -46,6 +49,7 @@ type watcher struct {
 	ctl     controller.Controller
 	scheme  *runtime.Scheme
 	cluster string
+	waitForCacheSync func(stop <-chan struct{}) bool
 
 	lock     sync.RWMutex
 	handlers map[schema.GroupVersionKind][]EventHandler
@@ -73,25 +77,13 @@ func NewWatcher(mgr manager.Manager, opts WatcherOpts) (EventWatcher, error) {
 	}
 
 	w.ctl = ctl
+	w.waitForCacheSync = mgr.GetCache().WaitForCacheSync
 
 	return w, nil
 }
 
 func (w *watcher) getGvk(resource runtime.Object) (schema.GroupVersionKind, error) {
-	gvks, _, err := w.scheme.ObjectKinds(resource)
-	if err != nil {
-		return schema.GroupVersionKind{}, err
-	}
-
-	if len(gvks) < 1 {
-		return schema.GroupVersionKind{}, errors.Errorf("no gvk registered for resource %T", resource)
-	}
-	if len(gvks) > 1 {
-		logr.V(4).Info("multiple versions registered for type, defaulting to first",
-			"type", resource, "gvks", gvks)
-	}
-
-	return gvks[0], nil
+	return apiutil.GVKForObject(resource, w.scheme)
 }
 
 func (w *watcher) getHandlers(resource runtime.Object) ([]EventHandler, error) {
@@ -109,7 +101,7 @@ func (w *watcher) getHandlers(resource runtime.Object) ([]EventHandler, error) {
 	return handlers, nil
 }
 
-func (w *watcher) Watch(resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error {
+func (w *watcher) Watch(ctx context.Context, resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error {
 	// create a source for the resource type
 	src := &source.Kind{Type: resource}
 
@@ -130,6 +122,10 @@ func (w *watcher) Watch(resource runtime.Object, eventHandler EventHandler, pred
 	handlers = append(handlers, eventHandler)
 	w.handlers[gvk] = handlers
 	w.lock.Unlock()
+
+	if synced := w.waitForCacheSync(ctx.Done()); !synced {
+		return errors.Errorf("waiting for cache sync failed")
+	}
 
 	return nil
 }

@@ -1,0 +1,40 @@
+[[/*
+This template contains the RBAC config required by the Operator deployment.
+Expressions evaluating Helm Values use "{{" and "}}"
+Expressions evaluating Autopilot Config use [[ "[[" ]] and [[ "]]" ]]
+*/]]
+
+[[- range $operator := $.Operators -]]
+[[- if $operator.Rbac ]]
+# Rbac manifests for [[ $operator.Name ]]
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: [[ $operator.Name ]]
+  labels:
+    app: [[ $operator.Name ]]
+rules:
+[[ toYaml $operator.Rbac ]]
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: [[ $operator.Name ]]
+  labels:
+    app: [[ $operator.Name ]]
+subjects:
+- kind: ServiceAccount
+  name: [[ $operator.Name ]]
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: [[ $operator.Name ]]
+  apiGroup: rbac.authorization.k8s.io
+
+[[- end ]]
+[[- end ]]
