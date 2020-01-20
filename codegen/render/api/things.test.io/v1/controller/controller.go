@@ -2,10 +2,15 @@
 package controller
 
 import (
+	"context"
+	"sync"
+
+	"github.com/rotisserie/eris"
 	. "github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/pkg/events"
+	multicluster "github.com/solo-io/autopilot/pkg/mutlicluster"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -57,12 +62,12 @@ type PaintController struct {
 	watcher events.EventWatcher
 }
 
-func NewPaintController(name string, mgr manager.Manager) (*PaintController, error) {
+func NewPaintController(mgr manager.Manager, opts events.WatcherOpts) (*PaintController, error) {
 	if err := AddToScheme(mgr.GetScheme()); err != nil {
 		return nil, err
 	}
 
-	w, err := events.NewWatcher(name, mgr)
+	w, err := events.NewWatcher(mgr, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -118,4 +123,78 @@ func (h genericPaintHandler) Generic(object runtime.Object) error {
 		return errors.Errorf("internal error: Paint handler received event for %T")
 	}
 	return h.handler.Generic(obj)
+}
+
+type ManagedPaintController struct {
+	mgr  *multicluster.ContextualManager
+	ctrl *PaintController
+}
+
+type MultiClusterPaintController struct {
+	handler PaintEventHandler
+
+	ctx         context.Context
+	ctrlLock    sync.RWMutex
+	controllers map[string]*ManagedPaintController
+}
+
+func (m *MultiClusterPaintController) ClusterAdded(mgr *multicluster.ContextualManager,
+	name string) error {
+
+	mcCtrl, err := m.addCluster(mgr, name)
+	if err != nil {
+		return err
+	}
+
+	m.ctrlLock.Lock()
+	defer m.ctrlLock.Unlock()
+	m.controllers[name] = &ManagedPaintController{
+		mgr:  mcCtrl.mgr,
+		ctrl: mcCtrl.ctrl,
+	}
+	return nil
+}
+
+func (m *MultiClusterPaintController) addCluster(mgr *multicluster.ContextualManager,
+	name string) (*ManagedPaintController, error) {
+
+	ctrl, err := NewPaintController(mgr.Manager(), events.WatcherOpts{
+		Name:    name,
+		Cluster: name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err := ctrl.AddEventHandler(m.handler); err != nil {
+		return nil, err
+	}
+
+	return &ManagedPaintController{
+		mgr:  mgr,
+		ctrl: ctrl,
+	}, nil
+}
+
+func (m *MultiClusterPaintController) ClusterRemoved(name string) error {
+	m.ctrlLock.Lock()
+	defer m.ctrlLock.Unlock()
+	mgr, ok := m.controllers[name]
+	if !ok {
+		return eris.Errorf("could not find controller for cluster %s", name)
+	}
+	go mgr.mgr.Stop()
+	delete(m.controllers, name)
+	return nil
+}
+
+func NewMultiClusterPaintController(ctx context.Context,
+	handler PaintEventHandler) (*MultiClusterPaintController, error) {
+
+	mcCtrl := &MultiClusterPaintController{
+		handler:     handler,
+		ctx:         ctx,
+		ctrlLock:    sync.RWMutex{},
+		controllers: make(map[string]*ManagedPaintController),
+	}
+	return mcCtrl, nil
 }

@@ -2,10 +2,15 @@
 package controller
 
 import (
+	"context"
+	"sync"
+
 	. "k8s.io/api/core/v1"
 
 	"github.com/pkg/errors"
+	"github.com/rotisserie/eris"
 	"github.com/solo-io/autopilot/pkg/events"
+	multicluster "github.com/solo-io/autopilot/pkg/mutlicluster"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -57,12 +62,12 @@ type SecretController struct {
 	watcher events.EventWatcher
 }
 
-func NewSecretController(name string, mgr manager.Manager) (*SecretController, error) {
+func NewSecretController(mgr manager.Manager, opts events.WatcherOpts) (*SecretController, error) {
 	if err := AddToScheme(mgr.GetScheme()); err != nil {
 		return nil, err
 	}
 
-	w, err := events.NewWatcher(name, mgr)
+	w, err := events.NewWatcher(mgr, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -118,4 +123,82 @@ func (h genericSecretHandler) Generic(object runtime.Object) error {
 		return errors.Errorf("internal error: Secret handler received event for %T")
 	}
 	return h.handler.Generic(obj)
+}
+
+type ManagedSecretController struct {
+	mgr  *multicluster.ContextualManager
+	ctrl *SecretController
+}
+
+type MultiClusterSecretController struct {
+	handler SecretEventHandler
+
+	ctx         context.Context
+	ctrlLock    sync.RWMutex
+	controllers map[string]*ManagedSecretController
+}
+
+func (m *MultiClusterSecretController) ClusterAdded(mgr *multicluster.ContextualManager,
+	name string) error {
+
+	mcCtrl, err := m.addCluster(mgr, name)
+	if err != nil {
+		return err
+	}
+
+	m.ctrlLock.Lock()
+	defer m.ctrlLock.Unlock()
+	m.controllers[name] = &ManagedSecretController{
+		mgr:  mcCtrl.mgr,
+		ctrl: mcCtrl.ctrl,
+	}
+	return nil
+}
+
+func (m *MultiClusterSecretController) addCluster(mgr *multicluster.ContextualManager,
+	name string) (*ManagedSecretController, error) {
+
+	ctrl, err := NewSecretController(mgr.Manager(), events.WatcherOpts{
+		Name:    name,
+		Cluster: name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err := ctrl.AddEventHandler(m.handler); err != nil {
+		return nil, err
+	}
+
+	return &ManagedSecretController{
+		mgr:  mgr,
+		ctrl: ctrl,
+	}, nil
+}
+
+func (m *MultiClusterSecretController) ClusterRemoved(name string) error {
+	m.ctrlLock.Lock()
+	defer m.ctrlLock.Unlock()
+	mgr, ok := m.controllers[name]
+	if !ok {
+		return eris.Errorf("could not find controller for cluster %s", name)
+	}
+	go mgr.mgr.Stop()
+	delete(m.controllers, name)
+	return nil
+}
+
+func NewMultiClusterSecretController(ctx context.Context, mgr manager.Manager,
+	handler SecretEventHandler) (*MultiClusterSecretController, error) {
+
+	mcCtrl := &MultiClusterSecretController{
+		handler:     handler,
+		ctx:         ctx,
+		ctrlLock:    sync.RWMutex{},
+		controllers: make(map[string]*ManagedSecretController),
+	}
+	ctxMgr := &multicluster.ContextualManager{
+		Manager: mgr,
+		Context: ctx,
+	}
+	return mcCtrl, nil
 }

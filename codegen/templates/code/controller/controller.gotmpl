@@ -2,10 +2,13 @@
 package controller
 
 import (
+    "context"
+    "sync"
     . "{{ group_import_path $ }}"
 
     "github.com/pkg/errors"
     "github.com/solo-io/autopilot/pkg/events"
+    "github.com/solo-io/autopilot/pkg/mutlicluster"
     "k8s.io/apimachinery/pkg/runtime"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -124,7 +127,7 @@ func (h generic{{ $resource.Kind }}Handler) Generic(object runtime.Object) error
 
 
 type Managed{{ $resource.Kind }}Controller struct {
-	  mgr  *cluster.ContextualManager
+	  mgr  *multicluster.ContextualManager
 	  ctrl *{{ $resource.Kind }}Controller
 }
 
@@ -136,8 +139,10 @@ type MultiCluster{{ $resource.Kind }}Controller struct {
     controllers map[string]*Managed{{ $resource.Kind }}Controller
 }
 
-func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterAdded(cfg *rest.Config, name string) error {
-    mcCtrl, err := m.addCluster(cfg, name)
+func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterAdded(mgr *multicluster.ContextualManager,
+    name string) error {
+
+    mcCtrl, err := m.addCluster(mgr, name, name)
     if err != nil {
         return err
     }
@@ -151,25 +156,18 @@ func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterAdded(cfg *rest.Conf
     return nil
 }
 
-func (m *MultiCluster{{ $resource.Kind }}Controller) addCluster(cfg *rest.Config,
-    name string) (*Managed{{ $resource.Kind }}Controller, error) {
+func (m *MultiCluster{{ $resource.Kind }}Controller) addCluster(mgr *multicluster.ContextualManager,
+    cluster, name string) (*Managed{{ $resource.Kind }}Controller, error) {
 
-    mgr, err := cluster.NewContextualManager(m.ctx, cfg, "")
-    if err != nil {
-        return nil, err
-    }
     ctrl, err := New{{ $resource.Kind }}Controller(mgr.Manager(), events.WatcherOpts{
         Name:    name,
-        Cluster: name,
+        Cluster: cluster,
     })
     if err != nil {
         return nil, err
     }
     if err := ctrl.AddEventHandler(m.handler); err != nil {
         return nil, err
-    }
-    if err := mgr.Manager().Start(mgr.Context().Done()); err != nil {
-       return nil, err
     }
 
     return &Managed{{ $resource.Kind }}Controller{
@@ -190,22 +188,23 @@ func (m *MultiCluster{{ $resource.Kind }}Controller) ClusterRemoved(name string)
     return nil
 }
 
-func NewMultiCluster{{ $resource.Kind }}Controller(ctx context.Context, cfg *rest.Config,
-  handler {{ $resource.Kind }}EventHandler) (*MultiCluster{{ $resource.Kind }}Controller, error) {
+// The mgr arg here should be the local cluster manager
+func NewMultiCluster{{ $resource.Kind }}Controller(ctx context.Context, mgr manager.Manager,
+    handler {{ $resource.Kind }}EventHandler) (*MultiCluster{{ $resource.Kind }}Controller, error) {
 
-	mcCtrl := &MultiCluster{{ $resource.Kind }}Controller{
-      handler:     handler,
-      ctx:         ctx,
-      ctrlLock:    sync.RWMutex{},
-      controllers: make(map[string]*Managed{{ $resource.Kind }}Controller),
-	}
+    mcCtrl := &MultiCluster{{ $resource.Kind }}Controller{
+        handler:     handler,
+        ctx:         ctx,
+        ctrlLock:    sync.RWMutex{},
+        controllers: make(map[string]*Managed{{ $resource.Kind }}Controller),
+    }
 
-	// empty string as it is local
-	localManaged{{ $resource.Kind }}Controller, err := mcCtrl.addCluster(cfg, "")
-	if err != nil {
-		  return nil, err
-	}
-	mcCtrl.controllers[""] = localManaged{{ $resource.Kind }}Controller
-	return nil, nil
+    ctxMgr := multicluster.NewContextualManager(ctx, mgr)
+    localController, err := mcCtrl.addCluster(ctxMgr, "", "local-{{ $resource.Kind }}-controller")
+    if err != nil {
+      return nil, err
+    }
+    mcCtrl.controllers[""] = localController
+    return mcCtrl, nil
 }
 {{- end }}

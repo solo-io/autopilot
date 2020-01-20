@@ -12,6 +12,7 @@ import (
 	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/clientset/versioned"
 	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/controller"
 	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/autopilot/pkg/events"
 	"github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
@@ -128,7 +129,7 @@ var _ = Describe("Generated Code", func() {
 
 		It("uses the generated controller to reconcile", func() {
 
-			ctl, err := controller.NewPaintController("blick", mgr)
+			ctl, err := controller.NewPaintController( mgr, events.WatcherOpts{Name: "blick"})
 			Expect(err).NotTo(HaveOccurred())
 
 			var created, updated, deleted *Paint

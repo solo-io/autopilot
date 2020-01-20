@@ -13,8 +13,36 @@ type ContextualManager struct {
 	cancel context.CancelFunc
 }
 
-func NewContextualManager(parentCtx context.Context, cfg *rest.Config, namespace string) (*ContextualManager, error) {
-	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
+type ContextualManagerOptions struct {
+	Namespace              string
+	MetricsBindAddress     string
+	HealthProbeBindAddress string
+}
+
+func (c ContextualManagerOptions) Convert() manager.Options {
+	managerOpts := manager.Options{}
+	if c.HealthProbeBindAddress == "" {
+		managerOpts.HealthProbeBindAddress = "0"
+	}
+	if c.MetricsBindAddress == "" {
+		managerOpts.MetricsBindAddress = "0"
+	}
+	return managerOpts
+}
+
+func NewContextualManager(parentCtx context.Context, mgr manager.Manager) *ContextualManager {
+	ctx, cancel := context.WithCancel(parentCtx)
+	return &ContextualManager{
+		mgr:    mgr,
+		ctx:    ctx,
+		cancel: cancel,
+	}
+}
+
+func NewContextualManagerFromCfg(parentCtx context.Context, cfg *rest.Config,
+	opts ContextualManagerOptions) (*ContextualManager, error) {
+
+	mgr, err := manager.New(cfg, opts.Convert())
 	if err != nil {
 		return nil, err
 	}
