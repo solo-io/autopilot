@@ -1,7 +1,6 @@
 package render_test
 
 import (
-	"context"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -9,11 +8,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
-	. "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
-	"github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1/clientset/versioned"
-	"github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1/controller"
+	. "github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1"
+	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/clientset/versioned"
+	"github.com/solo-io/autopilot/codegen/render/api/things.test.io/v1/controller"
 	"github.com/solo-io/autopilot/codegen/util"
-	"github.com/solo-io/autopilot/pkg/events"
 	"github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
@@ -27,7 +25,7 @@ import (
 )
 
 func applyFile(file string) error {
-	path := filepath.Join(util.GetModuleRoot(), "codegen/test/chart/crds", file)
+	path := filepath.Join(util.MustGetThisDir(), "manifests", file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -36,7 +34,7 @@ func applyFile(file string) error {
 }
 
 func deleteFile(file string) error {
-	path := filepath.Join(util.GetModuleRoot(), "codegen/test/chart/crds", file)
+	path := filepath.Join(util.MustGetThisDir(), "manifests", file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -67,7 +65,9 @@ var _ = Describe("Generated Code", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
-		err := kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
+		err := deleteFile("things.test.io_v1_crds.yaml")
+		Expect(err).NotTo(HaveOccurred())
+		err = kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -128,7 +128,7 @@ var _ = Describe("Generated Code", func() {
 
 		It("uses the generated controller to reconcile", func() {
 
-			ctl, err := controller.NewPaintController( mgr, events.WatcherOpts{Name: "blick"})
+			ctl, err := controller.NewPaintController("blick", mgr)
 			Expect(err).NotTo(HaveOccurred())
 
 			var created, updated, deleted *Paint
@@ -167,7 +167,7 @@ var _ = Describe("Generated Code", func() {
 
 			paint.GetObjectKind().GroupVersionKind()
 
-			err = ctl.AddEventHandler(context.TODO(), handler)
+			err = ctl.AddEventHandler(handler)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() *Paint {

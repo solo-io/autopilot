@@ -1,10 +1,7 @@
 package events
 
 import (
-	"context"
 	"sync"
-
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,34 +38,26 @@ type EventWatcher interface {
 	// register a watch with the watcher
 	// watches cannot currently be disabled / removed except by
 	// terminating the parent controller
-	Watch(ctx context.Context, resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error
+	Watch(resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error
 }
 
 type watcher struct {
-	events  Cache
-	ctl     controller.Controller
-	scheme  *runtime.Scheme
-	cluster string
-	waitForCacheSync func(stop <-chan struct{}) bool
+	events Cache
+	ctl    controller.Controller
+	scheme *runtime.Scheme
 
 	lock     sync.RWMutex
 	handlers map[schema.GroupVersionKind][]EventHandler
 }
 
-type WatcherOpts struct {
-	Name    string
-	Cluster string
-}
-
-func NewWatcher(mgr manager.Manager, opts WatcherOpts) (EventWatcher, error) {
+func NewWatcher(name string, mgr manager.Manager) (EventWatcher, error) {
 	w := &watcher{
 		events:   NewCache(),
 		handlers: make(map[schema.GroupVersionKind][]EventHandler),
 		scheme:   mgr.GetScheme(),
-		cluster:  opts.Cluster,
 	}
 
-	ctl, err := controller.New(opts.Name, mgr, controller.Options{
+	ctl, err := controller.New(name, mgr, controller.Options{
 		Reconciler: w,
 	})
 
@@ -77,13 +66,25 @@ func NewWatcher(mgr manager.Manager, opts WatcherOpts) (EventWatcher, error) {
 	}
 
 	w.ctl = ctl
-	w.waitForCacheSync = mgr.GetCache().WaitForCacheSync
 
 	return w, nil
 }
 
 func (w *watcher) getGvk(resource runtime.Object) (schema.GroupVersionKind, error) {
-	return apiutil.GVKForObject(resource, w.scheme)
+	gvks, _, err := w.scheme.ObjectKinds(resource)
+	if err != nil {
+		return schema.GroupVersionKind{}, err
+	}
+
+	if len(gvks) < 1 {
+		return schema.GroupVersionKind{}, errors.Errorf("no gvk registered for resource %T", resource)
+	}
+	if len(gvks) > 1 {
+		logr.V(4).Info("multiple versions registered for type, defaulting to first",
+			"type", resource, "gvks", gvks)
+	}
+
+	return gvks[0], nil
 }
 
 func (w *watcher) getHandlers(resource runtime.Object) ([]EventHandler, error) {
@@ -101,7 +102,7 @@ func (w *watcher) getHandlers(resource runtime.Object) ([]EventHandler, error) {
 	return handlers, nil
 }
 
-func (w *watcher) Watch(ctx context.Context, resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error {
+func (w *watcher) Watch(resource runtime.Object, eventHandler EventHandler, predicates ...predicate.Predicate) error {
 	// create a source for the resource type
 	src := &source.Kind{Type: resource}
 
@@ -122,10 +123,6 @@ func (w *watcher) Watch(ctx context.Context, resource runtime.Object, eventHandl
 	handlers = append(handlers, eventHandler)
 	w.handlers[gvk] = handlers
 	w.lock.Unlock()
-
-	if synced := w.waitForCacheSync(ctx.Done()); !synced {
-		return errors.Errorf("waiting for cache sync failed")
-	}
 
 	return nil
 }
@@ -148,7 +145,6 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		event.CreateEvent.Meta.SetClusterName(w.cluster)
 		for _, h := range handlers {
 			err := h.Create(obj)
 			if err != nil {
@@ -156,15 +152,13 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			}
 		}
 	case EventTypeUpdate:
-		objNew := event.UpdateEvent.ObjectNew
-		handlers, err := w.getHandlers(objNew)
+		obj := event.UpdateEvent.ObjectNew
+		handlers, err := w.getHandlers(obj)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		event.UpdateEvent.MetaOld.SetClusterName(w.cluster)
-		event.UpdateEvent.MetaNew.SetClusterName(w.cluster)
 		for _, h := range handlers {
-			err := h.Update(event.UpdateEvent.ObjectOld, objNew)
+			err := h.Update(event.UpdateEvent.ObjectOld, obj)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -175,7 +169,6 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		event.DeleteEvent.Meta.SetClusterName(w.cluster)
 		for _, h := range handlers {
 			err := h.Delete(event.DeleteEvent.Object)
 			if err != nil {
@@ -188,7 +181,6 @@ func (w *watcher) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		event.GenericEvent.Meta.SetClusterName(w.cluster)
 		for _, h := range handlers {
 			err := h.Generic(event.GenericEvent.Object)
 			if err != nil {

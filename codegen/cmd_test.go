@@ -17,6 +17,21 @@ var _ = Describe("Cmd", func() {
 			Groups: []Group{
 				{
 					GroupVersion: schema.GroupVersion{
+						Group:   "core",
+						Version: "v1",
+					},
+					Module: "k8s.io/api",
+					Resources: []Resource{
+						{
+							Kind: "Secret",
+						},
+					},
+					RenderController:      true,
+					CustomTypesImportPath: "k8s.io/api/core/v1",
+					ApiRoot:               "codegen/render/api",
+				},
+				{
+					GroupVersion: schema.GroupVersion{
 						Group:   "things.test.io",
 						Version: "v1",
 					},
@@ -33,42 +48,12 @@ var _ = Describe("Cmd", func() {
 					RenderTypes:      true,
 					RenderClients:    true,
 					RenderController: true,
-					ApiRoot:          "codegen/test/api",
+					ApiRoot:          "codegen/render/api",
 				},
 			},
 			AnyVendorConfig: &sk_anyvendor.Imports{
-				Local: []string{"codegen/test/*.proto"},
+				Local: []string{"codegen/render/api/*.proto"},
 			},
-
-			Chart: &Chart{
-				Operators: []Operator{
-					{
-						Name: "painter",
-						Deployment: Deployment{
-							Image: Image{
-								Tag:        "v0.0.0",
-								Repository: "painter",
-								Registry:   "quay.io/solo-io",
-								PullPolicy: "IfNotPresent",
-							},
-						},
-						Args: []string{"foo"},
-					},
-				},
-				Values: nil,
-				Data: Data{
-					ApiVersion:  "v1",
-					Description: "",
-					Name:        "Painting Operator",
-					Version:     "v0.0.1",
-					Home:        "https://docs.solo.io/autopilot/latest",
-					Sources: []string{
-						"https://github.com/solo-io/autopilot",
-					},
-				},
-			},
-
-			ManifestRoot: "codegen/test/chart",
 		}
 
 		err := cmd.Execute()

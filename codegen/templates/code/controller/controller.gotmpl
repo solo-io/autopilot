@@ -2,13 +2,10 @@
 package controller
 
 import (
-    "context"
-    "sync"
-
     . "{{ group_import_path $ }}"
+
     "github.com/pkg/errors"
     "github.com/solo-io/autopilot/pkg/events"
-    "github.com/solo-io/autopilot/pkg/mutlicluster"
     "k8s.io/apimachinery/pkg/runtime"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -62,12 +59,12 @@ type {{ $resource.Kind }}Controller struct {
     watcher events.EventWatcher
 }
 
-func New{{ $resource.Kind }}Controller(mgr manager.Manager, opts events.WatcherOpts) (*{{ $resource.Kind }}Controller, error) {
+func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) (*{{ $resource.Kind }}Controller, error) {
     if err := AddToScheme(mgr.GetScheme()); err != nil{
         return nil, err
     }
 
-    w, err := events.NewWatcher(mgr, opts)
+    w, err := events.NewWatcher(name, mgr)
     if err != nil {
         return nil, err
     }
@@ -76,9 +73,9 @@ func New{{ $resource.Kind }}Controller(mgr manager.Manager, opts events.WatcherO
     }, nil
 }
 
-func (c *{{ $resource.Kind }}Controller) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+func (c *{{ $resource.Kind }}Controller) AddEventHandler(h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
 	handler := generic{{ $resource.Kind }}Handler{handler: h}
-    if err := c.watcher.Watch(ctx, &{{ $resource.Kind }}{}, handler, predicates...); err != nil{
+    if err := c.watcher.Watch(&{{ $resource.Kind }}{}, handler, predicates...); err != nil{
         return err
     }
     return nil
@@ -124,4 +121,5 @@ func (h generic{{ $resource.Kind }}Handler) Generic(object runtime.Object) error
     }
     return h.handler.Generic(obj)
 }
+
 {{- end }}

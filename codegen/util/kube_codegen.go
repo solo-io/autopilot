@@ -72,7 +72,6 @@ ${CODEGEN_PKG}/generate-groups.sh all \
     ${CLIENT_PKG} \
     ${API_PKG} \
     ${GROUP}:${VERSION} \
-    --go-header-file "${CODEGEN_PKG}/hack/boilerplate.go.txt" \
     --output-base "${TEMP_DIR}"
 # Copy everything back.
 cp -a "${TEMP_DIR}/${MODULE_PKG}/." "${MODULE_PATH}/"
