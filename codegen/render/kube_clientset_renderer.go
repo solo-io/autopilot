@@ -1,8 +1,9 @@
 package render
 
 import (
-	"github.com/solo-io/autopilot/codegen/util"
 	"log"
+
+	"github.com/solo-io/autopilot/codegen/util"
 )
 
 // runs kubernetes code-generator.sh
