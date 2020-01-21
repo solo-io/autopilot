@@ -31,15 +31,3 @@ func (in *OilType) DeepCopyInto(out *OilType) {
 	p := proto.Clone(in).(*OilType)
 	*out = *p
 }
-
-// DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *PaintSpec) DeepCopyInto(out *PaintSpec) {
-	p := proto.Clone(in).(*PaintSpec)
-	*out = *p
-}
-
-// DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *OilType) DeepCopyInto(out *OilType) {
-	p := proto.Clone(in).(*OilType)
-	*out = *p
-}

@@ -17,6 +17,8 @@ import (
 // make sure the pkg matches the go_package option in the proto
 // TODO: validate this
 func CompileProtos(goModule, apiRoot, protoDir string) ([]*model.DescriptorWithPath, error) {
+	log.Printf("Compiling protos in %v", protoDir)
+
 	// need to be in module root so protoc runs on the expected apiRoot
 	if err := os.Chdir(util.GetModuleRoot()); err != nil {
 		return nil, err

@@ -4,8 +4,9 @@ package controller
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	. "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
+
+	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/pkg/events"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -58,12 +59,12 @@ type PaintController struct {
 	watcher events.EventWatcher
 }
 
-func NewPaintController(mgr manager.Manager, opts events.WatcherOpts) (*PaintController, error) {
+func NewPaintController(name string, mgr manager.Manager) (*PaintController, error) {
 	if err := AddToScheme(mgr.GetScheme()); err != nil {
 		return nil, err
 	}
 
-	w, err := events.NewWatcher(mgr, opts)
+	w, err := events.NewWatcher(name, mgr)
 	if err != nil {
 		return nil, err
 	}

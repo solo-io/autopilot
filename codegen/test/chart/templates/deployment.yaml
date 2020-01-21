@@ -1,8 +1,7 @@
----
-
 # Deployment manifest for painter
+
 {{- $painter := $.Values.painter}}
-{{- $painterImage := $painter.image }}
+{{- $image := $painter.image }}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -26,10 +25,10 @@ spec:
     spec:
       serviceAccountName: painter
       containers:
-      - image: {{ $painterImage.registry }}/{{ $painterImage.repository }}:{{ $painterImage.tag }}
+      - image: {{ $image.registry }}/{{ $image.repository }}:{{ $image.tag }}
         args:
         - foo
-        imagePullPolicy: {{ $painterImage.pullPolicy }}
+        imagePullPolicy: {{ $image.pullPolicy }}
         name: painter
 {{- if $painter.resources }}
         resources:
@@ -46,21 +45,7 @@ spec:
           capabilities:
             drop:
             - ALL
-      {{- if $painterImage.pullSecret }}
+      {{- if $image.pullSecret }}
       imagePullSecrets:
-        - name: {{ $painterImage.pullSecret }}
+        - name: {{ $image.pullSecret }}
       {{- end}}
-
-
----
-
-# Service account for painter
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: painter
-  name: painter
-  namespace: {{ $.Release.Namespace }}
-

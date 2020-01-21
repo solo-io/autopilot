@@ -38,6 +38,9 @@ func CustomResourceDefinition(resource model.Resource) *apiextv1beta1.CustomReso
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("%s.%s", kindLowerPlural, group),
+			Annotations: map[string]string{
+				"helm.sh/hook": "crd-install",
+			},
 		},
 		Spec: apiextv1beta1.CustomResourceDefinitionSpec{
 			Group: group,
