@@ -3,13 +3,10 @@ package controller
 
 import (
 	"context"
-	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/rotisserie/eris"
 	. "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
 	"github.com/solo-io/autopilot/pkg/events"
-	multicluster "github.com/solo-io/autopilot/pkg/mutlicluster"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -122,86 +119,4 @@ func (h genericPaintHandler) Generic(object runtime.Object) error {
 		return errors.Errorf("internal error: Paint handler received event for %T")
 	}
 	return h.handler.Generic(obj)
-}
-
-type ManagedPaintController struct {
-	mgr  *multicluster.ContextualManager
-	ctrl *PaintController
-}
-
-type MultiClusterPaintController struct {
-	handler PaintEventHandler
-
-	ctx         context.Context
-	ctrlLock    sync.RWMutex
-	controllers map[string]*ManagedPaintController
-}
-
-func (m *MultiClusterPaintController) ClusterAdded(mgr *multicluster.ContextualManager,
-	name string) error {
-
-	mcCtrl, err := m.addCluster(mgr, name, name)
-	if err != nil {
-		return err
-	}
-
-	m.ctrlLock.Lock()
-	defer m.ctrlLock.Unlock()
-	m.controllers[name] = &ManagedPaintController{
-		mgr:  mcCtrl.mgr,
-		ctrl: mcCtrl.ctrl,
-	}
-	return nil
-}
-
-func (m *MultiClusterPaintController) addCluster(mgr *multicluster.ContextualManager,
-	cluster, name string) (*ManagedPaintController, error) {
-
-	ctrl, err := NewPaintController(mgr.Manager(), events.WatcherOpts{
-		Name:    name,
-		Cluster: cluster,
-	})
-	if err != nil {
-		return nil, err
-	}
-	if err := ctrl.AddEventHandler(m.ctx, m.handler); err != nil {
-		return nil, err
-	}
-
-	return &ManagedPaintController{
-		mgr:  mgr,
-		ctrl: ctrl,
-	}, nil
-}
-
-func (m *MultiClusterPaintController) ClusterRemoved(name string) error {
-	m.ctrlLock.Lock()
-	defer m.ctrlLock.Unlock()
-	mgr, ok := m.controllers[name]
-	if !ok {
-		return eris.Errorf("could not find controller for cluster %s", name)
-	}
-	go mgr.mgr.Stop()
-	delete(m.controllers, name)
-	return nil
-}
-
-// The mgr arg here should be the local cluster manager
-func NewMultiClusterPaintController(ctx context.Context, mgr manager.Manager,
-	handler PaintEventHandler) (*MultiClusterPaintController, error) {
-
-	mcCtrl := &MultiClusterPaintController{
-		handler:     handler,
-		ctx:         ctx,
-		ctrlLock:    sync.RWMutex{},
-		controllers: make(map[string]*ManagedPaintController),
-	}
-
-	ctxMgr := multicluster.NewContextualManager(ctx, mgr)
-	localController, err := mcCtrl.addCluster(ctxMgr, "", "local-Paint-controller")
-	if err != nil {
-		return nil, err
-	}
-	mcCtrl.controllers[""] = localController
-	return mcCtrl, nil
 }
