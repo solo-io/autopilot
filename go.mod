@@ -15,6 +15,7 @@ require (
 	github.com/gobuffalo/packr v1.30.1
 	github.com/gobuffalo/packr/v2 v2.7.1 // indirect
 	github.com/gogo/protobuf v1.3.1
+	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gophercloud/gophercloud v0.2.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
@@ -34,7 +35,6 @@ require (
 	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
