@@ -1,0 +1,9 @@
+changelog:
+- type: FIX
+  description: Add type to Errorf in controller template
+  issueLink: https://github.com/solo-io/autopilot/issues/28
+- type: FIX
+  description: Add generated code headers to controllers
+  issueLink: https://github.com/solo-io/autopilot/issues/29
+
+
