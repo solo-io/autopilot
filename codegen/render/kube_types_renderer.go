@@ -29,13 +29,13 @@ var typesTemplates = inputTemplates{
 		Path: "doc.go",
 	},
 	"code/types/proto_deepcopy.gotmpl": {
-		Path: "proto_deepcopy.go",
+		Path: "proto_deepcopy.ap.go",
 	},
 }
 
 var controllerTemplates = inputTemplates{
 	"code/controller/controller.gotmpl": {
-		Path: "controller/controller.go",
+		Path: "controller/controller.ap.go",
 	},
 }
 
