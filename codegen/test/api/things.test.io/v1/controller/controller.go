@@ -109,11 +109,11 @@ func (h genericPaintHandler) Delete(object runtime.Object) error {
 func (h genericPaintHandler) Update(old, new runtime.Object) error {
 	objOld, ok := old.(*Paint)
 	if !ok {
-		return errors.Errorf("internal error: Paint handler received event for %T", object)
+		return errors.Errorf("internal error: Paint handler received event for %T", old)
 	}
 	objNew, ok := new.(*Paint)
 	if !ok {
-		return errors.Errorf("internal error: Paint handler received event for %T", object)
+		return errors.Errorf("internal error: Paint handler received event for %T", new)
 	}
 	return h.handler.Update(objOld, objNew)
 }

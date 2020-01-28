@@ -111,11 +111,11 @@ func (h generic{{ $resource.Kind }}Handler) Delete(object runtime.Object) error 
 func (h generic{{ $resource.Kind }}Handler) Update(old, new runtime.Object) error {
     objOld, ok := old.(*{{ $resource.Kind }})
     if !ok {
-        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", old)
     }
     objNew, ok := new.(*{{ $resource.Kind }})
     if !ok {
-        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", new)
     }
     return h.handler.Update(objOld, objNew)
 }
