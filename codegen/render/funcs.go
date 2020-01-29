@@ -60,7 +60,7 @@ type DescriptorWithFullName struct {
 func recursiveFieldSearch(packageName, fullName string, desc *descriptor.DescriptorProto) []*DescriptorWithFullName {
 	var result []*DescriptorWithFullName
 	for _, v := range desc.GetNestedType() {
-		result = append(result, recursiveFieldSearch(packageName, desc.GetName() + "_", v)...)
+		result = append(result, recursiveFieldSearch(packageName, desc.GetName()+"_", v)...)
 	}
 	var externalType bool
 	for _, v := range desc.GetField() {
