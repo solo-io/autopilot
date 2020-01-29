@@ -15,18 +15,16 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 {{- range $file := $.Descriptors -}}
-{{- range $message := $file.MessageType -}}
-
-{{- if gt (len $message.OneofDecl) 0 }}
+{{- range $topLevelMessage := $file.MessageType -}}
+{{- range $topLevelMessage := needs_deepcopy $file.GetPackage $topLevelMessage }}
 
 // DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *{{ $message.Name }}) DeepCopyInto(out *{{ $message.Name }}) {
-    p := proto.Clone(in).(*{{ $message.Name }})
+func (in *{{ $topLevelMessage.FullName }}) DeepCopyInto(out *{{ $topLevelMessage.FullName }}) {
+    p := proto.Clone(in).(*{{ $topLevelMessage.FullName }})
     *out = *p
 }
 
 {{- end }}
-
 {{- end }}
 {{- end }}
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/iancoleman/strcase"
 	"github.com/solo-io/autopilot/codegen/util"
 	"sigs.k8s.io/yaml"
@@ -39,6 +40,9 @@ func makeTemplateFuncs() template.FuncMap {
 		"group_import_path": func(grp Group) string {
 			return util.GoPackage(grp)
 		},
+		"needs_deepcopy": func(packageName string, desc *descriptor.DescriptorProto) []*DescriptorWithFullName {
+			return recursiveFieldSearch(packageName, "", desc)
+		},
 	}
 
 	for k, v := range extra {
@@ -46,6 +50,31 @@ func makeTemplateFuncs() template.FuncMap {
 	}
 
 	return f
+}
+
+type DescriptorWithFullName struct {
+	*descriptor.DescriptorProto
+	FullName string
+}
+
+func recursiveFieldSearch(packageName, fullName string, desc *descriptor.DescriptorProto) []*DescriptorWithFullName {
+	var result []*DescriptorWithFullName
+	for _, v := range desc.GetNestedType() {
+		result = append(result, recursiveFieldSearch(packageName, desc.GetName() + "_", v)...)
+	}
+	var externalType bool
+	for _, v := range desc.GetField() {
+		if v.TypeName != nil && !strings.Contains(v.GetTypeName(), packageName) {
+			externalType = true
+		}
+	}
+	if len(desc.GetOneofDecl()) > 0 || externalType {
+		result = append(result, &DescriptorWithFullName{
+			DescriptorProto: desc,
+			FullName:        fullName + desc.GetName(),
+		})
+	}
+	return result
 }
 
 // toYAML takes an interface, marshals it to yaml, and returns a string. It will

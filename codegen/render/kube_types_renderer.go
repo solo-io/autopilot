@@ -1,5 +1,12 @@
 package render
 
+import (
+	"path/filepath"
+	"strings"
+
+	"github.com/solo-io/solo-kit/pkg/code-generator/model"
+)
+
 // renders kubernetes from templates
 type KubeCodeRenderer struct {
 	templateRenderer
@@ -60,6 +67,7 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 		templatesToRender.add(r.ControllerTemplates)
 	}
 
+	grp.Descriptors = getUniqueRelevantDescriptorsForGroup(grp)
 	files, err := r.renderInputs(templatesToRender, grp)
 	if err != nil {
 		return nil, err
@@ -72,4 +80,20 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 	}
 
 	return files, nil
+}
+
+func getUniqueRelevantDescriptorsForGroup(grp Group) []*model.DescriptorWithPath {
+	result := make(map[string]*model.DescriptorWithPath)
+	for _, v := range grp.Descriptors {
+		outpuDir := filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String())
+		if strings.HasPrefix(v.GetOptions().GetGoPackage(), outpuDir) {
+			result[v.ProtoFilePath] = v
+		}
+	}
+	var array []*model.DescriptorWithPath
+	for _, v := range result {
+		array = append(array, v)
+	}
+
+	return array
 }
