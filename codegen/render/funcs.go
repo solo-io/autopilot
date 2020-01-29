@@ -1,6 +1,7 @@
 package render
 
 import (
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/iancoleman/strcase"
 	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/solo-kit/pkg/code-generator/model"
 	"sigs.k8s.io/yaml"
 )
 
@@ -40,8 +42,15 @@ func makeTemplateFuncs() template.FuncMap {
 		"group_import_path": func(grp Group) string {
 			return util.GoPackage(grp)
 		},
-		"needs_deepcopy": func(packageName string, desc *descriptor.DescriptorProto) []*DescriptorWithFullName {
-			return recursiveFieldSearch(packageName, "", desc)
+		"needs_deepcopy": func(grp Group) []*DescriptorWithFullName {
+			uniqueFile := getUniqueRelevantDescriptorsForGroup(grp)
+			var result []*DescriptorWithFullName
+			for _, file := range uniqueFile {
+				for _, desc := range file.GetMessageType() {
+					result = append(result, recursiveFieldSearch(file.GetPackage(), "", desc)...)
+				}
+			}
+			return result
 		},
 	}
 
@@ -76,6 +85,24 @@ func recursiveFieldSearch(packageName, fullName string, desc *descriptor.Descrip
 	}
 	return result
 }
+
+
+func getUniqueRelevantDescriptorsForGroup(grp Group) []*model.DescriptorWithPath {
+	result := make(map[string]*model.DescriptorWithPath)
+	for _, v := range grp.Descriptors {
+		outpuDir := filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String())
+		if strings.HasPrefix(v.GetOptions().GetGoPackage(), outpuDir) {
+			result[v.ProtoFilePath] = v
+		}
+	}
+	var array []*model.DescriptorWithPath
+	for _, v := range result {
+		array = append(array, v)
+	}
+
+	return array
+}
+
 
 // toYAML takes an interface, marshals it to yaml, and returns a string. It will
 // always return a string, even on marshal error (empty string).
