@@ -2,7 +2,6 @@
 package v1
 
 import (
-	// . "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
