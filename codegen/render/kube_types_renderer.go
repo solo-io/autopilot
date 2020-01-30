@@ -136,3 +136,16 @@ func (r KubeCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 	}
 	return result, nil
 }
+
+func uniquePackages(grp Group) []string {
+	resultMap := make(map[string]struct{})
+	for _, v := range grp.Resources {
+		resultMap[v.Package] = struct{}{}
+	}
+	var result []string
+	for k, _ := range resultMap {
+		result = append(result, k)
+	}
+	return result
+}
+

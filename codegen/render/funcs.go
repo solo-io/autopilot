@@ -42,7 +42,17 @@ func makeTemplateFuncs() template.FuncMap {
 			return util.GoPackage(grp)
 		},
 		"imports_for_group": func(grp Group) []string {
-			return uniquePackages(grp)
+			resultMap := make(map[string]struct{})
+			for _, v := range grp.Resources {
+				if v.Package != "" {
+					resultMap[v.Package] = struct{}{}
+				}
+			}
+			var result []string
+			for k, _ := range resultMap {
+				result = append(result, k)
+			}
+			return result
 		},
 		"needs_deepcopy": func(grp DescriptorsWithGopath) []*descriptor.DescriptorProto {
 			uniqueFile := getUniqueRelevantDescriptorsForGroup(grp)
@@ -61,20 +71,6 @@ func makeTemplateFuncs() template.FuncMap {
 	}
 
 	return f
-}
-
-func uniquePackages(grp Group) []string {
-	resultMap := make(map[string]struct{})
-	for _, v := range grp.Resources {
-		if v.Package != "" {
-			resultMap[v.Package] = struct{}{}
-		}
-	}
-	var result []string
-	for k, _ := range resultMap {
-		result = append(result, k)
-	}
-	return result
 }
 
 func fieldSearch(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
