@@ -9,7 +9,7 @@ type Group struct {
 	// the group version of the group
 	schema.GroupVersion
 
-	// the go module this group belongs to
+	// the go  modulethis group belongs to
 	Module string
 
 	// the root directory for generated API code
@@ -60,6 +60,8 @@ type Resource struct {
 	Kind   string
 	Spec   Field
 	Status *Field
+	// leave empty if same as output dir
+	Package string
 }
 
 type Field struct {

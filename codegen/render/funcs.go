@@ -1,7 +1,6 @@
 package render
 
 import (
-	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -42,12 +41,15 @@ func makeTemplateFuncs() template.FuncMap {
 		"group_import_path": func(grp Group) string {
 			return util.GoPackage(grp)
 		},
-		"needs_deepcopy": func(grp Group) []*DescriptorWithFullName {
+		"imports_for_group": func(grp Group) []string {
+			return uniquePackages(grp)
+		},
+		"needs_deepcopy": func(grp DescriptorsWithGopath) []*descriptor.DescriptorProto {
 			uniqueFile := getUniqueRelevantDescriptorsForGroup(grp)
-			var result []*DescriptorWithFullName
+			var result []*descriptor.DescriptorProto
 			for _, file := range uniqueFile {
 				for _, desc := range file.GetMessageType() {
-					result = append(result, recursiveFieldSearch(file.GetPackage(), "", desc)...)
+					result = append(result, fieldSearch(file.GetPackage(), grp.Resources, desc)...)
 				}
 			}
 			return result
@@ -61,45 +63,56 @@ func makeTemplateFuncs() template.FuncMap {
 	return f
 }
 
-type DescriptorWithFullName struct {
-	*descriptor.DescriptorProto
-	FullName string
-}
-
-func recursiveFieldSearch(packageName, fullName string, desc *descriptor.DescriptorProto) []*DescriptorWithFullName {
-	var result []*DescriptorWithFullName
-	for _, v := range desc.GetNestedType() {
-		result = append(result, recursiveFieldSearch(packageName, desc.GetName()+"_", v)...)
-	}
-	var externalType bool
-	for _, v := range desc.GetField() {
-		if v.TypeName != nil && !strings.Contains(v.GetTypeName(), packageName) {
-			externalType = true
+func uniquePackages(grp Group) []string {
+	resultMap := make(map[string]struct{})
+	for _, v := range grp.Resources {
+		if v.Package != "" {
+			resultMap[v.Package] = struct{}{}
 		}
 	}
-	if len(desc.GetOneofDecl()) > 0 || externalType {
-		result = append(result, &DescriptorWithFullName{
-			DescriptorProto: desc,
-			FullName:        fullName + desc.GetName(),
-		})
+	var result []string
+	for k, _ := range resultMap {
+		result = append(result, k)
+	}
+	return result
+}
+
+func fieldSearch(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
+	var result []*descriptor.DescriptorProto
+	var shouldGenerate bool
+	for _, v := range desc.GetField() {
+		if v.TypeName != nil && !strings.Contains(v.GetTypeName(), packageName)  {
+			shouldGenerate = true
+			break
+		}
+	}
+	if !shouldGenerate {
+		for _, resource := range resources {
+			if resource.Spec.Type == desc.GetName()  ||
+				(resource.Status != nil && resource.Status.Type == desc.GetName()) {
+				shouldGenerate = true
+			}
+		}
+	}
+
+	if len(desc.GetOneofDecl()) > 0 || shouldGenerate {
+		result = append(result, desc)
 	}
 	return result
 }
 
 
-func getUniqueRelevantDescriptorsForGroup(grp Group) []*model.DescriptorWithPath {
+func getUniqueRelevantDescriptorsForGroup(grp DescriptorsWithGopath) []*model.DescriptorWithPath {
 	result := make(map[string]*model.DescriptorWithPath)
-	for _, v := range grp.Descriptors {
-		outpuDir := filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String())
-		if strings.HasPrefix(v.GetOptions().GetGoPackage(), outpuDir) {
-			result[v.ProtoFilePath] = v
+	for _, desc := range grp.Descriptors {
+		if desc.GetOptions().GetGoPackage() == grp.goPackageToMatch {
+			result[desc.ProtoFilePath] = desc
 		}
 	}
 	var array []*model.DescriptorWithPath
 	for _, v := range result {
 		array = append(array, v)
 	}
-
 	return array
 }
 
