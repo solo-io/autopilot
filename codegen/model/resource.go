@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -60,8 +61,19 @@ type Resource struct {
 	Kind   string
 	Spec   Field
 	Status *Field
+	// external package where types can be found, leave empty if same as group
+	Package *ExternalPackage
+	// The set of additional printer columns to apply to the CustomResourceDefinition
+	AdditionalPrinterColumns []apiextensions.CustomResourceColumnDefinition
+}
+
+type ExternalPackage struct {
+	// The go package where the status and spec field can be found, if different than group root
 	// leave empty if same as output dir
-	Package string
+	GoPackage string
+	// The relative path to the package where the spec and status field can be found
+	// leave empty if same as output dir
+	RelativePath string
 }
 
 type Field struct {

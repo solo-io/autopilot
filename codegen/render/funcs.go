@@ -41,25 +41,30 @@ func makeTemplateFuncs() template.FuncMap {
 		"group_import_path": func(grp Group) string {
 			return util.GoPackage(grp)
 		},
+		// Used by types.go to get all unique external imports for a groups resources
 		"imports_for_group": func(grp Group) []string {
-			resultMap := make(map[string]struct{})
-			for _, v := range grp.Resources {
-				if v.Package != "" {
-					resultMap[v.Package] = struct{}{}
-				}
-			}
+			unique := uniquePackages(grp)
 			var result []string
-			for k, _ := range resultMap {
-				result = append(result, k)
+			for _, v := range unique {
+				if v.GoPackage != "" {
+					result = append(result, v.GoPackage)
+				}
 			}
 			return result
 		},
+		/*
+			Used by the proto_deepcopy.gotml file to decide which objects need a proto.clone deepcopy method.
+
+			In order to support external go packages generated from protos, this template is run for
+			every unique external go package, and then filters out only the protos which are relevant to
+			that specific go package before generating.
+		*/
 		"needs_deepcopy": func(grp DescriptorsWithGopath) []*descriptor.DescriptorProto {
 			uniqueFile := getUniqueRelevantDescriptorsForGroup(grp)
 			var result []*descriptor.DescriptorProto
 			for _, file := range uniqueFile {
 				for _, desc := range file.GetMessageType() {
-					result = append(result, fieldSearch(file.GetPackage(), grp.Resources, desc)...)
+					result = append(result, fineDeepCopyFields(file.GetPackage(), grp.Resources, desc)...)
 				}
 			}
 			return result
@@ -73,18 +78,19 @@ func makeTemplateFuncs() template.FuncMap {
 	return f
 }
 
-func fieldSearch(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
+// find the proto messages for a given set of descriptors which need proto_deepcopoy funcs
+func fineDeepCopyFields(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
 	var result []*descriptor.DescriptorProto
 	var shouldGenerate bool
 	for _, v := range desc.GetField() {
-		if v.TypeName != nil && !strings.Contains(v.GetTypeName(), packageName)  {
+		if v.TypeName != nil && !strings.Contains(v.GetTypeName(), packageName) {
 			shouldGenerate = true
 			break
 		}
 	}
 	if !shouldGenerate {
 		for _, resource := range resources {
-			if resource.Spec.Type == desc.GetName()  ||
+			if resource.Spec.Type == desc.GetName() ||
 				(resource.Status != nil && resource.Status.Type == desc.GetName()) {
 				shouldGenerate = true
 			}
@@ -97,7 +103,10 @@ func fieldSearch(packageName string, resources []Resource, desc *descriptor.Desc
 	return result
 }
 
-
+/*
+	Get the relevant descriptors for a group of descriptors with a go package to match against.
+	A unique object is initialized for each external go package to the group package
+*/
 func getUniqueRelevantDescriptorsForGroup(grp DescriptorsWithGopath) []*model.DescriptorWithPath {
 	result := make(map[string]*model.DescriptorWithPath)
 	for _, desc := range grp.Descriptors {
@@ -111,7 +120,6 @@ func getUniqueRelevantDescriptorsForGroup(grp DescriptorsWithGopath) []*model.De
 	}
 	return array
 }
-
 
 // toYAML takes an interface, marshals it to yaml, and returns a string. It will
 // always return a string, even on marshal error (empty string).
