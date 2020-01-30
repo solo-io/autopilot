@@ -9,7 +9,7 @@ type Group struct {
 	// the group version of the group
 	schema.GroupVersion
 
-	// the go  modulethis group belongs to
+	// the go  module this group belongs to
 	Module string
 
 	// the root directory for generated API code
