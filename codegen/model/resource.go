@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -64,7 +64,7 @@ type Resource struct {
 	// external package where types can be found, leave empty if same as group
 	Package *ExternalPackage
 	// The set of additional printer columns to apply to the CustomResourceDefinition
-	AdditionalPrinterColumns []apiextensions.CustomResourceColumnDefinition
+	AdditionalPrinterColumns []apiextv1beta1.CustomResourceColumnDefinition
 }
 
 type ExternalPackage struct {
