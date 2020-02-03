@@ -2,8 +2,8 @@ package render
 
 import (
 	"path/filepath"
+	"strings"
 
-	model2 "github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
 )
 
@@ -19,12 +19,11 @@ type ProtoCodeRenderer struct {
 	ApiRoot string
 }
 
-
 func RenderProtoTypes(grp Group) ([]OutFile, error) {
 	defaultKubeCodeRenderer := ProtoCodeRenderer{
-		templateRenderer:    defaultTemplateRenderer,
-		GoModule:            grp.Module,
-		ApiRoot:             grp.ApiRoot,
+		templateRenderer: defaultTemplateRenderer,
+		GoModule:         grp.Module,
+		ApiRoot:          grp.ApiRoot,
 	}
 
 	return defaultKubeCodeRenderer.RenderProtoHelpers(grp)
@@ -58,11 +57,11 @@ const (
 // helper type for rendering proto_deepcopy.go files
 type DescriptorsWithGopath struct {
 	// list of descriptors pulled from the group
-	Descriptors      []*model.DescriptorWithPath
+	Descriptors []*model.DescriptorWithPath
 	// list of resources pulled from the group
-	Resources        []Resource
+	Resources []Resource
 	// package name used to render the package name in the go template
-	PackageName      string
+	PackageName string
 	// full go package which the template render funcs will use to match against the
 	// set of descriptors to find the relevant messages
 	goPackageToMatch string
@@ -78,13 +77,13 @@ type DescriptorsWithGopath struct {
 */
 func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 	var result []OutFile
-	for _, v := range uniquePackages(grp) {
+	for _, uniquePackage := range uniquePaths(grp) {
 		var (
 			inputTmpls       inputTemplates
 			packageName      string
 			goPackageToMatch string
 		)
-		if v.GoPackage == "" {
+		if uniquePackage == "" {
 			inputTmpls = inputTemplates{
 				protoDeepCopyTemplate: OutFile{
 					Path: protoDeepCopyGo,
@@ -95,11 +94,13 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 		} else {
 			inputTmpls = inputTemplates{
 				protoDeepCopyTemplate: OutFile{
-					Path: filepath.Join(v.RelativePath, protoDeepCopyGo),
+					Path: filepath.Join(
+						strings.TrimPrefix(uniquePackage, filepath.Join(r.ApiRoot, grp.Group, grp.Version)), protoDeepCopyGo,
+					),
 				},
 			}
-			goPackageToMatch = v.GoPackage
-			packageName = filepath.Base(v.GoPackage)
+			goPackageToMatch = filepath.Join(grp.Module, uniquePackage)
+			packageName = filepath.Base(goPackageToMatch)
 		}
 		files, err := r.renderInputs(inputTmpls, DescriptorsWithGopath{
 			Descriptors:      grp.Descriptors,
@@ -117,21 +118,33 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 
 /*
 	Get all of the unique go packages for a group by checking the packages of the resources
-	This list can include abn empty string which corresponds to the local group package
 */
-func uniquePackages(grp Group) []*model2.ExternalPackage {
-	resultMap := make(map[string]*model2.ExternalPackage)
+func uniquePackages(grp Group) []string {
+	unique := uniquePaths(grp)
+	var result []string
+	for _, v := range unique {
+		if v != "" {
+			result = append(result, filepath.Join(grp.Module, v))
+		}
+	}
+	return result
+}
+
+/*
+	Get all of the unique paths for a group by checking the packages of the resources
+	This list can include an empty string which corresponds to the local group
+*/
+func uniquePaths(grp Group) []string {
+	resultMap := make(map[string]struct{})
 	for _, v := range grp.Resources {
 		if !grp.RenderProtos {
 			continue
 		}
-		if v.Package != nil {
-			resultMap[v.Package.GoPackage] = v.Package
-		}
+		resultMap[v.RelativePathFromRoot] = struct{}{}
 	}
-	var result []*model2.ExternalPackage
-	for _, v := range resultMap {
-		result = append(result, v)
+	var result []string
+	for k, _ := range resultMap {
+		result = append(result, k)
 	}
 	return result
 }

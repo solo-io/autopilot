@@ -43,14 +43,7 @@ func makeTemplateFuncs() template.FuncMap {
 		},
 		// Used by types.go to get all unique external imports for a groups resources
 		"imports_for_group": func(grp Group) []string {
-			unique := uniquePackages(grp)
-			var result []string
-			for _, v := range unique {
-				if v.GoPackage != "" {
-					result = append(result, v.GoPackage)
-				}
-			}
-			return result
+			return uniquePackages(grp)
 		},
 		/*
 			Used by the proto_deepcopy.gotml file to decide which objects need a proto.clone deepcopy method.

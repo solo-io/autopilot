@@ -61,19 +61,16 @@ type Resource struct {
 	Kind   string
 	Spec   Field
 	Status *Field
-	// external package where types can be found, leave empty if same as group
-	Package *ExternalPackage
+	/*
+		The relative path to where the status and spec field can be found, if different than group root. This value
+		should be the relative path to the package from the root of the codegen project.
+		leave empty if same as output dir
+
+		As this field is used for codegen, the types/path need to be in the same module as the project being built
+	*/
+	RelativePathFromRoot string
 	// The set of additional printer columns to apply to the CustomResourceDefinition
 	AdditionalPrinterColumns []apiextv1beta1.CustomResourceColumnDefinition
-}
-
-type ExternalPackage struct {
-	// The go package where the status and spec field can be found, if different than group root
-	// leave empty if same as output dir
-	GoPackage string
-	// The relative path to the package where the spec and status field can be found
-	// leave empty if same as output dir
-	RelativePath string
 }
 
 type Field struct {
