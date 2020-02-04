@@ -12,7 +12,6 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/iancoleman/strcase"
 	"github.com/solo-io/autopilot/codegen/util"
-	"github.com/solo-io/solo-kit/pkg/code-generator/model"
 	"sigs.k8s.io/yaml"
 )
 
@@ -43,7 +42,7 @@ func makeTemplateFuncs() template.FuncMap {
 		},
 		// Used by types.go to get all unique external imports for a groups resources
 		"imports_for_group": func(grp Group) []string {
-			return uniquePackages(grp)
+			return uniqueGoPackagesForGroup(grp)
 		},
 		/*
 			Used by the proto_deepcopy.gotml file to decide which objects need a proto.clone deepcopy method.
@@ -52,12 +51,13 @@ func makeTemplateFuncs() template.FuncMap {
 			every unique external go package, and then filters out only the protos which are relevant to
 			that specific go package before generating.
 		*/
-		"needs_deepcopy": func(grp DescriptorsWithGopath) []*descriptor.DescriptorProto {
-			uniqueFile := getUniqueRelevantDescriptorsForGroup(grp)
+		"needs_deepcopy": func(grp descriptorsWithGopath) []*descriptor.DescriptorProto {
+			uniqueFile := grp.getUniqueDescriptors()
 			var result []*descriptor.DescriptorProto
 			for _, file := range uniqueFile {
 				for _, desc := range file.GetMessageType() {
-					result = append(result, fineDeepCopyFields(file.GetPackage(), grp.Resources, desc)...)
+					// for each message, in each file, find the fields which need deep copy functions
+					result = append(result, findDeepCopyFields(file.GetPackage(), grp.Resources, desc)...)
 				}
 			}
 			return result
@@ -71,10 +71,19 @@ func makeTemplateFuncs() template.FuncMap {
 	return f
 }
 
-// find the proto messages for a given set of descriptors which need proto_deepcopoy funcs
-func fineDeepCopyFields(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
+/*
+	Find the proto messages for a given set of descriptors which need proto_deepcopoy funcs.
+	The three cases are as follows:
+
+	1. One of the subfields has an external type
+	2. The descriptor is either the status or the spec of one of the group resources
+	3. There is a oneof present
+*/
+
+func findDeepCopyFields(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
 	var result []*descriptor.DescriptorProto
 	var shouldGenerate bool
+	// case 1 above
 	for _, v := range desc.GetField() {
 		if v.TypeName != nil && !strings.Contains(v.GetTypeName(), packageName) {
 			shouldGenerate = true
@@ -82,6 +91,7 @@ func fineDeepCopyFields(packageName string, resources []Resource, desc *descript
 		}
 	}
 	if !shouldGenerate {
+		// case 2 above
 		for _, resource := range resources {
 			if resource.Spec.Type == desc.GetName() ||
 				(resource.Status != nil && resource.Status.Type == desc.GetName()) {
@@ -90,28 +100,11 @@ func fineDeepCopyFields(packageName string, resources []Resource, desc *descript
 		}
 	}
 
+	// case 3 above
 	if len(desc.GetOneofDecl()) > 0 || shouldGenerate {
 		result = append(result, desc)
 	}
 	return result
-}
-
-/*
-	Get the relevant descriptors for a group of descriptors with a go package to match against.
-	A unique object is initialized for each external go package to the group package
-*/
-func getUniqueRelevantDescriptorsForGroup(grp DescriptorsWithGopath) []*model.DescriptorWithPath {
-	result := make(map[string]*model.DescriptorWithPath)
-	for _, desc := range grp.Descriptors {
-		if desc.GetOptions().GetGoPackage() == grp.goPackageToMatch {
-			result[desc.ProtoFilePath] = desc
-		}
-	}
-	var array []*model.DescriptorWithPath
-	for _, v := range result {
-		array = append(array, v)
-	}
-	return array
 }
 
 // toYAML takes an interface, marshals it to yaml, and returns a string. It will

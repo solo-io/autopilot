@@ -55,7 +55,7 @@ const (
 )
 
 // helper type for rendering proto_deepcopy.go files
-type DescriptorsWithGopath struct {
+type descriptorsWithGopath struct {
 	// list of descriptors pulled from the group
 	Descriptors []*model.DescriptorWithPath
 	// list of resources pulled from the group
@@ -68,6 +68,24 @@ type DescriptorsWithGopath struct {
 }
 
 /*
+	Get the relevant descriptors for a group of descriptors with a go package to match against.
+	A unique object is initialized for each external go package to the group package
+*/
+func (grp descriptorsWithGopath) getUniqueDescriptors() []*model.DescriptorWithPath {
+	result := make(map[string]*model.DescriptorWithPath)
+	for _, desc := range grp.Descriptors {
+		if desc.GetOptions().GetGoPackage() == grp.goPackageToMatch {
+			result[desc.ProtoFilePath] = desc
+		}
+	}
+	var array []*model.DescriptorWithPath
+	for _, v := range result {
+		array = append(array, v)
+	}
+	return array
+}
+
+/*
 	Create and render the templates for the proto_deepcopy filesin order to support
 	proto_deepcopy funcs for packages which are different than the main group package
 
@@ -77,13 +95,14 @@ type DescriptorsWithGopath struct {
 */
 func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 	var result []OutFile
-	for _, uniquePackage := range uniquePaths(grp) {
+	for _, uniquePackage := range uniqueGoImportPathsForGroup(grp) {
 		var (
 			inputTmpls       inputTemplates
 			packageName      string
 			goPackageToMatch string
 		)
 		if uniquePackage == "" {
+			// this case represents the local package, therefore no special pathing is necessary
 			inputTmpls = inputTemplates{
 				protoDeepCopyTemplate: OutFile{
 					Path: protoDeepCopyGo,
@@ -92,6 +111,8 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 			goPackageToMatch = filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String())
 			packageName = grp.Version
 		} else {
+			// this case represents any go packages which are in the same go module as the root,
+			// but in a different directory
 			inputTmpls = inputTemplates{
 				protoDeepCopyTemplate: OutFile{
 					Path: filepath.Join(
@@ -102,7 +123,7 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 			goPackageToMatch = filepath.Join(grp.Module, uniquePackage)
 			packageName = filepath.Base(goPackageToMatch)
 		}
-		files, err := r.renderInputs(inputTmpls, DescriptorsWithGopath{
+		files, err := r.renderInputs(inputTmpls, descriptorsWithGopath{
 			Descriptors:      grp.Descriptors,
 			Resources:        grp.Resources,
 			PackageName:      packageName,
@@ -119,8 +140,8 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 /*
 	Get all of the unique go packages for a group by checking the packages of the resources
 */
-func uniquePackages(grp Group) []string {
-	unique := uniquePaths(grp)
+func uniqueGoPackagesForGroup(grp Group) []string {
+	unique := uniqueGoImportPathsForGroup(grp)
 	var result []string
 	for _, v := range unique {
 		if v != "" {
@@ -132,11 +153,12 @@ func uniquePackages(grp Group) []string {
 
 /*
 	Get all of the unique paths for a group by checking the packages of the resources
-	This list can include an empty string which corresponds to the local group
+	This list can include an empty string ("") which corresponds to the local group
 */
-func uniquePaths(grp Group) []string {
+func uniqueGoImportPathsForGroup(grp Group) []string {
 	resultMap := make(map[string]struct{})
 	for _, v := range grp.Resources {
+		// if the group does not have protos to render, than finding the go import path is unnecessary
 		if !grp.RenderProtos {
 			continue
 		}
