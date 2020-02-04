@@ -57,7 +57,9 @@ func makeTemplateFuncs() template.FuncMap {
 			for _, file := range uniqueFile {
 				for _, desc := range file.GetMessageType() {
 					// for each message, in each file, find the fields which need deep copy functions
-					result = append(result, findDeepCopyFields(file.GetPackage(), grp.Resources, desc)...)
+					result = append(result,
+						findDeepCopyFields(file.GetPackage(), grp.Resources, desc, grp.goPackageToMatch != "")...
+					)
 				}
 			}
 			return result
@@ -76,11 +78,15 @@ func makeTemplateFuncs() template.FuncMap {
 	The three cases are as follows:
 
 	1. One of the subfields has an external type
-	2. The descriptor is either the status or the spec of one of the group resources
+	2. The descriptor is either the status or the spec of one of the group resources in a different package
 	3. There is a oneof present
 */
 
-func findDeepCopyFields(packageName string, resources []Resource, desc *descriptor.DescriptorProto) []*descriptor.DescriptorProto {
+func findDeepCopyFields(
+	packageName string,
+	resources []Resource,
+	desc *descriptor.DescriptorProto,
+	externalPath bool) []*descriptor.DescriptorProto {
 	var result []*descriptor.DescriptorProto
 	var shouldGenerate bool
 	// case 1 above
@@ -90,7 +96,7 @@ func findDeepCopyFields(packageName string, resources []Resource, desc *descript
 			break
 		}
 	}
-	if !shouldGenerate {
+	if !shouldGenerate && externalPath {
 		// case 2 above
 		for _, resource := range resources {
 			if resource.Spec.Type == desc.GetName() ||
