@@ -117,14 +117,23 @@ func (c Command) generateGroup(grp model.Group) error {
 		return err
 	}
 
-	writer := &writer.DefaultFileWriter{Root: c.moduleRoot}
+	fileWriter := &writer.DefaultFileWriter{Root: c.moduleRoot}
+
+	protoTypes, err := render.RenderProtoTypes(grp)
+	if err != nil {
+		return err
+	}
+
+	if err := fileWriter.WriteFiles(protoTypes); err != nil {
+		return err
+	}
 
 	apiTypes, err := render.RenderApiTypes(grp)
 	if err != nil {
 		return err
 	}
 
-	if err := writer.WriteFiles(apiTypes); err != nil {
+	if err := fileWriter.WriteFiles(apiTypes); err != nil {
 		return err
 	}
 
@@ -133,7 +142,7 @@ func (c Command) generateGroup(grp model.Group) error {
 		return err
 	}
 
-	if err := writer.WriteFiles(manifests); err != nil {
+	if err := fileWriter.WriteFiles(manifests); err != nil {
 		return err
 	}
 

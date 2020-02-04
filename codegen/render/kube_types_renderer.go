@@ -1,5 +1,9 @@
 package render
 
+import (
+	"path/filepath"
+)
+
 // renders kubernetes from templates
 type KubeCodeRenderer struct {
 	templateRenderer
@@ -27,9 +31,6 @@ var typesTemplates = inputTemplates{
 	},
 	"code/types/doc.gotmpl": {
 		Path: "doc.go",
-	},
-	"code/types/proto_deepcopy.gotmpl": {
-		Path: "proto_deepcopy.go",
 	},
 }
 
@@ -67,7 +68,7 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 
 	// prepend output file paths with path to api dir
 	for i, out := range files {
-		out.Path = r.ApiRoot + "/" + grp.Group + "/" + grp.Version + "/" + out.Path
+		out.Path = filepath.Join(r.ApiRoot, grp.Group, grp.Version, out.Path)
 		files[i] = out
 	}
 

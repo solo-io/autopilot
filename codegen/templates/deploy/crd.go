@@ -46,9 +46,10 @@ func CustomResourceDefinition(resource model.Resource) *apiextv1beta1.CustomReso
 			Group: group,
 			Scope: apiextv1beta1.NamespaceScoped,
 			Versions: []apiextv1beta1.CustomResourceDefinitionVersion{{
-				Name:    version,
-				Served:  true,
-				Storage: true,
+				Name:                     version,
+				Served:                   true,
+				Storage:                  true,
+				AdditionalPrinterColumns: resource.AdditionalPrinterColumns,
 			}},
 			Subresources: &apiextv1beta1.CustomResourceSubresources{
 				Status: status,

@@ -1,32 +1,30 @@
 // This file contains generated Deepcopy methods for
 // Protobuf types with oneofs
 
-package {{.Version}}
+package {{ .PackageName }}
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/gogo/protobuf/gogoproto"
-import _ "github.com/gogo/protobuf/types"
+import (
+    proto "github.com/gogo/protobuf/proto"
+    fmt "fmt"
+    math "math"
+    _ "github.com/gogo/protobuf/gogoproto"
+    _ "github.com/gogo/protobuf/types"
+)
+
+
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-{{- range $file := $.Descriptors -}}
-{{- range $message := $file.MessageType -}}
-
-{{- if gt (len $message.OneofDecl) 0 }}
+{{- range $message := needs_deepcopy . }}
 
 // DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *{{ $message.Name }}) DeepCopyInto(out *{{ $message.Name }}) {
-    p := proto.Clone(in).(*{{ $message.Name }})
+func (in *{{ $message }}) DeepCopyInto(out *{{ $message }}) {
+    p := proto.Clone(in).(*{{ $message }})
     *out = *p
 }
 
-{{- end }}
-
-{{- end }}
 {{- end }}
 
