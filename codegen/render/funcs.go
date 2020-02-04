@@ -59,11 +59,14 @@ func makeTemplateFuncs() template.FuncMap {
 			for _, file := range uniqueFile {
 				for _, desc := range file.GetMessageType() {
 					switch {
+					// In the case when the groups root go package equals the go package of the proto file
+					// generate a local proto_deepopy file
 					case grp.rootGoPackage == file.GetOptions().GetGoPackage():
 						// for each message, in each file, find the fields which need deep copy functions
 						if shouldGenerate := shouldDeepCopyInternalMessage(file.GetPackage(), desc); shouldGenerate {
 							result = append(result, desc.GetName())
 						}
+					// Otherwise generate a proto_deepcopy file in the folder containing the rest of the code of the types
 					default:
 						// for each message, in each file, find the fields which need deep copy functions
 						if shouldGenerate := shouldDeepCopyExternalMessage(grp.Resources, desc); shouldGenerate {
