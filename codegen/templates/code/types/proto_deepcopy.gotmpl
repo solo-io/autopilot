@@ -21,8 +21,8 @@ var _ = math.Inf
 {{- range $message := needs_deepcopy . }}
 
 // DeepCopyInto supports using AttributeManifest within kubernetes types, where deepcopy-gen is used.
-func (in *{{ $message.GetName }}) DeepCopyInto(out *{{ $message.GetName }}) {
-    p := proto.Clone(in).(*{{ $message.GetName }})
+func (in *{{ $message }}) DeepCopyInto(out *{{ $message }}) {
+    p := proto.Clone(in).(*{{ $message }})
     *out = *p
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/iancoleman/strcase"
+	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/autopilot/codegen/util"
 	"sigs.k8s.io/yaml"
 )
@@ -51,15 +52,24 @@ func makeTemplateFuncs() template.FuncMap {
 			every unique external go package, and then filters out only the protos which are relevant to
 			that specific go package before generating.
 		*/
-		"needs_deepcopy": func(grp descriptorsWithGopath) []*descriptor.DescriptorProto {
-			uniqueFile := grp.getUniqueDescriptors()
-			var result []*descriptor.DescriptorProto
+		"needs_deepcopy": func(grp descriptorsWithGopath) []string {
+			uniqueFile := grp.getUniqueDescriptorsWithPath()
+			var result []string
+
 			for _, file := range uniqueFile {
 				for _, desc := range file.GetMessageType() {
-					// for each message, in each file, find the fields which need deep copy functions
-					result = append(result,
-						findDeepCopyFields(file.GetPackage(), grp.Resources, desc, grp.goPackageToMatch != "")...
-					)
+					switch {
+					case grp.rootGoPackage == file.GetOptions().GetGoPackage():
+						// for each message, in each file, find the fields which need deep copy functions
+						if shouldGenerate := shouldDeepCopyInternalMessage(file.GetPackage(), desc); shouldGenerate {
+							result = append(result, desc.GetName())
+						}
+					default:
+						// for each message, in each file, find the fields which need deep copy functions
+						if shouldGenerate := shouldDeepCopyExternalMessage(grp.Resources, desc); shouldGenerate {
+							result = append(result, desc.GetName())
+						}
+					}
 				}
 			}
 			return result
@@ -73,21 +83,30 @@ func makeTemplateFuncs() template.FuncMap {
 	return f
 }
 
+
+
+/*
+	Find the proto messages for a given set of descriptors which need proto_deepcopoy funcs and whose types are not in
+	the API root package
+*/
+func shouldDeepCopyExternalMessage(resources []model.Resource, desc *descriptor.DescriptorProto) bool {
+	for _, resource := range resources {
+		if resource.Spec.Type == desc.GetName() ||
+			(resource.Status != nil && resource.Status.Type == desc.GetName()) {
+			return true
+		}
+	}
+	return false
+}
+
 /*
 	Find the proto messages for a given set of descriptors which need proto_deepcopoy funcs.
 	The three cases are as follows:
 
 	1. One of the subfields has an external type
-	2. The descriptor is either the status or the spec of one of the group resources in a different package
-	3. There is a oneof present
+	2. There is a oneof present
 */
-
-func findDeepCopyFields(
-	packageName string,
-	resources []Resource,
-	desc *descriptor.DescriptorProto,
-	externalPath bool) []*descriptor.DescriptorProto {
-	var result []*descriptor.DescriptorProto
+func shouldDeepCopyInternalMessage(packageName string, desc *descriptor.DescriptorProto) bool {
 	var shouldGenerate bool
 	// case 1 above
 	for _, v := range desc.GetField() {
@@ -96,21 +115,8 @@ func findDeepCopyFields(
 			break
 		}
 	}
-	if !shouldGenerate && externalPath {
-		// case 2 above
-		for _, resource := range resources {
-			if resource.Spec.Type == desc.GetName() ||
-				(resource.Status != nil && resource.Status.Type == desc.GetName()) {
-				shouldGenerate = true
-			}
-		}
-	}
-
-	// case 3 above
-	if len(desc.GetOneofDecl()) > 0 || shouldGenerate {
-		result = append(result, desc)
-	}
-	return result
+	// case 2 above
+	return len(desc.GetOneofDecl()) > 0 || shouldGenerate
 }
 
 // toYAML takes an interface, marshals it to yaml, and returns a string. It will

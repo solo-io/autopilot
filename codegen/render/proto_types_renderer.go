@@ -62,6 +62,8 @@ type descriptorsWithGopath struct {
 	Resources []Resource
 	// package name used to render the package name in the go template
 	PackageName string
+	// go package of the group api root
+	rootGoPackage string
 	// full go package which the template render funcs will use to match against the
 	// set of descriptors to find the relevant messages
 	goPackageToMatch string
@@ -71,7 +73,7 @@ type descriptorsWithGopath struct {
 	Get the relevant descriptors for a group of descriptors with a go package to match against.
 	A unique object is initialized for each external go package to the group package
 */
-func (grp descriptorsWithGopath) getUniqueDescriptors() []*model.DescriptorWithPath {
+func (grp descriptorsWithGopath) getUniqueDescriptorsWithPath() []*model.DescriptorWithPath {
 	result := make(map[string]*model.DescriptorWithPath)
 	for _, desc := range grp.Descriptors {
 		if desc.GetOptions().GetGoPackage() == grp.goPackageToMatch {
@@ -127,6 +129,7 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 			Descriptors:      grp.Descriptors,
 			Resources:        grp.Resources,
 			PackageName:      packageName,
+			rootGoPackage:    filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String()),
 			goPackageToMatch: goPackageToMatch,
 		})
 		if err != nil {
