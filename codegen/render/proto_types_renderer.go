@@ -175,5 +175,6 @@ func uniqueGoImportPathsForGroup(grp Group) []string {
 	for k, _ := range resultMap {
 		result = append(result, k)
 	}
+	sort.Strings(result)
 	return result
 }
