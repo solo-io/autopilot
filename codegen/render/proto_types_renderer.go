@@ -2,6 +2,7 @@ package render
 
 import (
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
@@ -84,6 +85,9 @@ func (grp descriptorsWithGopath) getUniqueDescriptorsWithPath() []*model.Descrip
 	for _, v := range result {
 		array = append(array, v)
 	}
+	sort.Slice(array, func(i, j int) bool {
+		return array[i].ProtoFilePath < array[j].ProtoFilePath
+	})
 	return array
 }
 
@@ -171,5 +175,6 @@ func uniqueGoImportPathsForGroup(grp Group) []string {
 	for k, _ := range resultMap {
 		result = append(result, k)
 	}
+	sort.Strings(result)
 	return result
 }
