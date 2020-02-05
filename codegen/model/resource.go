@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
+	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -9,7 +10,7 @@ type Group struct {
 	// the group version of the group
 	schema.GroupVersion
 
-	// the go module this group belongs to
+	// the go  module this group belongs to
 	Module string
 
 	// the root directory for generated API code
@@ -60,6 +61,16 @@ type Resource struct {
 	Kind   string
 	Spec   Field
 	Status *Field
+	/*
+		The relative path to where the status and spec field can be found, if different than group root. This value
+		should be the relative path to the package from the root of the codegen project.
+		leave empty if same as output dir
+
+		As this field is used for codegen, the types/path need to be in the same module as the project being built
+	*/
+	RelativePathFromRoot string
+	// The set of additional printer columns to apply to the CustomResourceDefinition
+	AdditionalPrinterColumns []apiextv1beta1.CustomResourceColumnDefinition
 }
 
 type Field struct {

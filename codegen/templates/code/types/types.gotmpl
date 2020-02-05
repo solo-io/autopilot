@@ -3,6 +3,9 @@ package {{ .Version }}
 
 import (
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+{{- range $import := imports_for_group . }}
+    . "{{ $import }}"
+{{ end -}}
 )
 
 {{- range $resource := $.Resources }}
