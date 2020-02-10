@@ -137,7 +137,7 @@ func (c Command) generateGroup(grp model.Group) error {
 		return err
 	}
 
-	manifests, err := render.RenderManifests(c.AppName, filepath.Join(c.ManifestRoot, c.AppName), grp)
+	manifests, err := render.RenderManifests(c.AppName, c.ManifestRoot, grp)
 	if err != nil {
 		return err
 	}
