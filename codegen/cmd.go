@@ -35,7 +35,7 @@ type Command struct {
 	// optinal helm chart to render
 	Chart *model.Chart
 
-	// the root directory for generated Kube manfiests
+	// the root directory for generated Kube manifests
 	ManifestRoot string
 
 	// optional Go/Docker images to build
@@ -102,7 +102,7 @@ func (c Command) generateChart() error {
 			return err
 		}
 
-		writer := &writer.DefaultFileWriter{Root: filepath.Join(c.moduleRoot, c.ManifestRoot, c.AppName)}
+		writer := &writer.DefaultFileWriter{Root: filepath.Join(c.moduleRoot, c.ManifestRoot)}
 
 		if err := writer.WriteFiles(files); err != nil {
 			return err
