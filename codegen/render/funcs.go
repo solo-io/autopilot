@@ -41,6 +41,12 @@ func makeTemplateFuncs() template.FuncMap {
 		"group_import_path": func(grp Group) string {
 			return util.GoPackage(grp)
 		},
+		"group_import_name": func(grp Group) string {
+			name := strings.ReplaceAll(grp.GroupVersion.String(), "/", "_")
+			name = strings.ReplaceAll(name, ".", "_")
+
+			return name
+		},
 		// Used by types.go to get all unique external imports for a groups resources
 		"imports_for_group": func(grp Group) []string {
 			return uniqueGoPackagesForGroup(grp)
