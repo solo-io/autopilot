@@ -20,13 +20,17 @@ require (
 	github.com/gophercloud/gophercloud v0.2.0 // indirect
 	github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334
 	github.com/karrick/godirwalk v1.14.1 // indirect
+	github.com/lyft/protoc-gen-validate v0.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mwitkow/go-proto-validators v0.3.0 // indirect
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/common v0.7.0
+	github.com/pseudomuto/protoc-gen-doc v1.3.0 // indirect
+	github.com/pseudomuto/protokit v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.5.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/anyvendor v0.0.1
@@ -39,7 +43,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
 	golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5
-	istio.io/tools v0.0.0-20200128155652-36eceb1fcb9d // indirect
+	istio.io/tools v0.0.0-20200214155848-b0036b2c2d76 // indirect
 	k8s.io/api v0.17.1
 	k8s.io/apiextensions-apiserver v0.0.0-20191016113550-5357c4baaf65
 	k8s.io/apimachinery v0.17.1

@@ -86,8 +86,6 @@ func makeTemplateFuncs() template.FuncMap {
 	return f
 }
 
-
-
 /*
 	Find the proto messages for a given set of descriptors which need proto_deepcopoy funcs and whose types are not in
 	the API root package
