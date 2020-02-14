@@ -4,7 +4,7 @@ package controller
 import (
 	"context"
 
-	. "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
+	things_test_io_v1 "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/pkg/events"
@@ -14,41 +14,41 @@ import (
 )
 
 type PaintEventHandler interface {
-	Create(obj *Paint) error
-	Update(old, new *Paint) error
-	Delete(obj *Paint) error
-	Generic(obj *Paint) error
+	Create(obj *things_test_io_v1.Paint) error
+	Update(old, new *things_test_io_v1.Paint) error
+	Delete(obj *things_test_io_v1.Paint) error
+	Generic(obj *things_test_io_v1.Paint) error
 }
 
 type PaintEventHandlerFuncs struct {
-	OnCreate  func(obj *Paint) error
-	OnUpdate  func(old, new *Paint) error
-	OnDelete  func(obj *Paint) error
-	OnGeneric func(obj *Paint) error
+	OnCreate  func(obj *things_test_io_v1.Paint) error
+	OnUpdate  func(old, new *things_test_io_v1.Paint) error
+	OnDelete  func(obj *things_test_io_v1.Paint) error
+	OnGeneric func(obj *things_test_io_v1.Paint) error
 }
 
-func (f *PaintEventHandlerFuncs) Create(obj *Paint) error {
+func (f *PaintEventHandlerFuncs) Create(obj *things_test_io_v1.Paint) error {
 	if f.OnCreate == nil {
 		return nil
 	}
 	return f.OnCreate(obj)
 }
 
-func (f *PaintEventHandlerFuncs) Delete(obj *Paint) error {
+func (f *PaintEventHandlerFuncs) Delete(obj *things_test_io_v1.Paint) error {
 	if f.OnDelete == nil {
 		return nil
 	}
 	return f.OnDelete(obj)
 }
 
-func (f *PaintEventHandlerFuncs) Update(objOld, objNew *Paint) error {
+func (f *PaintEventHandlerFuncs) Update(objOld, objNew *things_test_io_v1.Paint) error {
 	if f.OnUpdate == nil {
 		return nil
 	}
 	return f.OnUpdate(objOld, objNew)
 }
 
-func (f *PaintEventHandlerFuncs) Generic(obj *Paint) error {
+func (f *PaintEventHandlerFuncs) Generic(obj *things_test_io_v1.Paint) error {
 	if f.OnGeneric == nil {
 		return nil
 	}
@@ -64,7 +64,7 @@ type PaintControllerImpl struct {
 }
 
 func NewPaintController(name string, mgr manager.Manager) (PaintController, error) {
-	if err := AddToScheme(mgr.GetScheme()); err != nil {
+	if err := things_test_io_v1.AddToScheme(mgr.GetScheme()); err != nil {
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func NewPaintController(name string, mgr manager.Manager) (PaintController, erro
 
 func (c *PaintControllerImpl) AddEventHandler(ctx context.Context, h PaintEventHandler, predicates ...predicate.Predicate) error {
 	handler := genericPaintHandler{handler: h}
-	if err := c.watcher.Watch(ctx, &Paint{}, handler, predicates...); err != nil {
+	if err := c.watcher.Watch(ctx, &things_test_io_v1.Paint{}, handler, predicates...); err != nil {
 		return err
 	}
 	return nil
@@ -91,7 +91,7 @@ type genericPaintHandler struct {
 }
 
 func (h genericPaintHandler) Create(object runtime.Object) error {
-	obj, ok := object.(*Paint)
+	obj, ok := object.(*things_test_io_v1.Paint)
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", object)
 	}
@@ -99,7 +99,7 @@ func (h genericPaintHandler) Create(object runtime.Object) error {
 }
 
 func (h genericPaintHandler) Delete(object runtime.Object) error {
-	obj, ok := object.(*Paint)
+	obj, ok := object.(*things_test_io_v1.Paint)
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", object)
 	}
@@ -107,11 +107,11 @@ func (h genericPaintHandler) Delete(object runtime.Object) error {
 }
 
 func (h genericPaintHandler) Update(old, new runtime.Object) error {
-	objOld, ok := old.(*Paint)
+	objOld, ok := old.(*things_test_io_v1.Paint)
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", old)
 	}
-	objNew, ok := new.(*Paint)
+	objNew, ok := new.(*things_test_io_v1.Paint)
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", new)
 	}
@@ -119,7 +119,7 @@ func (h genericPaintHandler) Update(old, new runtime.Object) error {
 }
 
 func (h genericPaintHandler) Generic(object runtime.Object) error {
-	obj, ok := object.(*Paint)
+	obj, ok := object.(*things_test_io_v1.Paint)
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", object)
 	}

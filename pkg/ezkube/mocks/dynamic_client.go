@@ -6,9 +6,10 @@ package mock_ezkube
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	ezkube "github.com/solo-io/autopilot/pkg/ezkube"
-	reflect "reflect"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 	manager "sigs.k8s.io/controller-runtime/pkg/manager"
 )
