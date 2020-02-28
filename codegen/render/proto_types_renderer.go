@@ -98,7 +98,7 @@ func (grp descriptorsWithGopath) getUniqueDescriptorsWithPath() []*model.Descrip
 */
 func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 	var result []OutFile
-	for _, pkgForGroup := range uniqueGoImportPathsForGroup(grp) {
+	for _, pkgForGroup := range uniqueImportsForGroup(grp) {
 
 		if pkgForGroup == "" {
 			// use default package
@@ -139,11 +139,11 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 /*
 	Get all of the unique go packages for a group by checking the packages of the resources
 */
-func uniqueGoPackagesForGroup(grp Group) []string {
+func uniqueImportsForGroup(grp Group) []string {
 	unique := uniqueGoImportPathsForGroup(grp)
 	var result []string
 	for _, pkg := range unique {
-		if pkg != "" {
+		if pkg != "" && pkg != util.GoPackage(grp) {
 			result = append(result, pkg)
 		}
 	}
