@@ -26,9 +26,9 @@ type {{ $resource.Kind }} struct {
     metav1.TypeMeta   `json:",inline"`
     metav1.ObjectMeta `json:"metadata,omitempty"`
 
-    Spec {{ $resource.Spec.Type }} `json:"spec,omitempty"`
+    Spec {{ $resource.Spec.Type.Name }} `json:"spec,omitempty"`
 {{- if $resource.Status }}
-    Status {{ $resource.Status.Type }} `json:"status,omitempty"`
+    Status {{ $resource.Status.Type.Name }} `json:"status,omitempty"`
 {{- end }}
 }
 

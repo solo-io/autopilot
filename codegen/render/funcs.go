@@ -100,8 +100,8 @@ func makeTemplateFuncs() template.FuncMap {
 */
 func shouldDeepCopyExternalMessage(resources []model.Resource, desc *descriptor.DescriptorProto) bool {
 	for _, resource := range resources {
-		if resource.Spec.Type == desc.GetName() ||
-			(resource.Status != nil && resource.Status.Type == desc.GetName()) {
+		if resource.Spec.Type.Name == desc.GetName() ||
+			(resource.Status != nil && resource.Status.Type.Name == desc.GetName()) {
 			return true
 		}
 	}

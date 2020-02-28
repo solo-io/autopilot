@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -61,18 +62,28 @@ type Resource struct {
 	Kind   string
 	Spec   Field
 	Status *Field
-	/*
-		The relative path to where the status and spec field can be found, if different than group root. This value
-		should be the relative path to the package from the root of the codegen project.
-		leave empty if same as output dir
 
-		As this field is used for codegen, the types/path need to be in the same module as the project being built
-	*/
-	RelativePathFromRoot string
 	// The set of additional printer columns to apply to the CustomResourceDefinition
 	AdditionalPrinterColumns []apiextv1beta1.CustomResourceColumnDefinition
 }
 
 type Field struct {
-	Type string
+	Type Type
+}
+
+type Type struct {
+	// name of the type.
+	Name string
+
+	// proto message for the type, if the proto message is compiled with Autopilot
+	Message proto.Message
+
+	/*
+
+		The go package containing the type of the file relative path to where the status and spec field can be found, if different than group root.
+		Will be set automatically for proto-based types.
+
+		If unset, AutoPilot uses the default types package for the type.
+	*/
+	GoPackage string
 }

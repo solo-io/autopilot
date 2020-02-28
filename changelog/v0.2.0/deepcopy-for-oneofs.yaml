@@ -1,0 +1,4 @@
+changelog:
+  - type: BREAKING_CHANGE
+    description: RelativePath removed from groups. Go Package is now on the spec/status level, and can be inferred from the corresponding proto message if there is one. Supports putting spec and status in different packages.
+    issueLink: https://github.com/solo-io/autopilot/issues/38

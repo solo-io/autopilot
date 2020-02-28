@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/solo-io/autopilot/codegen/util"
+
 	"github.com/solo-io/solo-kit/pkg/code-generator/model"
 )
 
@@ -32,19 +34,14 @@ func RenderProtoTypes(grp Group) ([]OutFile, error) {
 
 func (r ProtoCodeRenderer) RenderProtoHelpers(grp Group) ([]OutFile, error) {
 
-	if !grp.RenderProtos {
+	// only render proto helpers for proto groups in the current module
+	if !grp.RenderProtos || grp.Module != r.GoModule {
 		return nil, nil
 	}
 
 	files, err := r.deepCopyGenTemplate(grp)
 	if err != nil {
 		return nil, err
-	}
-
-	// prepend output file paths with path to api dir
-	for i, out := range files {
-		out.Path = filepath.Join(r.ApiRoot, grp.Group, grp.Version, out.Path)
-		files[i] = out
 	}
 
 	return files, nil
@@ -92,7 +89,7 @@ func (grp descriptorsWithGopath) getUniqueDescriptorsWithPath() []*model.Descrip
 }
 
 /*
-	Create and render the templates for the proto_deepcopy filesin order to support
+	Create and render the templates for the proto_deepcopy files in order to support
 	proto_deepcopy funcs for packages which are different than the main group package
 
 	The empty string package name is treated as local, and so it it computed the same way as before
@@ -101,40 +98,35 @@ func (grp descriptorsWithGopath) getUniqueDescriptorsWithPath() []*model.Descrip
 */
 func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 	var result []OutFile
-	for _, uniquePackage := range uniqueGoImportPathsForGroup(grp) {
-		var (
-			inputTmpls       inputTemplates
-			packageName      string
-			goPackageToMatch string
-		)
-		if uniquePackage == "" {
-			// this case represents the local package, therefore no special pathing is necessary
-			inputTmpls = inputTemplates{
-				protoDeepCopyTemplate: OutFile{
-					Path: protoDeepCopyGo,
-				},
-			}
-			goPackageToMatch = filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String())
-			packageName = grp.Version
-		} else {
-			// this case represents any go packages which are in the same go module as the root,
-			// but in a different directory
-			inputTmpls = inputTemplates{
-				protoDeepCopyTemplate: OutFile{
-					Path: filepath.Join(
-						strings.TrimPrefix(uniquePackage, filepath.Join(r.ApiRoot, grp.Group, grp.Version)), protoDeepCopyGo,
-					),
-				},
-			}
-			goPackageToMatch = filepath.Join(grp.Module, uniquePackage)
-			packageName = filepath.Base(goPackageToMatch)
+	for _, pkgForGroup := range uniqueGoImportPathsForGroup(grp) {
+
+		if pkgForGroup == "" {
+			// use default package
+			pkgForGroup = util.GoPackage(grp)
+			//// this case represents the local package, therefore no special pathing is necessary
+			//inputTmpls = inputTemplates{
+			//	protoDeepCopyTemplate: OutFile{
+			//		Path: protoDeepCopyGo,
+			//	},
+			//}
 		}
+
+		// render the proto helper code in the directory containing the type's package
+		outPath := "." + strings.TrimPrefix(pkgForGroup, r.GoModule)
+
+		inputTmpls := inputTemplates{
+			protoDeepCopyTemplate: OutFile{
+				Path: filepath.Join(outPath, protoDeepCopyGo),
+			},
+		}
+		packageName := filepath.Base(pkgForGroup)
+
 		files, err := r.renderInputs(inputTmpls, descriptorsWithGopath{
 			Descriptors:      grp.Descriptors,
 			Resources:        grp.Resources,
 			PackageName:      packageName,
 			rootGoPackage:    filepath.Join(grp.Module, grp.ApiRoot, grp.GroupVersion.String()),
-			goPackageToMatch: goPackageToMatch,
+			goPackageToMatch: pkgForGroup,
 		})
 		if err != nil {
 			return nil, err
@@ -150,9 +142,9 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 func uniqueGoPackagesForGroup(grp Group) []string {
 	unique := uniqueGoImportPathsForGroup(grp)
 	var result []string
-	for _, v := range unique {
-		if v != "" {
-			result = append(result, filepath.Join(grp.Module, v))
+	for _, pkg := range unique {
+		if pkg != "" {
+			result = append(result, pkg)
 		}
 	}
 	return result
@@ -164,12 +156,12 @@ func uniqueGoPackagesForGroup(grp Group) []string {
 */
 func uniqueGoImportPathsForGroup(grp Group) []string {
 	resultMap := make(map[string]struct{})
-	for _, v := range grp.Resources {
+	for _, res := range grp.Resources {
 		// if the group does not have protos to render, than finding the go import path is unnecessary
 		if !grp.RenderProtos {
 			continue
 		}
-		resultMap[v.RelativePathFromRoot] = struct{}{}
+		resultMap[res.Spec.Type.GoPackage] = struct{}{}
 	}
 	var result []string
 	for k, _ := range resultMap {

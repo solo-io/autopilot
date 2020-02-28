@@ -7,6 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
+	skmodel "github.com/solo-io/solo-kit/pkg/code-generator/model"
+
 	"github.com/solo-io/anyvendor/anyvendor"
 	"github.com/solo-io/anyvendor/pkg/manager"
 	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
@@ -113,7 +116,7 @@ func (c Command) generateChart() error {
 }
 
 func (c Command) generateGroup(grp model.Group) error {
-	if err := c.compileProtos(&grp); err != nil {
+	if err := c.compileProtosAndUpdateGroup(&grp); err != nil {
 		return err
 	}
 
@@ -153,7 +156,10 @@ func (c Command) generateGroup(grp model.Group) error {
 	return nil
 }
 
-func (c Command) compileProtos(grp *render.Group) error {
+// compiles protos and attaches descriptors to the group and its resources
+// it is important to run this func before rendering as it attaches protos to the
+// group model
+func (c Command) compileProtosAndUpdateGroup(grp *render.Group) error {
 	if !grp.RenderProtos {
 		return nil
 	}
@@ -184,7 +190,33 @@ func (c Command) compileProtos(grp *render.Group) error {
 	// set the descriptors on the group for compilation
 	grp.Descriptors = descriptors
 
+	for i, resource := range grp.Resources {
+		// attach the proto messages for spec and status to each resource
+		// these are processed by renderers at later stages
+		addMessagesToResource(descriptors, &resource)
+		grp.Resources[i] = resource
+	}
+
 	return nil
+}
+
+func addMessagesToResource(descriptors []*skmodel.DescriptorWithPath, resource *model.Resource) {
+	for _, fileDescriptor := range descriptors {
+
+		if fileDescriptor.GetPackage() == resource.Group.Group {
+			specMessage := fileDescriptor.GetMessage(resource.Spec.Type.Name)
+			resource.Spec.Type.Message = specMessage
+			resource.Spec.Type.GoPackage = fileDescriptor.GetOptions().GetGoPackage()
+
+			if resource.Status != nil {
+				statusMessage := fileDescriptor.GetMessage(resource.Status.Type.Name)
+				resource.Status.Type.Message = statusMessage
+			}
+
+			return
+		}
+	}
+	logrus.Warnf("no package found for %v", resource.Group.Group)
 }
 
 func (c Command) generateBuild(build model.Build) error {
