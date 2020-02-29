@@ -24,8 +24,8 @@ var _ = Describe("Cmd", func() {
 					Resources: []Resource{
 						{
 							Kind:   "Paint",
-							Spec:   Field{Type: "PaintSpec"},
-							Status: &Field{Type: "PaintStatus"},
+							Spec:   Field{Type: Type{Name: "PaintSpec"}},
+							Status: &Field{Type: Type{Name: "PaintStatus"}},
 						},
 					},
 					RenderProtos:     true,
