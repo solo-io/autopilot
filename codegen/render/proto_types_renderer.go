@@ -103,12 +103,6 @@ func (r ProtoCodeRenderer) deepCopyGenTemplate(grp Group) ([]OutFile, error) {
 		if pkgForGroup == "" {
 			// use default package
 			pkgForGroup = util.GoPackage(grp)
-			//// this case represents the local package, therefore no special pathing is necessary
-			//inputTmpls = inputTemplates{
-			//	protoDeepCopyTemplate: OutFile{
-			//		Path: protoDeepCopyGo,
-			//	},
-			//}
 		}
 
 		// render the proto helper code in the directory containing the type's package

@@ -201,22 +201,28 @@ func (c Command) compileProtosAndUpdateGroup(grp *render.Group) error {
 }
 
 func addMessagesToResource(descriptors []*skmodel.DescriptorWithPath, resource *model.Resource) {
+	var foundSpec bool
 	for _, fileDescriptor := range descriptors {
 
 		if fileDescriptor.GetPackage() == resource.Group.Group {
-			specMessage := fileDescriptor.GetMessage(resource.Spec.Type.Name)
-			resource.Spec.Type.Message = specMessage
-			resource.Spec.Type.GoPackage = fileDescriptor.GetOptions().GetGoPackage()
 
-			if resource.Status != nil {
-				statusMessage := fileDescriptor.GetMessage(resource.Status.Type.Name)
-				resource.Status.Type.Message = statusMessage
+			if specMessage := fileDescriptor.GetMessage(resource.Spec.Type.Name); specMessage != nil {
+				resource.Spec.Type.Message = specMessage
+				resource.Spec.Type.GoPackage = fileDescriptor.GetOptions().GetGoPackage()
+				foundSpec = true
 			}
 
-			return
+			if resource.Status != nil {
+				if statusMessage := fileDescriptor.GetMessage(resource.Status.Type.Name); statusMessage != nil {
+					resource.Status.Type.Message = statusMessage
+				}
+			}
+
 		}
 	}
-	logrus.Warnf("no package found for %v", resource.Group.Group)
+	if !foundSpec {
+		logrus.Warnf("no package found for %v", resource.Group.Group)
+	}
 }
 
 func (c Command) generateBuild(build model.Build) error {

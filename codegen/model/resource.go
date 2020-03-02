@@ -80,7 +80,7 @@ type Type struct {
 
 	/*
 
-		The go package containing the type of the file relative path to where the status and spec field can be found, if different than group root.
+		The go package containing the type, if different than group root api directory (where the resource itself lives).
 		Will be set automatically for proto-based types.
 
 		If unset, AutoPilot uses the default types package for the type.
