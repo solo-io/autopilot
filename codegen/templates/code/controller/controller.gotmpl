@@ -15,11 +15,12 @@ import (
 
 {{- range $resource := $.Resources }}
 
+// Handle events for the {{ $resource.Kind }} Resource
 type {{ $resource.Kind }}EventHandler interface {
-    Create(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
-    Update(old, new *{{ group_import_name $ }}.{{ $resource.Kind }}) error
-    Delete(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
-    Generic(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Create{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Update{{ $resource.Kind }}(old, new *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Delete{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Generic{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
 }
 
 type {{ $resource.Kind }}EventHandlerFuncs struct {
@@ -29,28 +30,28 @@ type {{ $resource.Kind }}EventHandlerFuncs struct {
     OnGeneric func(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Create(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Create{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnCreate == nil {
         return nil
     }
     return f.OnCreate(obj)
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Delete(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Delete{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnDelete == nil {
         return nil
     }
     return f.OnDelete(obj)
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Update(objOld, objNew *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Update{{ $resource.Kind }}(objOld, objNew *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnUpdate == nil {
         return nil
     }
     return f.OnUpdate(objOld, objNew)
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Generic(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Generic{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnGeneric == nil {
         return nil
     }
@@ -65,17 +66,15 @@ type {{ $resource.Kind }}ControllerImpl struct {
     watcher events.EventWatcher
 }
 
-func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) ({{ $resource.Kind }}Controller, error) {
+func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager, h {{ $resource.Kind }}EventHandler) ({{ $resource.Kind }}Controller, error) {
     if err := {{ group_import_name $ }}.AddToScheme(mgr.GetScheme()); err != nil {
         return nil, err
     }
 
-    w, err := events.NewWatcher(name, mgr)
-    if err != nil {
-        return nil, err
-    }
+    handler := generic{{ $resource.Kind }}Handler{handler: h}
+
     return &{{ $resource.Kind }}ControllerImpl{
-        watcher: w,
+        watcher: events.NewWatcher(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
     }, nil
 }
 
@@ -92,12 +91,12 @@ type generic{{ $resource.Kind }}Handler struct {
     handler {{ $resource.Kind }}EventHandler
 }
 
-func (h generic{{ $resource.Kind }}Handler) Create(object runtime.Object) error {
+func (h generic{{ $resource.Kind }}Handler) HandleEvent(object ezkube.Object) (time.Duration, error) {
     obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
     if !ok {
         return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
-    return h.handler.Create(obj)
+    return h.handler.HandleEvent(obj)
 }
 
 func (h generic{{ $resource.Kind }}Handler) Delete(object runtime.Object) error {

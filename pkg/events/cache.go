@@ -1,6 +1,7 @@
 package events
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sync"
 
 	"github.com/pborman/uuid"
@@ -12,29 +13,42 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type EventType string
-
-const (
-	EventTypeCreate  EventType = "Create"
-	EventTypeUpdate  EventType = "Update"
-	EventTypeDelete  EventType = "Delete"
-	EventTypeGeneric EventType = "Generic"
-)
-
-// event represents a standard kubernetes event
-// it can be
-type Event struct {
-	EventType EventType
-
-	// only one can be set
-	CreateEvent  *event.CreateEvent
-	UpdateEvent  *event.UpdateEvent
-	DeleteEvent  *event.DeleteEvent
-	GenericEvent *event.GenericEvent
+// Go's "union type"
+type eventType interface {
+	meta() metav1.Object
+	isEvent()
 }
 
+type createEvent event.CreateEvent
+
+func (e createEvent) meta() metav1.Object {
+	return e.Meta
+}
+func (e createEvent) isEvent() {}
+
+type updateEvent event.UpdateEvent
+
+func (e updateEvent) meta() metav1.Object {
+	return e.MetaNew
+}
+func (e updateEvent) isEvent() {}
+
+type deleteEvent event.DeleteEvent
+
+func (e deleteEvent) meta() metav1.Object {
+	return e.Meta
+}
+func (e deleteEvent) isEvent() {}
+
+type genericEvent event.GenericEvent
+
+func (e genericEvent) meta() metav1.Object {
+	return e.Meta
+}
+func (e genericEvent) isEvent() {}
+
 // Cache caches k8s resource events
-// It implements handler.EventHandler,
+// It implements handler.eventHandler,
 // emitting reconcile Requests for its cached
 // events. This allows a Reconciler to
 // claim and process these custom events
@@ -43,7 +57,7 @@ type Cache interface {
 	handler.EventHandler
 
 	// retrieve an event from the cache
-	Get(key string) *Event
+	Get(key string) eventType
 
 	// remove an event from the cache
 	Forget(key string)
@@ -53,14 +67,14 @@ type cache struct {
 	lock sync.RWMutex
 
 	// cache keys will be mapped to the reconcile.Request.Name
-	cache map[string]*Event
+	cache map[string]eventType
 }
 
 func NewCache() *cache {
-	return &cache{cache: make(map[string]*Event)}
+	return &cache{cache: make(map[string]eventType)}
 }
 
-func (c *cache) handleEvent(evt *Event, q workqueue.RateLimitingInterface) {
+func (c *cache) handleEvent(evt eventType, q workqueue.RateLimitingInterface) {
 
 	// use a UUID so the reconciler can claim this event with
 	// the reconcile request
@@ -80,23 +94,23 @@ func (c *cache) handleEvent(evt *Event, q workqueue.RateLimitingInterface) {
 }
 
 func (c *cache) Create(evt event.CreateEvent, q workqueue.RateLimitingInterface) {
-	c.handleEvent(&Event{EventType: EventTypeCreate, CreateEvent: &evt}, q)
+	c.handleEvent(createEvent(evt), q)
 }
 
 func (c *cache) Update(evt event.UpdateEvent, q workqueue.RateLimitingInterface) {
-	c.handleEvent(&Event{EventType: EventTypeUpdate, UpdateEvent: &evt}, q)
+	c.handleEvent(updateEvent(evt), q)
 }
 
 func (c *cache) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface) {
-	c.handleEvent(&Event{EventType: EventTypeDelete, DeleteEvent: &evt}, q)
+	c.handleEvent(deleteEvent(evt), q)
 }
 
 func (c *cache) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
-	c.handleEvent(&Event{EventType: EventTypeGeneric, GenericEvent: &evt}, q)
+	c.handleEvent(genericEvent(evt), q)
 }
 
 // pops the event with the key
-func (c *cache) Get(key string) *Event {
+func (c *cache) Get(key string) eventType {
 	c.lock.RLock()
 	evt := c.cache[key]
 	c.lock.RUnlock()
