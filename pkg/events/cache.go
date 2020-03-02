@@ -93,7 +93,6 @@ func (c *cache) Delete(evt event.DeleteEvent, q workqueue.RateLimitingInterface)
 
 func (c *cache) Generic(evt event.GenericEvent, q workqueue.RateLimitingInterface) {
 	c.handleEvent(&Event{EventType: EventTypeGeneric, GenericEvent: &evt}, q)
-
 }
 
 // pops the event with the key
