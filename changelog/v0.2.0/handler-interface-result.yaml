@@ -1,0 +1,7 @@
+changelog:
+  - type: BREAKING_CHANGE
+    description: Update the names of the <Kind> Handler interface methods.
+    issueLink: https://github.com/solo-io/autopilot/issues/41
+  - type: NEW_FEATURE
+    description: Add the new generated <Kind> Reconcilers for more opinionated reconciling workflows.
+    issueLink: https://github.com/solo-io/autopilot/issues/40
