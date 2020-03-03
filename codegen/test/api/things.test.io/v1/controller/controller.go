@@ -13,11 +13,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
+// Handle events for the Paint Resource
 type PaintEventHandler interface {
-	Create(obj *things_test_io_v1.Paint) error
-	Update(old, new *things_test_io_v1.Paint) error
-	Delete(obj *things_test_io_v1.Paint) error
-	Generic(obj *things_test_io_v1.Paint) error
+	CreatePaint(obj *things_test_io_v1.Paint) error
+	UpdatePaint(old, new *things_test_io_v1.Paint) error
+	DeletePaint(obj *things_test_io_v1.Paint) error
+	GenericPaint(obj *things_test_io_v1.Paint) error
 }
 
 type PaintEventHandlerFuncs struct {
@@ -27,28 +28,28 @@ type PaintEventHandlerFuncs struct {
 	OnGeneric func(obj *things_test_io_v1.Paint) error
 }
 
-func (f *PaintEventHandlerFuncs) Create(obj *things_test_io_v1.Paint) error {
+func (f *PaintEventHandlerFuncs) CreatePaint(obj *things_test_io_v1.Paint) error {
 	if f.OnCreate == nil {
 		return nil
 	}
 	return f.OnCreate(obj)
 }
 
-func (f *PaintEventHandlerFuncs) Delete(obj *things_test_io_v1.Paint) error {
+func (f *PaintEventHandlerFuncs) DeletePaint(obj *things_test_io_v1.Paint) error {
 	if f.OnDelete == nil {
 		return nil
 	}
 	return f.OnDelete(obj)
 }
 
-func (f *PaintEventHandlerFuncs) Update(objOld, objNew *things_test_io_v1.Paint) error {
+func (f *PaintEventHandlerFuncs) UpdatePaint(objOld, objNew *things_test_io_v1.Paint) error {
 	if f.OnUpdate == nil {
 		return nil
 	}
 	return f.OnUpdate(objOld, objNew)
 }
 
-func (f *PaintEventHandlerFuncs) Generic(obj *things_test_io_v1.Paint) error {
+func (f *PaintEventHandlerFuncs) GenericPaint(obj *things_test_io_v1.Paint) error {
 	if f.OnGeneric == nil {
 		return nil
 	}
@@ -68,18 +69,14 @@ func NewPaintController(name string, mgr manager.Manager) (PaintController, erro
 		return nil, err
 	}
 
-	w, err := events.NewWatcher(name, mgr)
-	if err != nil {
-		return nil, err
-	}
 	return &PaintControllerImpl{
-		watcher: w,
+		watcher: events.NewWatcher(name, mgr, &things_test_io_v1.Paint{}),
 	}, nil
 }
 
 func (c *PaintControllerImpl) AddEventHandler(ctx context.Context, h PaintEventHandler, predicates ...predicate.Predicate) error {
 	handler := genericPaintHandler{handler: h}
-	if err := c.watcher.Watch(ctx, &things_test_io_v1.Paint{}, handler, predicates...); err != nil {
+	if err := c.watcher.Watch(ctx, handler, predicates...); err != nil {
 		return err
 	}
 	return nil
@@ -95,7 +92,7 @@ func (h genericPaintHandler) Create(object runtime.Object) error {
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", object)
 	}
-	return h.handler.Create(obj)
+	return h.handler.CreatePaint(obj)
 }
 
 func (h genericPaintHandler) Delete(object runtime.Object) error {
@@ -103,7 +100,7 @@ func (h genericPaintHandler) Delete(object runtime.Object) error {
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", object)
 	}
-	return h.handler.Delete(obj)
+	return h.handler.DeletePaint(obj)
 }
 
 func (h genericPaintHandler) Update(old, new runtime.Object) error {
@@ -115,7 +112,7 @@ func (h genericPaintHandler) Update(old, new runtime.Object) error {
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", new)
 	}
-	return h.handler.Update(objOld, objNew)
+	return h.handler.UpdatePaint(objOld, objNew)
 }
 
 func (h genericPaintHandler) Generic(object runtime.Object) error {
@@ -123,5 +120,5 @@ func (h genericPaintHandler) Generic(object runtime.Object) error {
 	if !ok {
 		return errors.Errorf("internal error: Paint handler received event for %T", object)
 	}
-	return h.handler.Generic(obj)
+	return h.handler.GenericPaint(obj)
 }

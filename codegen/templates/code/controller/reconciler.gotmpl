@@ -1,0 +1,107 @@
+// Definitions for the Kubernetes Controllers
+package controller
+
+import (
+	"context"
+    "time"
+
+{{ group_import_name $ }} "{{ group_import_path $ }}"
+
+    "github.com/pkg/errors"
+    "github.com/solo-io/autopilot/pkg/events"
+    "github.com/solo-io/autopilot/pkg/reconcile"
+    "k8s.io/apimachinery/pkg/runtime"
+    "sigs.k8s.io/controller-runtime/pkg/manager"
+    "sigs.k8s.io/controller-runtime/pkg/predicate"
+)
+
+{{- range $resource := $.Resources }}
+
+// Reconcile the {{ $resource.Kind }} Resource
+// implemented by the user
+type {{ $resource.Kind }}Reconciler interface {
+    Reconcile(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (time.Duration, error)
+}
+
+// Reconcile and finalize the {{ $resource.Kind }} Resource
+// implemented by the user
+type Finalizing{{ $resource.Kind }}Reconciler interface {
+    {{ $resource.Kind }}Reconciler
+
+    // name of the finalizer used by this handler.
+    // finalizer names should be unique for a single task
+    FinalizerName() string
+
+    // finalize the object before it is deleted.
+    // Watchers created with a finalizing handler will a
+    Finalize(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+}
+
+type {{ $resource.Kind }}ReconcileLoop interface {
+    RunReconciler(ctx context.Context, rec {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error
+}
+
+type {{ $resource.Kind }}ReconcileLoopImpl struct {
+    loop reconcile.Loop
+}
+
+func New{{ $resource.Kind }}ReconcileLoopImpl(name string, mgr manager.Manager) ({{ $resource.Kind }}ReconcileLoop, error) {
+    if err := {{ group_import_name $ }}.AddToScheme(mgr.GetScheme()); err != nil {
+        return nil, err
+    }
+
+    return &{{ $resource.Kind }}ReconcileLoopImpl{
+        loop: reconcile.NewLoop(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
+    }, nil
+}
+
+func (c *{{ $resource.Kind }}ReconcileLoopImpl) RunReconciler(ctx context.Context, reconciler {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error {
+	var reconcilerWrapper reconcile.Reconciler
+	if finalizingReconciler, ok := reconciler.(Finalizing{{ $resource.Kind }}Reconciler); ok {
+        reconcilerWrapper = genericFinalizing{{ $resource.Kind }}Reconciler{
+            finalizingReconciler: finalizingReconciler,
+        }
+    } else {
+        reconcilerWrapper = generic{{ $resource.Kind }}Reconciler{
+            reconciler: reconciler,
+        }
+    }
+	return c.loop.RunReconciler(ctx, reconcilerWrapper, predicates...)
+}
+
+// generic{{ $resource.Kind }}Handler implements a generic reconcile.Reconciler
+type generic{{ $resource.Kind }}Reconciler struct {
+    reconciler {{ $resource.Kind }}Reconciler
+}
+
+func (r generic{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (time.Duration, error) {
+    obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
+    if !ok {
+        return 0, errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+    }
+    return r.reconciler.Reconcile(obj)
+}
+
+// genericFinalizing{{ $resource.Kind }}Reconciler implements a generic reconcile.FinalizingReconciler
+type genericFinalizing{{ $resource.Kind }}Reconciler struct {
+    finalizingReconciler Finalizing{{ $resource.Kind }}Reconciler
+}
+
+func (r genericFinalizing{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (time.Duration, error) {
+	rec := generic{{ $resource.Kind }}Reconciler{reconciler: r.finalizingReconciler}
+    return rec.Reconcile(object)
+}
+
+func (r genericFinalizing{{ $resource.Kind }}Reconciler) FinalizerName() string {
+    return r.finalizingReconciler.FinalizerName()
+}
+
+func (r genericFinalizing{{ $resource.Kind }}Reconciler) Finalize(object ezkube.Object) error {
+    obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+    }
+    return r.finalizingReconciler.Finalize(obj)
+}
+
+{{- end }}

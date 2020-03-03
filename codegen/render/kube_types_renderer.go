@@ -38,6 +38,9 @@ var controllerTemplates = inputTemplates{
 	"code/controller/controller.gotmpl": {
 		Path: "controller/controller.go",
 	},
+	"code/controller/reconciler.gotmpl": {
+		Path: "controller/reconciler.go",
+	},
 }
 
 func RenderApiTypes(grp Group) ([]OutFile, error) {

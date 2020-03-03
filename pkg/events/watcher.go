@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -26,11 +27,6 @@ type EventHandler interface {
 // uses a cache to retrieve the original event that spawned the
 // reconcile request
 type EventWatcher interface {
-	// the user registers their handlers and starts their watches
-	// through the event EventWatcher.
-	// they can then register the reconciler with a controller.Controller
-	reconcile.Reconciler
-
 	// start a watch with the EventWatcher
 	// watches cannot currently be disabled / removed except by
 	// terminating the parent controller
@@ -38,9 +34,9 @@ type EventWatcher interface {
 }
 
 type watcher struct {
-	name         string          // name of this watch/controller
-	mgr          manager.Manager // manager
-	resource     runtime.Object  // resource type
+	name     string          // name of this watch/controller
+	mgr      manager.Manager // manager
+	resource runtime.Object  // resource type
 }
 
 func NewWatcher(name string, mgr manager.Manager, resource runtime.Object) *watcher {
