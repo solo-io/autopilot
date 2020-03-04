@@ -46,7 +46,7 @@ func RenderChart(chart model.Chart) ([]OutFile, error) {
 func (r ChartRenderer) Render(chart model.Chart) ([]OutFile, error) {
 	templatesToRender := defaultChartInputs
 
-	files, err := r.renderInputs(templatesToRender, chart)
+	files, err := r.renderCoreTemplates(templatesToRender, chart)
 	if err != nil {
 		return nil, err
 	}

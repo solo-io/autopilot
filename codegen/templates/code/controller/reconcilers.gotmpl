@@ -20,7 +20,7 @@ import (
 // Reconcile the {{ $resource.Kind }} Resource
 // implemented by the user
 type {{ $resource.Kind }}Reconciler interface {
-    Reconcile(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (time.Duration, error)
+    Reconcile(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (reconcile.Result, error)
 }
 
 // Reconcile and finalize the {{ $resource.Kind }} Resource
@@ -74,10 +74,10 @@ type generic{{ $resource.Kind }}Reconciler struct {
     reconciler {{ $resource.Kind }}Reconciler
 }
 
-func (r generic{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (time.Duration, error) {
+func (r generic{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
     obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
     if !ok {
-        return 0, errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+        return reconcile.Result{}, errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
     return r.reconciler.Reconcile(obj)
 }
@@ -87,7 +87,7 @@ type genericFinalizing{{ $resource.Kind }}Reconciler struct {
     finalizingReconciler Finalizing{{ $resource.Kind }}Reconciler
 }
 
-func (r genericFinalizing{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (time.Duration, error) {
+func (r genericFinalizing{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
 	rec := generic{{ $resource.Kind }}Reconciler{reconciler: r.finalizingReconciler}
     return rec.Reconcile(object)
 }

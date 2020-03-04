@@ -2,7 +2,6 @@ package reconcile
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -19,10 +18,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+type Result = reconcile.Result
+
 type Reconciler interface {
 	// reconcile an object
 	// requeue the object if returning an error, or a non-zero "requeue-after" duration
-	Reconcile(object ezkube.Object) (time.Duration, error)
+	Reconcile(object ezkube.Object) (Result, error)
 }
 
 type FinalizingReconciler interface {
@@ -146,13 +147,12 @@ func (ec *runnerReconciler) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 	}
 
-	requeueAfter, err := ec.reconciler.Reconcile(obj)
-	result := reconcile.Result{RequeueAfter: requeueAfter}
+	result, err := ec.reconciler.Reconcile(obj)
 	if err != nil {
 		logger.Error(err, "handler error. retrying")
 		return result, err
 	}
-	logger.V(2).Info("handler success.", "retry", requeueAfter > 0)
+	logger.V(2).Info("handler success.", "result", result)
 
 	return result, nil
 }

@@ -25,7 +25,7 @@ func RenderBuild(build model.Build) ([]OutFile, error) {
 func (r BuildRenderer) Render(build model.Build) ([]OutFile, error) {
 	templatesToRender := defaultBuildInputs(build)
 
-	files, err := r.renderInputs(templatesToRender, build)
+	files, err := r.renderCoreTemplates(templatesToRender, build)
 	if err != nil {
 		return nil, err
 	}

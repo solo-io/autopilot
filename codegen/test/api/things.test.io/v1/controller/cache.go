@@ -14,18 +14,29 @@ import (
 )
 
 // Handle events for the Paint Resource
-type PaintEventHandler interface {
-	CreatePaint(obj *things_test_io_v1.Paint) error
-	UpdatePaint(old, new *things_test_io_v1.Paint) error
-	DeletePaint(obj *things_test_io_v1.Paint) error
-	GenericPaint(obj *things_test_io_v1.Paint) error
+type PaintCache interface {
+	List() ([]*things_test_io_v1.Paint, error)
 }
 
-type PaintEventHandlerFuncs struct {
-	OnCreate  func(obj *things_test_io_v1.Paint) error
-	OnUpdate  func(old, new *things_test_io_v1.Paint) error
-	OnDelete  func(obj *things_test_io_v1.Paint) error
-	OnGeneric func(obj *things_test_io_v1.Paint) error
+type paintCache struct {
+	client manager.Manager
+}
+
+func (p *paintCache) CreatePaint(obj *things_test_io_v1.Paint) error {
+	p.mgr.GetCache().List()
+	return nil
+}
+
+func (p *paintCache) UpdatePaint(old, new *things_test_io_v1.Paint) error {
+	return nil
+}
+
+func (p *paintCache) DeletePaint(obj *things_test_io_v1.Paint) error {
+	return nil
+}
+
+func (p *paintCache) GenericPaint(obj *things_test_io_v1.Paint) error {
+	return nil
 }
 
 func (f *PaintEventHandlerFuncs) CreatePaint(obj *things_test_io_v1.Paint) error {

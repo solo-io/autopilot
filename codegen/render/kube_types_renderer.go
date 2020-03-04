@@ -26,6 +26,9 @@ var typesTemplates = inputTemplates{
 	"code/types/types.gotmpl": {
 		Path: "types.go",
 	},
+	"code/types/clients.gotmpl": {
+		Path: "clients.go",
+	},
 	"code/types/register.gotmpl": {
 		Path: "register.go",
 	},
@@ -35,11 +38,11 @@ var typesTemplates = inputTemplates{
 }
 
 var controllerTemplates = inputTemplates{
-	"code/controller/controller.gotmpl": {
-		Path: "controller/controller.go",
+	"code/controller/event_handlers.gotmpl": {
+		Path: "controller/event_handlers.go",
 	},
-	"code/controller/reconciler.gotmpl": {
-		Path: "controller/reconciler.go",
+	"code/controller/reconcilers.gotmpl": {
+		Path: "controller/reconcilers.go",
 	},
 }
 
@@ -64,13 +67,18 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 		templatesToRender.add(r.ControllerTemplates)
 	}
 
-	files, err := r.renderInputs(templatesToRender, grp)
+	files, err := r.renderCoreTemplates(templatesToRender, grp)
+	if err != nil {
+		return nil, err
+	}
+
+	customFiles, err := r.renderCustomTemplates(grp.CustomTemplates, grp)
 	if err != nil {
 		return nil, err
 	}
 
 	// prepend output file paths with path to api dir
-	for i, out := range files {
+	for i, out := range append(files, customFiles...) {
 		out.Path = filepath.Join(r.ApiRoot, grp.Group, grp.Version, out.Path)
 		files[i] = out
 	}

@@ -1,7 +1,13 @@
 changelog:
   - type: BREAKING_CHANGE
+    description: Require Kube codegen generators to be explicitly specified. Deepcopy generator will run automatically.
+    issueLink: https://github.com/solo-io/autopilot/issues/44
+  - type: BREAKING_CHANGE
     description: Update the names of the <Kind> Handler interface methods.
     issueLink: https://github.com/solo-io/autopilot/issues/41
   - type: NEW_FEATURE
     description: Add the new generated <Kind> Reconcilers for more opinionated reconciling workflows.
     issueLink: https://github.com/solo-io/autopilot/issues/40
+  - type: NEW_FEATURE
+    description: Add the ability to generate code from custom templates with Autopilot.
+    issueLink: https://github.com/solo-io/autopilot/issues/45
