@@ -22,7 +22,7 @@ type ProtoCodeRenderer struct {
 
 func RenderProtoTypes(grp Group) ([]OutFile, error) {
 	defaultKubeCodeRenderer := ProtoCodeRenderer{
-		templateRenderer: defaultTemplateRenderer,
+		templateRenderer: DefaultTemplateRenderer,
 		GoModule:         grp.Module,
 		ApiRoot:          grp.ApiRoot,
 	}

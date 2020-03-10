@@ -7,6 +7,26 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+type GeneratorType string
+
+const (
+	GeneratorType_Deepcopy  GeneratorType = "deepcopy"
+	GeneratorType_Defaulter GeneratorType = "defaulter"
+	GeneratorType_Client    GeneratorType = "client"
+	GeneratorType_Lister    GeneratorType = "lister"
+	GeneratorType_Informer  GeneratorType = "informer"
+)
+
+type GeneratorTypes []GeneratorType
+
+func (g GeneratorTypes) Strings() []string {
+	var strs []string
+	for _, generatorType := range g {
+		strs = append(strs, string(generatorType))
+	}
+	return strs
+}
+
 type Group struct {
 	// the group version of the group
 	schema.GroupVersion
@@ -33,9 +53,12 @@ type Group struct {
 	// Should we generate kubernetes Go structs?
 	RenderTypes bool
 
+	// Should we generate kubernetes Go clients?
+	RenderClients bool
+
 	// Should we run kubernetes code generators? (see https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh)
 	// Note: if RenderTypes is true, this always contains the 'deepcopy' generator
-	Generators []string
+	Generators GeneratorTypes
 
 	// Should we generate kubernetes Go controllers?
 	RenderController bool

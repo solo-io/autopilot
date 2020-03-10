@@ -11,6 +11,9 @@ type KubeCodeRenderer struct {
 	// the templates to use for rendering kube kypes
 	TypesTemplates inputTemplates
 
+	// the templates to use for rendering typed kube clients which use the underlying cache
+	ClientsTemplates inputTemplates
+
 	// the templates to use for rendering kube controllers
 	ControllerTemplates inputTemplates
 
@@ -22,12 +25,9 @@ type KubeCodeRenderer struct {
 	ApiRoot string
 }
 
-var typesTemplates = inputTemplates{
+var TypesTemplates = inputTemplates{
 	"code/types/types.gotmpl": {
 		Path: "types.go",
-	},
-	"code/types/clients.gotmpl": {
-		Path: "clients.go",
 	},
 	"code/types/register.gotmpl": {
 		Path: "register.go",
@@ -37,7 +37,13 @@ var typesTemplates = inputTemplates{
 	},
 }
 
-var controllerTemplates = inputTemplates{
+var ClientsTemplates = inputTemplates{
+	"code/types/clients.gotmpl": {
+		Path: "clients.go",
+	},
+}
+
+var ControllerTemplates = inputTemplates{
 	"code/controller/event_handlers.gotmpl": {
 		Path: "controller/event_handlers.go",
 	},
@@ -48,9 +54,10 @@ var controllerTemplates = inputTemplates{
 
 func RenderApiTypes(grp Group) ([]OutFile, error) {
 	defaultKubeCodeRenderer := KubeCodeRenderer{
-		templateRenderer:    defaultTemplateRenderer,
-		TypesTemplates:      typesTemplates,
-		ControllerTemplates: controllerTemplates,
+		templateRenderer:    DefaultTemplateRenderer,
+		TypesTemplates:      TypesTemplates,
+		ClientsTemplates:    ClientsTemplates,
+		ControllerTemplates: ControllerTemplates,
 		GoModule:            grp.Module,
 		ApiRoot:             grp.ApiRoot,
 	}
@@ -62,6 +69,9 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 	templatesToRender := make(inputTemplates)
 	if grp.RenderTypes {
 		templatesToRender.add(r.TypesTemplates)
+	}
+	if grp.RenderClients {
+		templatesToRender.add(r.ClientsTemplates)
 	}
 	if grp.RenderController {
 		templatesToRender.add(r.ControllerTemplates)

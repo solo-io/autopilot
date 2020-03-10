@@ -3,6 +3,11 @@ package {{.Version}}
 import (
     "context"
     "sigs.k8s.io/controller-runtime/pkg/client"
+
+    {{- if $.CustomTypesImportPath }}
+
+    . "{{ $.CustomTypesImportPath }}"
+    {{- end}}
 )
 
 {{- range $resource := $.Resources }}

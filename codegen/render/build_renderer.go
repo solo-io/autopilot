@@ -17,7 +17,7 @@ var defaultBuildInputs = func(build model.Build) inputTemplates {
 
 func RenderBuild(build model.Build) ([]OutFile, error) {
 	defaultBuildRenderer := BuildRenderer{
-		templateRenderer: defaultTemplateRenderer,
+		templateRenderer: DefaultTemplateRenderer,
 	}
 	return defaultBuildRenderer.Render(build)
 }

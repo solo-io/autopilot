@@ -28,7 +28,7 @@ type templateRenderer struct {
 	left, right string
 }
 
-var defaultTemplateRenderer = templateRenderer{
+var DefaultTemplateRenderer = templateRenderer{
 	// a packr.Box for reading the conents of ../templates
 	// note that this code uses relative path
 	// and will need to be updated if the relative

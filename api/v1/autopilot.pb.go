@@ -442,7 +442,9 @@ func init() {
 	proto.RegisterType((*MetricsQuery)(nil), "autopilot.MetricsQuery")
 }
 
-func init() { proto.RegisterFile("autopilot.proto", fileDescriptor_f7c7e86e2b87635e) }
+func init() {
+	proto.RegisterFile("autopilot.proto", fileDescriptor_f7c7e86e2b87635e)
+}
 
 var fileDescriptor_f7c7e86e2b87635e = []byte{
 	// 467 bytes of a gzipped FileDescriptorProto

@@ -12,6 +12,11 @@ Possible generators:
 (deepcopy,defaulter,client,lister,informer) or "all"
 */
 func KubeCodegen(group, version, apiDir string, generators []string) error {
+	if len(generators) == 0 {
+		// nothing to do
+		return nil
+	}
+
 	// path on disk
 	modulePath := GetModuleRoot()
 	// go module package

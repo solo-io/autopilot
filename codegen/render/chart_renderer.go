@@ -30,7 +30,7 @@ var defaultChartInputs = inputTemplates{
 }
 
 func RenderChart(chart model.Chart) ([]OutFile, error) {
-	renderer := defaultTemplateRenderer
+	renderer := DefaultTemplateRenderer
 
 	// when rendering helm charts, we need
 	// to use a custom delimiter
