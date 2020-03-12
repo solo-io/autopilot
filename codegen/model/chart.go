@@ -8,6 +8,12 @@ import (
 type Chart struct {
 	Operators []Operator
 
+	// filter out the template based on its output name
+	FilterTemplate func(outPath string) bool
+
+	// outPath: content template map
+	CustomTemplates map[string]string
+
 	Values interface{}
 
 	// goes into the chart.yaml
