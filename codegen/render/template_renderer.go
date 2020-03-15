@@ -8,6 +8,11 @@ import (
 	"github.com/gobuffalo/packr"
 )
 
+// exported interface for using to render templates
+type TemplateRenderer interface {
+	ExecuteTemplate(name, templateText string, data interface{}) (string, error)
+}
+
 // map of template files to the file they render to
 type inputTemplates map[string]OutFile
 
@@ -75,6 +80,10 @@ func (r templateRenderer) renderCustomTemplates(customTemplates map[string]strin
 		return renderedFiles[i].Path < renderedFiles[j].Path
 	})
 	return renderedFiles, nil
+}
+
+func (r templateRenderer) ExecuteTemplate(name, templateText string, data interface{}) (string, error) {
+	return r.executeTemplate(name, templateText, data)
 }
 
 func (r templateRenderer) executeTemplate(name, templateText string, data interface{}) (string, error) {
