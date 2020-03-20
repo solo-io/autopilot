@@ -20,7 +20,7 @@ import (
 // Reconcile the {{ $resource.Kind }} Resource
 // implemented by the user
 type {{ $resource.Kind }}Reconciler interface {
-    Reconcile(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (reconcile.Result, error)
+    Reconcile{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (reconcile.Result, error)
 }
 
 // Reconcile and finalize the {{ $resource.Kind }} Resource
@@ -30,15 +30,15 @@ type Finalizing{{ $resource.Kind }}Reconciler interface {
 
     // name of the finalizer used by this handler.
     // finalizer names should be unique for a single task
-    FinalizerName() string
+    {{ $resource.Kind }}FinalizerName() string
 
     // finalize the object before it is deleted.
     // Watchers created with a finalizing handler will a
-    Finalize(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Finalize{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
 }
 
 type {{ $resource.Kind }}ReconcileLoop interface {
-    RunReconciler(ctx context.Context, rec {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error
+    Run{{ $resource.Kind }}Reconciler(ctx context.Context, rec {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error
 }
 
 type {{ $resource.Kind }}ReconcileLoopImpl struct {
@@ -55,7 +55,7 @@ func New{{ $resource.Kind }}ReconcileLoopImpl(name string, mgr manager.Manager) 
     }, nil
 }
 
-func (c *{{ $resource.Kind }}ReconcileLoopImpl) RunReconciler(ctx context.Context, reconciler {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error {
+func (c *{{ $resource.Kind }}ReconcileLoopImpl) Run{{ $resource.Kind }}Reconciler(ctx context.Context, reconciler {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error {
 	var reconcilerWrapper reconcile.Reconciler
 	if finalizingReconciler, ok := reconciler.(Finalizing{{ $resource.Kind }}Reconciler); ok {
         reconcilerWrapper = genericFinalizing{{ $resource.Kind }}Reconciler{
@@ -74,12 +74,12 @@ type generic{{ $resource.Kind }}Reconciler struct {
     reconciler {{ $resource.Kind }}Reconciler
 }
 
-func (r generic{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
+func (r generic{{ $resource.Kind }}Reconciler) Reconcile{{ $resource.Kind }}(object ezkube.Object) (reconcile.Result, error) {
     obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
     if !ok {
         return reconcile.Result{}, errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
-    return r.reconciler.Reconcile(obj)
+    return r.reconciler.Reconcile{{ $resource.Kind }}(obj)
 }
 
 // genericFinalizing{{ $resource.Kind }}Reconciler implements a generic reconcile.FinalizingReconciler
@@ -89,11 +89,11 @@ type genericFinalizing{{ $resource.Kind }}Reconciler struct {
 
 func (r genericFinalizing{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
 	rec := generic{{ $resource.Kind }}Reconciler{reconciler: r.finalizingReconciler}
-    return rec.Reconcile(object)
+    return rec.Reconcile{{ $resource.Kind }}(object)
 }
 
 func (r genericFinalizing{{ $resource.Kind }}Reconciler) FinalizerName() string {
-    return r.finalizingReconciler.FinalizerName()
+    return r.finalizingReconciler.{{ $resource.Kind }}FinalizerName()
 }
 
 func (r genericFinalizing{{ $resource.Kind }}Reconciler) Finalize(object ezkube.Object) error {
@@ -101,7 +101,7 @@ func (r genericFinalizing{{ $resource.Kind }}Reconciler) Finalize(object ezkube.
     if !ok {
         return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
-    return r.finalizingReconciler.Finalize(obj)
+    return r.finalizingReconciler.Finalize{{ $resource.Kind }}(obj)
 }
 
 {{- end }}
