@@ -74,7 +74,7 @@ type generic{{ $resource.Kind }}Reconciler struct {
     reconciler {{ $resource.Kind }}Reconciler
 }
 
-func (r generic{{ $resource.Kind }}Reconciler) Reconcile{{ $resource.Kind }}(object ezkube.Object) (reconcile.Result, error) {
+func (r generic{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
     obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
     if !ok {
         return reconcile.Result{}, errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
@@ -89,7 +89,7 @@ type genericFinalizing{{ $resource.Kind }}Reconciler struct {
 
 func (r genericFinalizing{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
 	rec := generic{{ $resource.Kind }}Reconciler{reconciler: r.finalizingReconciler}
-    return rec.Reconcile{{ $resource.Kind }}(object)
+    return rec.Reconcile(object)
 }
 
 func (r genericFinalizing{{ $resource.Kind }}Reconciler) FinalizerName() string {
