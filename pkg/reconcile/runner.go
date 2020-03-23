@@ -129,20 +129,22 @@ func (ec *runnerReconciler) Reconcile(request reconcile.Request) (reconcile.Resu
 					return reconcile.Result{}, err
 				}
 			}
-		}
-		// The object is being deleted
-		if utils.ContainsString(finalizers, finalizerName) {
-			// our finalizer is present, so lets handle any external dependency
-			if err := finalizer.Finalize(obj); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				return reconcile.Result{}, err
-			}
+		} else {
 
-			// remove our finalizer from the list and update it.
-			obj.SetFinalizers(utils.RemoveString(finalizers, finalizerName))
-			if err := restClient.Update(context.Background(), obj); err != nil {
-				return reconcile.Result{}, err
+			// The object is being deleted
+			if utils.ContainsString(finalizers, finalizerName) {
+				// our finalizer is present, so lets handle any external dependency
+				if err := finalizer.Finalize(obj); err != nil {
+					// if fail to delete the external dependency here, return with error
+					// so that it can be retried
+					return reconcile.Result{}, err
+				}
+
+				// remove our finalizer from the list and update it.
+				obj.SetFinalizers(utils.RemoveString(finalizers, finalizerName))
+				if err := restClient.Update(context.Background(), obj); err != nil {
+					return reconcile.Result{}, err
+				}
 			}
 		}
 	}
