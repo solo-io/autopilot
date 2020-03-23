@@ -25,6 +25,7 @@ type Operator struct {
 
 	// deployment config
 	Deployment Deployment
+
 	// these populate the generated ClusterRole for the operator
 	Rbac []rbacv1.PolicyRule
 	// these populate the generated ClusterRole for the operator
@@ -33,6 +34,9 @@ type Operator struct {
 	VolumeMounts []v1.VolumeMount
 	// add a manifest for each configmap
 	ConfigMaps []v1.ConfigMap
+
+	// if at least one port is defined, create a service for the
+	Service Service
 
 	// args for the container
 	Args []string
@@ -44,6 +48,19 @@ type Deployment struct {
 	UseDaemonSet bool                     `json:"-"`
 	Image        Image                    `json:"image,omitempty"`
 	Resources    *v1.ResourceRequirements `json:"resources,omitempty"`
+}
+
+// values for struct template
+type Service struct {
+	Type  v1.ServiceType
+	Ports []ServicePort
+}
+type ServicePort struct {
+	// The name of this port within the service.
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
+
+	// The default port that will be exposed by this service.
+	DefaultPort int32 `json:"port" protobuf:"varint,3,opt,name=port"`
 }
 
 type Image struct {
