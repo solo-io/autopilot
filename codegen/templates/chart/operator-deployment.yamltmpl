@@ -100,6 +100,8 @@ metadata:
   name: [[ $operator.Name ]]
   namespace: {{ $.Release.Namespace }}
 spec:
+  selector:
+    app: [[ $operator.Name ]]
   type: [[ $operator.Service.Type ]]
   ports:
   [[- range $port := $operator.Service.Ports ]]
