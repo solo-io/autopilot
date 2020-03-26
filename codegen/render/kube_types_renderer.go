@@ -87,8 +87,10 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 		return nil, err
 	}
 
+	files = append(files, customFiles...)
+
 	// prepend output file paths with path to api dir
-	for i, out := range append(files, customFiles...) {
+	for i, out := range files {
 		out.Path = filepath.Join(r.ApiRoot, grp.Group, grp.Version, out.Path)
 		files[i] = out
 	}
