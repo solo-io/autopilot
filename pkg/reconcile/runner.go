@@ -2,6 +2,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -104,7 +105,7 @@ func (ec *runnerReconciler) Reconcile(request reconcile.Request) (reconcile.Resu
 	obj.SetName(request.Name)
 	obj.SetNamespace(request.Namespace)
 	if err := restClient.Get(ec.ctx, obj); err != nil {
-		logger.Error(err, "unable to fetch %T %v", obj, request)
+		logger.Error(err, fmt.Sprintf("unable to fetch %T", obj), "request", request)
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
