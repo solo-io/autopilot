@@ -45,14 +45,10 @@ type {{ $resource.Kind }}ReconcileLoopImpl struct {
     loop reconcile.Loop
 }
 
-func New{{ $resource.Kind }}ReconcileLoopImpl(name string, mgr manager.Manager) ({{ $resource.Kind }}ReconcileLoop, error) {
-    if err := {{ group_import_name $ }}.AddToScheme(mgr.GetScheme()); err != nil {
-        return nil, err
-    }
-
+func New{{ $resource.Kind }}ReconcileLoopImpl(name string, mgr manager.Manager) {{ $resource.Kind }}ReconcileLoop {
     return &{{ $resource.Kind }}ReconcileLoopImpl{
         loop: reconcile.NewLoop(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
-    }, nil
+    }
 }
 
 func (c *{{ $resource.Kind }}ReconcileLoopImpl) Run{{ $resource.Kind }}Reconciler(ctx context.Context, reconciler {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error {

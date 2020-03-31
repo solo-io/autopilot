@@ -66,14 +66,10 @@ type {{ $resource.Kind }}EventWatcherImpl struct {
     watcher events.EventWatcher
 }
 
-func New{{ $resource.Kind }}EventWatcher(name string, mgr manager.Manager) ({{ $resource.Kind }}EventWatcher, error) {
-    if err := {{ group_import_name $ }}.AddToScheme(mgr.GetScheme()); err != nil {
-        return nil, err
-    }
-
+func New{{ $resource.Kind }}EventWatcher(name string, mgr manager.Manager) {{ $resource.Kind }}EventWatcher {
     return &{{ $resource.Kind }}EventWatcherImpl{
         watcher: events.NewWatcher(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
-    }, nil
+    }
 }
 
 func (c *{{ $resource.Kind }}EventWatcherImpl) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
