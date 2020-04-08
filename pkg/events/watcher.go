@@ -50,8 +50,9 @@ type watcher struct {
 	scheme           *runtime.Scheme
 	waitForCacheSync func(stop <-chan struct{}) bool
 
-	lock     sync.RWMutex
-	handlers map[schema.GroupVersionKind][]EventHandler
+	lock       sync.RWMutex
+	startWatch sync.Once
+	handlers   map[schema.GroupVersionKind][]EventHandler
 }
 
 func NewWatcher(name string, mgr manager.Manager) (EventWatcher, error) {
@@ -98,8 +99,12 @@ func (w *watcher) Watch(ctx context.Context, resource runtime.Object, eventHandl
 	// create a source for the resource type
 	src := &source.Kind{Type: resource}
 
-	// send watch events to the Cache
-	if err := w.ctl.Watch(src, w.events, predicates...); err != nil {
+	var err error
+	w.startWatch.Do(func() {
+		// send watch events to the Cache
+		err = w.ctl.Watch(src, w.events, predicates...)
+	})
+	if err != nil {
 		return err
 	}
 
