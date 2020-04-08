@@ -3,6 +3,7 @@ module github.com/solo-io/autopilot
 go 1.13
 
 require (
+	cuelang.org/go v0.0.15 // indirect
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/coreos/go-systemd/v22 v22.0.0 // indirect

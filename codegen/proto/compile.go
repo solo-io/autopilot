@@ -49,6 +49,10 @@ func CompileProtos(goModule, apiRoot, protoDir string) ([]*model.DescriptorWithP
 		return nil, err
 	}
 
+	if err = copyFiles(filepath.Join(protoOutDir, goModule, apiRoot), apiRoot); err != nil {
+		return nil, err
+	}
+
 	// copy the files generated for our package into our repo from the
 	// tmp dir
 	return descriptors, copyFiles(filepath.Join(protoOutDir, goModule, apiRoot), apiRoot)

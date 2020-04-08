@@ -1,9 +1,15 @@
 package deploy
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
+	"cuelang.org/go/cue"
+	"cuelang.org/go/encoding/openapi"
+	"cuelang.org/go/encoding/protobuf"
 	"github.com/gertd/go-pluralize"
 
 	"github.com/solo-io/autopilot/codegen/model"
@@ -63,4 +69,47 @@ func CustomResourceDefinition(resource model.Resource) *apiextv1beta1.CustomReso
 		},
 	}
 	return crd
+}
+
+func openApi() {
+	cfg := &protobuf.Config{
+		Root:   "vendor_any",
+		Module: "zephyr.solo.io",
+		Paths:  []string{"vendor_any/github.com/solo-io","vendor_any/github.com/gogo/protobuf","vendor_any/github.com/solo-io/solo-kit/api/external"},
+	}
+	ext := protobuf.NewExtractor(cfg)
+	if err := ext.AddFile("github.com/solo-io/mesh-projects/api/discovery/v1alpha1/cluster.proto", nil); err != nil {
+		log.Fatal(err)
+	}
+	// files, err := ext.Files()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	instances, err := ext.Instances()
+	if err != nil {
+		log.Fatal(err)
+	}
+	generator := &openapi.Generator{}
+	built := cue.Build(instances)
+	for _, builtInstance := range built {
+		if builtInstance.Err != nil {
+			log.Fatal(err)
+		}
+		if err := builtInstance.Value().Validate(); err != nil {
+			log.Fatal(err)
+		}
+		oapi, err := generator.Schemas(builtInstance)
+		if err != nil {
+			log.Fatal(err)
+		}
+		byt, err := json.Marshal(oapi)
+		if err != nil{
+			log.Fatal(err)
+		}
+		buf := &bytes.Buffer{}
+		if err := json.Indent(buf, byt, "", " "); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(buf.String())
+	}
 }
