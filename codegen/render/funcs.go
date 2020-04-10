@@ -4,6 +4,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/gertd/go-pluralize"
+
 	"bytes"
 	"encoding/json"
 
@@ -33,6 +35,7 @@ func makeTemplateFuncs() template.FuncMap {
 		"lower":           strings.ToLower,
 		"lower_camel":     strcase.ToLowerCamel,
 		"upper_camel":     strcase.ToCamel,
+		"pluralize":       pluralize.NewClient().Plural,
 		"snake":           strcase.ToSnake,
 		"split":           splitTrimEmpty,
 		"string_contains": strings.Contains,
