@@ -6,11 +6,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/solo-io/autopilot/pkg/reconcile"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 	. "github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1"
-	"github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1/clientset/versioned"
 	"github.com/solo-io/autopilot/codegen/test/api/things.test.io/v1/controller"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/test"
@@ -34,21 +37,13 @@ func applyFile(file string) error {
 	return utils.KubectlApply(b)
 }
 
-func deleteFile(file string) error {
-	path := filepath.Join(util.GetModuleRoot(), "codegen/test/chart/crds", file)
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	return utils.KubectlDelete(b)
-}
-
 var _ = Describe("Generated Code", func() {
 	var (
 		ns        string
 		kube      kubernetes.Interface
-		clientset versioned.Interface
+		clientSet Clientset
 		logLevel  = zap.NewAtomicLevel()
+		ctx       = context.TODO()
 	)
 	BeforeEach(func() {
 		logLevel.SetLevel(zap.DebugLevel)
@@ -62,7 +57,7 @@ var _ = Describe("Generated Code", func() {
 		kube = kubehelp.MustKubeClient()
 		err = kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
-		clientset, err = versioned.NewForConfig(test.MustConfig())
+		clientSet, err = NewClientsetFromConfig(test.MustConfig())
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
@@ -72,12 +67,11 @@ var _ = Describe("Generated Code", func() {
 
 	Context("kube clientsests", func() {
 		It("uses the generated clientsets to crud", func() {
-			clientset, err := versioned.NewForConfig(test.MustConfig())
-			Expect(err).NotTo(HaveOccurred())
 
-			paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
+			paint := &Paint{
 				ObjectMeta: v1.ObjectMeta{
-					Name: "paint-1",
+					Name:      "paint-1",
+					Namespace: ns,
 				},
 				Spec: PaintSpec{
 					Color: &PaintColor{
@@ -90,10 +84,15 @@ var _ = Describe("Generated Code", func() {
 						},
 					},
 				},
-			})
+			}
+
+			err := clientSet.Paints().CreatePaint(ctx, paint)
 			Expect(err).NotTo(HaveOccurred())
 
-			written, err := clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
+			written, err := clientSet.Paints().GetPaint(ctx, client.ObjectKey{
+				Namespace: paint.Namespace,
+				Name:      paint.Name,
+			})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(written.Spec).To(Equal(paint.Spec))
@@ -105,17 +104,20 @@ var _ = Describe("Generated Code", func() {
 
 			written.Status = status
 
-			_, err = clientset.ThingsV1().Paints(ns).UpdateStatus(written)
+			err = clientSet.Paints().UpdatePaintStatus(ctx, written)
 			Expect(err).NotTo(HaveOccurred())
 
-			written, err = clientset.ThingsV1().Paints(ns).Get(paint.Name, v1.GetOptions{})
+			written, err = clientSet.Paints().GetPaint(ctx, client.ObjectKey{
+				Namespace: paint.Namespace,
+				Name:      paint.Name,
+			})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(written.Status).To(Equal(status))
 		})
 	})
 
-	Context("kube controllers", func() {
+	Context("kube reconciler", func() {
 		var (
 			mgr    manager.Manager
 			cancel = func() {}
@@ -127,28 +129,10 @@ var _ = Describe("Generated Code", func() {
 
 		It("uses the generated controller to reconcile", func() {
 
-			ctl, err := controller.NewPaintController("blick", mgr)
-			Expect(err).NotTo(HaveOccurred())
-
-			var created, updated, deleted *Paint
-			handler := &controller.PaintEventHandlerFuncs{
-				OnCreate: func(obj *Paint) error {
-					created = obj
-					return nil
-				},
-				OnUpdate: func(_, new *Paint) error {
-					updated = new
-					return nil
-				},
-				OnDelete: func(obj *Paint) error {
-					deleted = obj
-					return nil
-				},
-			}
-
-			paint, err := clientset.ThingsV1().Paints(ns).Create(&Paint{
+			paint := &Paint{
 				ObjectMeta: v1.ObjectMeta{
-					Name: "paint-1",
+					Name:      "paint-2",
+					Namespace: ns,
 				},
 				Spec: PaintSpec{
 					Color: &PaintColor{
@@ -161,35 +145,57 @@ var _ = Describe("Generated Code", func() {
 						},
 					},
 				},
-			})
+			}
+
+			err := clientSet.Paints().CreatePaint(ctx, paint)
 			Expect(err).NotTo(HaveOccurred())
 
 			paint.GetObjectKind().GroupVersionKind()
 
-			err = ctl.AddEventHandler(context.TODO(), handler)
+			loop := controller.NewPaintReconcileLoop("blick", mgr)
+
+			var reconciled *Paint
+			var deleted reconcile.Request
+			reconciler := &controller.PaintReconcilerFuncs{
+				OnReconcilePaint: func(obj *Paint) (result reconcile.Result, err error) {
+					reconciled = obj
+					return
+				},
+				OnReconcilePaintDeletion: func(req reconcile.Request) {
+					deleted = req
+					return
+				},
+			}
+			err = loop.RunPaintReconciler(ctx, reconciler)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() *Paint {
-				return created
+				return reconciled
 			}, time.Second).ShouldNot(BeNil())
 
 			// update
 			paint.Spec.Color = &PaintColor{Value: 0.7}
 
-			paint, err = clientset.ThingsV1().Paints(ns).Update(paint)
+			err = clientSet.Paints().UpdatePaint(ctx, paint)
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(func() *Paint {
-				return updated
-			}, time.Second).ShouldNot(BeNil())
+			Eventually(func() PaintSpec {
+				return reconciled.Spec
+			}, time.Second).Should(Equal(paint.Spec))
 
 			// delete
-			err = clientset.ThingsV1().Paints(ns).Delete(paint.Name, nil)
+			err = clientSet.Paints().DeletePaint(ctx, client.ObjectKey{
+				Name:      paint.Name,
+				Namespace: paint.Namespace,
+			})
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(func() *Paint {
+			Eventually(func() reconcile.Request {
 				return deleted
-			}, time.Second).ShouldNot(BeNil())
+			}, time.Second).Should(Equal(reconcile.Request{NamespacedName: types.NamespacedName{
+				Name:      paint.Name,
+				Namespace: paint.Namespace,
+			}}))
 		})
 	})
 })

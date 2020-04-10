@@ -1,0 +1,128 @@
+// Definitions for the Kubernetes Controllers
+package controller
+
+import (
+	"context"
+    "time"
+
+{{ group_import_name $ }} "{{ group_import_path $ }}"
+
+    "github.com/pkg/errors"
+    "github.com/solo-io/autopilot/pkg/ezkube"
+    "github.com/solo-io/autopilot/pkg/reconcile"
+    "sigs.k8s.io/controller-runtime/pkg/manager"
+    "sigs.k8s.io/controller-runtime/pkg/predicate"
+)
+
+{{- range $resource := $.Resources }}
+
+{{- $kindLowerCamel := lower_camel $resource.Kind }}
+
+// Reconcile the {{ $resource.Kind }} Resource
+// implemented by the user
+type {{ $resource.Kind }}Reconciler interface {
+    Reconcile{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (reconcile.Result, error)
+    Reconcile{{ $resource.Kind }}Deletion(req reconcile.Request)
+}
+
+type {{ $resource.Kind }}ReconcilerFuncs struct {
+    OnReconcile{{ $resource.Kind }} func(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (reconcile.Result, error)
+    OnReconcile{{ $resource.Kind }}Deletion func(req reconcile.Request)
+}
+
+func (f *{{ $resource.Kind }}ReconcilerFuncs) Reconcile{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) (reconcile.Result, error) {
+    if f.OnReconcile{{ $resource.Kind }} == nil {
+        return reconcile.Result{}, nil
+    }
+    return f.OnReconcile{{ $resource.Kind }}(obj)
+}
+
+func (f *{{ $resource.Kind }}ReconcilerFuncs) Reconcile{{ $resource.Kind }}Deletion(req reconcile.Request) {
+    if f.OnReconcile{{ $resource.Kind }}Deletion == nil {
+        return
+    }
+    f.OnReconcile{{ $resource.Kind }}Deletion(req)
+}
+
+// Reconcile and finalize the {{ $resource.Kind }} Resource
+// implemented by the user
+type {{ $resource.Kind }}Finalizer interface {
+    {{ $resource.Kind }}Reconciler
+
+    // name of the finalizer used by this handler.
+    // finalizer names should be unique for a single task
+    {{ $resource.Kind }}FinalizerName() string
+
+    // finalize the object before it is deleted.
+    // Watchers created with a finalizing handler will a
+    Finalize{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+}
+
+type {{ $resource.Kind }}ReconcileLoop interface {
+    Run{{ $resource.Kind }}Reconciler(ctx context.Context, rec {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error
+}
+
+type {{ $kindLowerCamel }}ReconcileLoop struct {
+    loop reconcile.Loop
+}
+
+func New{{ $resource.Kind }}ReconcileLoop(name string, mgr manager.Manager) {{ $resource.Kind }}ReconcileLoop {
+    return &{{ $kindLowerCamel }}ReconcileLoop{
+        loop: reconcile.NewLoop(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
+    }
+}
+
+func (c *{{ $kindLowerCamel }}ReconcileLoop) Run{{ $resource.Kind }}Reconciler(ctx context.Context, reconciler {{ $resource.Kind }}Reconciler, predicates ...predicate.Predicate) error {
+    genericReconciler := generic{{ $resource.Kind }}Reconciler{
+        reconciler: reconciler,
+    }
+
+	var reconcilerWrapper reconcile.Reconciler
+	if finalizingReconciler, ok := reconciler.({{ $resource.Kind }}Finalizer); ok {
+        reconcilerWrapper = generic{{ $resource.Kind }}Finalizer{
+            generic{{ $resource.Kind }}Reconciler: genericReconciler,
+            finalizingReconciler: finalizingReconciler,
+        }
+    } else {
+        reconcilerWrapper = genericReconciler
+    }
+	return c.loop.RunReconciler(ctx, reconcilerWrapper, predicates...)
+}
+
+// generic{{ $resource.Kind }}Handler implements a generic reconcile.Reconciler
+type generic{{ $resource.Kind }}Reconciler struct {
+    reconciler {{ $resource.Kind }}Reconciler
+}
+
+func (r generic{{ $resource.Kind }}Reconciler) Reconcile(object ezkube.Object) (reconcile.Result, error) {
+    obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
+    if !ok {
+        return reconcile.Result{}, errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+    }
+    return r.reconciler.Reconcile{{ $resource.Kind }}(obj)
+}
+
+func (r generic{{ $resource.Kind }}Reconciler) ReconcileDeletion(request reconcile.Request) {
+    r.reconciler.Reconcile{{ $resource.Kind }}Deletion(request)
+}
+
+// generic{{ $resource.Kind }}Finalizer implements a generic reconcile.FinalizingReconciler
+type generic{{ $resource.Kind }}Finalizer struct {
+    generic{{ $resource.Kind }}Reconciler
+    finalizingReconciler {{ $resource.Kind }}Finalizer
+}
+
+
+func (r generic{{ $resource.Kind }}Finalizer) FinalizerName() string {
+    return r.finalizingReconciler.{{ $resource.Kind }}FinalizerName()
+}
+
+func (r generic{{ $resource.Kind }}Finalizer) Finalize(object ezkube.Object) error {
+    obj, ok := object.(*{{ group_import_name $ }}.{{ $resource.Kind }})
+    if !ok {
+        return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
+    }
+    return r.finalizingReconciler.Finalize{{ $resource.Kind }}(obj)
+}
+
+{{- end }}

@@ -30,7 +30,7 @@ var defaultChartInputs = inputTemplates{
 }
 
 func RenderChart(chart model.Chart) ([]OutFile, error) {
-	renderer := defaultTemplateRenderer
+	renderer := DefaultTemplateRenderer
 
 	// when rendering helm charts, we need
 	// to use a custom delimiter
@@ -46,10 +46,27 @@ func RenderChart(chart model.Chart) ([]OutFile, error) {
 func (r ChartRenderer) Render(chart model.Chart) ([]OutFile, error) {
 	templatesToRender := defaultChartInputs
 
-	files, err := r.renderInputs(templatesToRender, chart)
+	files, err := r.renderCoreTemplates(templatesToRender, chart)
 	if err != nil {
 		return nil, err
 	}
 
-	return files, nil
+	customFiles, err := r.renderCustomTemplates(chart.CustomTemplates, chart)
+	if err != nil {
+		return nil, err
+	}
+
+	files = append(files, customFiles...)
+
+	var filteredFiles []OutFile
+	if chart.FilterTemplate != nil {
+		for _, file := range files {
+			if chart.FilterTemplate(file.Path) {
+				continue
+			}
+			filteredFiles = append(filteredFiles, file)
+		}
+	}
+
+	return filteredFiles, nil
 }

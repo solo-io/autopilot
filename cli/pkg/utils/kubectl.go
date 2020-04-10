@@ -18,27 +18,17 @@ func KubectlDelete(manifest []byte, extraArgs ...string) error {
 }
 
 func Kubectl(stdin io.Reader, args ...string) error {
-	kubectl := exec.Command("kubectl", args...)
-	if stdin != nil {
-		kubectl.Stdin = stdin
-	}
-	kubectl.Stdout = os.Stdout
-	kubectl.Stderr = os.Stderr
-	kubectl.Env = os.Environ()
+	kubectl := KubectlCmd(stdin, args...)
+
 	return kubectl.Run()
 }
 
 func KubectlOut(stdin io.Reader, args ...string) (string, error) {
-	kubectl := exec.Command("kubectl", args...)
-	if stdin != nil {
-		kubectl.Stdin = stdin
-	}
+	kubectl := KubectlCmd(stdin, args...)
 
 	out := &bytes.Buffer{}
-
 	kubectl.Stdout = out
 	kubectl.Stderr = out
-	kubectl.Env = os.Environ()
 	err := kubectl.Run()
 
 	if err != nil {
@@ -46,4 +36,15 @@ func KubectlOut(stdin io.Reader, args ...string) (string, error) {
 	}
 
 	return out.String(), nil
+}
+
+func KubectlCmd(stdin io.Reader, args ...string) *exec.Cmd {
+	kubectl := exec.Command("kubectl", args...)
+	if stdin != nil {
+		kubectl.Stdin = stdin
+	}
+	kubectl.Stdout = os.Stdout
+	kubectl.Stderr = os.Stderr
+	kubectl.Env = os.Environ()
+	return kubectl
 }

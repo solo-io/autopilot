@@ -15,11 +15,14 @@ import (
 
 {{- range $resource := $.Resources }}
 
+{{- $kindLowerCamel := lower_camel $resource.Kind }}
+
+// Handle events for the {{ $resource.Kind }} Resource
 type {{ $resource.Kind }}EventHandler interface {
-    Create(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
-    Update(old, new *{{ group_import_name $ }}.{{ $resource.Kind }}) error
-    Delete(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
-    Generic(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Create{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Update{{ $resource.Kind }}(old, new *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Delete{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
+    Generic{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
 }
 
 type {{ $resource.Kind }}EventHandlerFuncs struct {
@@ -29,59 +32,51 @@ type {{ $resource.Kind }}EventHandlerFuncs struct {
     OnGeneric func(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Create(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Create{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnCreate == nil {
         return nil
     }
     return f.OnCreate(obj)
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Delete(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Delete{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnDelete == nil {
         return nil
     }
     return f.OnDelete(obj)
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Update(objOld, objNew *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Update{{ $resource.Kind }}(objOld, objNew *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnUpdate == nil {
         return nil
     }
     return f.OnUpdate(objOld, objNew)
 }
 
-func (f *{{ $resource.Kind }}EventHandlerFuncs) Generic(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
+func (f *{{ $resource.Kind }}EventHandlerFuncs) Generic{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error {
     if f.OnGeneric == nil {
         return nil
     }
     return f.OnGeneric(obj)
 }
 
-type {{ $resource.Kind }}Controller interface {
+type {{ $resource.Kind }}EventWatcher interface {
     AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error
 }
 
-type {{ $resource.Kind }}ControllerImpl struct {
+type {{ $kindLowerCamel }}EventWatcher struct {
     watcher events.EventWatcher
 }
 
-func New{{ $resource.Kind }}Controller(name string, mgr manager.Manager) ({{ $resource.Kind }}Controller, error) {
-    if err := {{ group_import_name $ }}.AddToScheme(mgr.GetScheme()); err != nil {
-        return nil, err
+func New{{ $resource.Kind }}EventWatcher(name string, mgr manager.Manager) {{ $resource.Kind }}EventWatcher {
+    return &{{ $kindLowerCamel }}EventWatcher{
+        watcher: events.NewWatcher(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
     }
-
-    w, err := events.NewWatcher(name, mgr)
-    if err != nil {
-        return nil, err
-    }
-    return &{{ $resource.Kind }}ControllerImpl{
-        watcher: w,
-    }, nil
 }
 
-func (c *{{ $resource.Kind }}ControllerImpl) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+func (c *{{ $kindLowerCamel }}EventWatcher) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
 	handler := generic{{ $resource.Kind }}Handler{handler: h}
-    if err := c.watcher.Watch(ctx, &{{ group_import_name $ }}.{{ $resource.Kind }}{}, handler, predicates...); err != nil{
+    if err := c.watcher.Watch(ctx, handler, predicates...); err != nil{
         return err
     }
     return nil
@@ -97,7 +92,7 @@ func (h generic{{ $resource.Kind }}Handler) Create(object runtime.Object) error 
     if !ok {
         return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
-    return h.handler.Create(obj)
+    return h.handler.Create{{ $resource.Kind }}(obj)
 }
 
 func (h generic{{ $resource.Kind }}Handler) Delete(object runtime.Object) error {
@@ -105,7 +100,7 @@ func (h generic{{ $resource.Kind }}Handler) Delete(object runtime.Object) error 
     if !ok {
         return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
-    return h.handler.Delete(obj)
+    return h.handler.Delete{{ $resource.Kind }}(obj)
 }
 
 func (h generic{{ $resource.Kind }}Handler) Update(old, new runtime.Object) error {
@@ -117,7 +112,7 @@ func (h generic{{ $resource.Kind }}Handler) Update(old, new runtime.Object) erro
     if !ok {
         return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", new)
     }
-    return h.handler.Update(objOld, objNew)
+    return h.handler.Update{{ $resource.Kind }}(objOld, objNew)
 }
 
 func (h generic{{ $resource.Kind }}Handler) Generic(object runtime.Object) error {
@@ -125,7 +120,7 @@ func (h generic{{ $resource.Kind }}Handler) Generic(object runtime.Object) error
     if !ok {
         return errors.Errorf("internal error: {{ $resource.Kind }} handler received event for %T", object)
     }
-    return h.handler.Generic(obj)
+    return h.handler.Generic{{ $resource.Kind }}(obj)
 }
 
 {{- end }}

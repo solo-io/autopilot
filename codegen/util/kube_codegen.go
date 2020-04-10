@@ -4,10 +4,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
-func KubeCodegen(group, version, apiDir string) error {
-	// TODO: replace these funcs with anyvendor
+/*
+Possible generators:
+(deepcopy,defaulter,client,lister,informer) or "all"
+*/
+func KubeCodegen(group, version, apiDir string, generators []string) error {
+	if len(generators) == 0 {
+		// nothing to do
+		return nil
+	}
 
 	// path on disk
 	modulePath := GetModuleRoot()
@@ -29,6 +37,7 @@ func KubeCodegen(group, version, apiDir string) error {
 		"CLIENT_PKG="+clientPkg,
 		"GROUP="+group,
 		"VERSION="+version,
+		"CODEGEN_GENERATORS="+strings.Join(generators, ","),
 	)
 
 	cmd.Stdout = os.Stdout
@@ -68,7 +77,7 @@ echo ">> Temporary output directory ${TEMP_DIR}"
 chmod +x ${CODEGEN_PKG}/generate-groups.sh
 
 
-${CODEGEN_PKG}/generate-groups.sh all \
+${CODEGEN_PKG}/generate-groups.sh ${CODEGEN_GENERATORS} \
     ${CLIENT_PKG} \
     ${API_PKG} \
     ${GROUP}:${VERSION} \
