@@ -19,12 +19,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+type Request = reconcile.Request
 type Result = reconcile.Result
 
 type Reconciler interface {
 	// reconcile an object
 	// requeue the object if returning an error, or a non-zero "requeue-after" duration
 	Reconcile(object ezkube.Object) (Result, error)
+
+	// we received a reconcile request for an object that was removed from the cache
+	ReconcileDeletion(request Request)
 }
 
 type FinalizingReconciler interface {
@@ -94,7 +98,7 @@ func (ec *runner) RunReconciler(ctx context.Context, reconciler Reconciler, pred
 	return nil
 }
 
-func (ec *runnerReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (ec *runnerReconciler) Reconcile(request Request) (reconcile.Result, error) {
 	logger := ec.logger.WithValues("event", request)
 	logger.V(2).Info("handling event", "event", request)
 
@@ -105,11 +109,15 @@ func (ec *runnerReconciler) Reconcile(request reconcile.Request) (reconcile.Resu
 	obj.SetName(request.Name)
 	obj.SetNamespace(request.Namespace)
 	if err := restClient.Get(ec.ctx, obj); err != nil {
-		logger.Error(err, fmt.Sprintf("unable to fetch %T", obj), "request", request)
-		// we'll ignore not-found errors, since they can't be fixed by an immediate
-		// requeue (we'll need to wait for a new notification), and we can get them
-		// on deleted requests.
-		return reconcile.Result{}, client.IgnoreNotFound(err)
+		if err := client.IgnoreNotFound(err); err != nil {
+			return reconcile.Result{}, err
+		}
+		logger.V(2).Info(fmt.Sprintf("unable to fetch %T", obj), "request", request, "err", err)
+
+		// call OnDelete
+		ec.reconciler.ReconcileDeletion(request)
+
+		return reconcile.Result{}, nil
 	}
 
 	// if the handler is a finalizer, check if we need to finalize
