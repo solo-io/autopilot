@@ -14,29 +14,18 @@ import (
 )
 
 // Handle events for the Paint Resource
-type PaintCache interface {
-	List() ([]*things_test_io_v1.Paint, error)
+type PaintEventHandler interface {
+	CreatePaint(obj *things_test_io_v1.Paint) error
+	UpdatePaint(old, new *things_test_io_v1.Paint) error
+	DeletePaint(obj *things_test_io_v1.Paint) error
+	GenericPaint(obj *things_test_io_v1.Paint) error
 }
 
-type paintCache struct {
-	client manager.Manager
-}
-
-func (p *paintCache) CreatePaint(obj *things_test_io_v1.Paint) error {
-	p.mgr.GetCache().List()
-	return nil
-}
-
-func (p *paintCache) UpdatePaint(old, new *things_test_io_v1.Paint) error {
-	return nil
-}
-
-func (p *paintCache) DeletePaint(obj *things_test_io_v1.Paint) error {
-	return nil
-}
-
-func (p *paintCache) GenericPaint(obj *things_test_io_v1.Paint) error {
-	return nil
+type PaintEventHandlerFuncs struct {
+	OnCreate  func(obj *things_test_io_v1.Paint) error
+	OnUpdate  func(old, new *things_test_io_v1.Paint) error
+	OnDelete  func(obj *things_test_io_v1.Paint) error
+	OnGeneric func(obj *things_test_io_v1.Paint) error
 }
 
 func (f *PaintEventHandlerFuncs) CreatePaint(obj *things_test_io_v1.Paint) error {
@@ -67,25 +56,21 @@ func (f *PaintEventHandlerFuncs) GenericPaint(obj *things_test_io_v1.Paint) erro
 	return f.OnGeneric(obj)
 }
 
-type PaintController interface {
+type PaintEventWatcher interface {
 	AddEventHandler(ctx context.Context, h PaintEventHandler, predicates ...predicate.Predicate) error
 }
 
-type PaintControllerImpl struct {
+type paintEventWatcher struct {
 	watcher events.EventWatcher
 }
 
-func NewPaintController(name string, mgr manager.Manager) (PaintController, error) {
-	if err := things_test_io_v1.AddToScheme(mgr.GetScheme()); err != nil {
-		return nil, err
-	}
-
-	return &PaintControllerImpl{
+func NewPaintEventWatcher(name string, mgr manager.Manager) PaintEventWatcher {
+	return &paintEventWatcher{
 		watcher: events.NewWatcher(name, mgr, &things_test_io_v1.Paint{}),
-	}, nil
+	}
 }
 
-func (c *PaintControllerImpl) AddEventHandler(ctx context.Context, h PaintEventHandler, predicates ...predicate.Predicate) error {
+func (c *paintEventWatcher) AddEventHandler(ctx context.Context, h PaintEventHandler, predicates ...predicate.Predicate) error {
 	handler := genericPaintHandler{handler: h}
 	if err := c.watcher.Watch(ctx, handler, predicates...); err != nil {
 		return err
