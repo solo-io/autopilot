@@ -8,9 +8,8 @@ import (
 {{ group_import_name $ }} "{{ group_import_path $ }}"
 
     "github.com/pkg/errors"
-    "github.com/solo-io/autopilot/pkg/events"
+    "github.com/solo-io/autopilot/pkg/ezkube"
     "github.com/solo-io/autopilot/pkg/reconcile"
-    "k8s.io/apimachinery/pkg/runtime"
     "sigs.k8s.io/controller-runtime/pkg/manager"
     "sigs.k8s.io/controller-runtime/pkg/predicate"
 )
