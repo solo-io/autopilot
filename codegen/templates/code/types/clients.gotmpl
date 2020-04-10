@@ -2,6 +2,9 @@ package {{.Version}}
 
 import (
     "context"
+
+    "k8s.io/client-go/kubernetes/scheme"
+    "k8s.io/client-go/rest"
     "sigs.k8s.io/controller-runtime/pkg/client"
 
     {{- if $.CustomTypesImportPath }}
@@ -9,6 +12,44 @@ import (
     . "{{ $.CustomTypesImportPath }}"
     {{- end}}
 )
+
+// clienset for the {{.Group}}/{{.Version}} APIs
+type Clientset interface {
+    {{- range $resource := $.Resources }}
+    // clienset for the {{.Group}}/{{.Version}} APIs
+    {{ pluralize $resource.Kind }}() {{ $resource.Kind }}Client
+    {{- end }}
+}
+
+type clientSet struct {
+    client client.Client
+}
+
+func NewClientsetFromConfig(cfg *rest.Config) (*clientSet, error) {
+    scheme := scheme.Scheme
+    if err := AddToScheme(scheme); err != nil{
+        return nil, err
+    }
+    client, err := client.New(cfg, client.Options{
+        Scheme: scheme,
+    })
+    if err != nil {
+        return nil, err
+    }
+    return NewClientset(client), nil
+}
+
+func NewClientset(client client.Client) *clientSet {
+    return &clientSet{client: client}
+}
+
+{{- range $resource := $.Resources }}
+
+// clienset for the {{.Group}}/{{.Version}} APIs
+func (c *clientSet) {{ pluralize $resource.Kind }}() {{ $resource.Kind }}Client {
+	return New{{ $resource.Kind }}Client(c.client)
+}
+{{- end }}
 
 {{- range $resource := $.Resources }}
 

@@ -15,6 +15,8 @@ import (
 
 {{- range $resource := $.Resources }}
 
+{{- $kindLowerCamel := lower_camel $resource.Kind }}
+
 // Handle events for the {{ $resource.Kind }} Resource
 type {{ $resource.Kind }}EventHandler interface {
     Create{{ $resource.Kind }}(obj *{{ group_import_name $ }}.{{ $resource.Kind }}) error
@@ -62,17 +64,17 @@ type {{ $resource.Kind }}EventWatcher interface {
     AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error
 }
 
-type {{ $resource.Kind }}EventWatcherImpl struct {
+type {{ $kindLowerCamel }}EventWatcher struct {
     watcher events.EventWatcher
 }
 
 func New{{ $resource.Kind }}EventWatcher(name string, mgr manager.Manager) {{ $resource.Kind }}EventWatcher {
-    return &{{ $resource.Kind }}EventWatcherImpl{
+    return &{{ $kindLowerCamel }}EventWatcher{
         watcher: events.NewWatcher(name, mgr, &{{ group_import_name $ }}.{{ $resource.Kind }}{}),
     }
 }
 
-func (c *{{ $resource.Kind }}EventWatcherImpl) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
+func (c *{{ $kindLowerCamel }}EventWatcher) AddEventHandler(ctx context.Context, h {{ $resource.Kind }}EventHandler, predicates ...predicate.Predicate) error {
 	handler := generic{{ $resource.Kind }}Handler{handler: h}
     if err := c.watcher.Watch(ctx, handler, predicates...); err != nil{
         return err
