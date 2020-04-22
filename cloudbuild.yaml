@@ -7,7 +7,6 @@ steps:
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: 'bash'
     args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/autopilot/autopilot-mod.tar.gz | tar -xzf -']
-    env:
     volumes: &vol
       - name: 'gopath'
         path: '/go/pkg'
@@ -25,8 +24,8 @@ steps:
     volumes: *vol
     env:
       - 'GO111MODULE=on'
-    - 'KUBECONFIG=/builder/home/.kube/config'
-    - 'BUILD_ID=$BUILD_ID'
+      - 'KUBECONFIG=/builder/home/.kube/config'
+      - 'BUILD_ID=$BUILD_ID'
     secretEnv: ['GITHUB_TOKEN']
     args: ['-r', '-p', '-failFast', '-randomizeSuites', '-randomizeAllSpecs']
     waitFor: ['untar-mod-cache']
