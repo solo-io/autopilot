@@ -5,4 +5,10 @@
 [[- range $operator := $.Operators ]]
 [[ lower_camel $operator.Name ]]:
 [[ toYaml $operator.Deployment | indent 2 ]]
+[[- if gt (len $operator.Service.Ports) 0 ]]
+  ports:
+[[- range $port := $operator.Service.Ports ]]
+    [[ $port.Name ]]: [[ $port.DefaultPort ]]
+[[- end ]]
+[[- end ]]
 [[- end ]]

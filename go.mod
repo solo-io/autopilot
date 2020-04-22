@@ -40,19 +40,20 @@ require (
 	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
+	go.uber.org/atomic v1.5.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
 	golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5
 	istio.io/tools v0.0.0-20200214155848-b0036b2c2d76 // indirect
-	k8s.io/api v0.17.1
-	k8s.io/apiextensions-apiserver v0.0.0-20191016113550-5357c4baaf65
-	k8s.io/apimachinery v0.17.1
+	k8s.io/api v0.17.2
+	k8s.io/apiextensions-apiserver v0.17.2
+	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v8.0.0+incompatible
-	k8s.io/code-generator v0.17.1
+	k8s.io/code-generator v0.17.2
 	k8s.io/gengo v0.0.0-20190822140433-26a664648505
 	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f
-	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/controller-runtime v0.5.1
 	sigs.k8s.io/yaml v1.1.0
 )
 

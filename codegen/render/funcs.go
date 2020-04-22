@@ -4,6 +4,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/gertd/go-pluralize"
+
 	"bytes"
 	"encoding/json"
 
@@ -33,6 +35,7 @@ func makeTemplateFuncs() template.FuncMap {
 		"lower":           strings.ToLower,
 		"lower_camel":     strcase.ToLowerCamel,
 		"upper_camel":     strcase.ToCamel,
+		"pluralize":       pluralize.NewClient().Plural,
 		"snake":           strcase.ToSnake,
 		"split":           splitTrimEmpty,
 		"string_contains": strings.Contains,
@@ -49,7 +52,15 @@ func makeTemplateFuncs() template.FuncMap {
 		},
 		// Used by types.go to get all unique external imports for a groups resources
 		"imports_for_group": func(grp Group) []string {
-			return uniqueImportsForGroup(grp)
+			allImports := uniqueGoImportPathsForGroup(grp)
+			var excludingGroupImport []string
+			for _, imp := range allImports {
+				if imp == util.GoPackage(grp) {
+					continue
+				}
+				excludingGroupImport = append(excludingGroupImport, imp)
+			}
+			return excludingGroupImport
 		},
 		/*
 			Used by the proto_deepcopy.gotml file to decide which objects need a proto.clone deepcopy method.

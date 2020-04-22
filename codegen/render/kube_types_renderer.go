@@ -11,6 +11,9 @@ type KubeCodeRenderer struct {
 	// the templates to use for rendering kube kypes
 	TypesTemplates inputTemplates
 
+	// the templates to use for rendering typed kube clients which use the underlying cache
+	ClientsTemplates inputTemplates
+
 	// the templates to use for rendering kube controllers
 	ControllerTemplates inputTemplates
 
@@ -22,7 +25,7 @@ type KubeCodeRenderer struct {
 	ApiRoot string
 }
 
-var typesTemplates = inputTemplates{
+var TypesTemplates = inputTemplates{
 	"code/types/types.gotmpl": {
 		Path: "types.go",
 	},
@@ -34,17 +37,27 @@ var typesTemplates = inputTemplates{
 	},
 }
 
-var controllerTemplates = inputTemplates{
-	"code/controller/controller.gotmpl": {
-		Path: "controller/controller.go",
+var ClientsTemplates = inputTemplates{
+	"code/types/clients.gotmpl": {
+		Path: "clients.go",
+	},
+}
+
+var ControllerTemplates = inputTemplates{
+	"code/controller/event_handlers.gotmpl": {
+		Path: "controller/event_handlers.go",
+	},
+	"code/controller/reconcilers.gotmpl": {
+		Path: "controller/reconcilers.go",
 	},
 }
 
 func RenderApiTypes(grp Group) ([]OutFile, error) {
 	defaultKubeCodeRenderer := KubeCodeRenderer{
-		templateRenderer:    defaultTemplateRenderer,
-		TypesTemplates:      typesTemplates,
-		ControllerTemplates: controllerTemplates,
+		templateRenderer:    DefaultTemplateRenderer,
+		TypesTemplates:      TypesTemplates,
+		ClientsTemplates:    ClientsTemplates,
+		ControllerTemplates: ControllerTemplates,
 		GoModule:            grp.Module,
 		ApiRoot:             grp.ApiRoot,
 	}
@@ -57,14 +70,24 @@ func (r KubeCodeRenderer) RenderKubeCode(grp Group) ([]OutFile, error) {
 	if grp.RenderTypes {
 		templatesToRender.add(r.TypesTemplates)
 	}
+	if grp.RenderClients {
+		templatesToRender.add(r.ClientsTemplates)
+	}
 	if grp.RenderController {
 		templatesToRender.add(r.ControllerTemplates)
 	}
 
-	files, err := r.renderInputs(templatesToRender, grp)
+	files, err := r.renderCoreTemplates(templatesToRender, grp)
 	if err != nil {
 		return nil, err
 	}
+
+	customFiles, err := r.renderCustomTemplates(grp.CustomTemplates, grp)
+	if err != nil {
+		return nil, err
+	}
+
+	files = append(files, customFiles...)
 
 	// prepend output file paths with path to api dir
 	for i, out := range files {
